@@ -134,6 +134,8 @@ function Decrypt_Hash(func, tell, extra)
     return highest
 end
 
+getgenv().cfourhash = decrypt_hash(require(replicated.Game.Item.C4).ShootBegin)
+
 --//
 
 local function fetchKey(callerFunction, keyIndex)
