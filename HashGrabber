@@ -4,7 +4,7 @@ if networkKeys and network then
     return networkKeys, network
 end
 
---// Variables 
+--// Variables
 
 local networkKeys = {}
 local network = getupvalue(require(game:GetService("ReplicatedStorage").Module.AlexChassis).SetEvent, 1)
@@ -48,6 +48,93 @@ for index, value in next, getrenv() do -- soooo bad
 end
 
 --// Functions
+
+function Decrypt_Hash(func, tell, extra)
+    local keys = getupvalue(getupvalue(network.FireServer, 1), 3)
+    local constants = getconstants(func)
+
+    local start = nil
+    local encrypted = false
+    for i, v in constants do
+        if v == 'sub' or v == 'reverse' then
+            encrypted = true
+        end
+        
+        if extra then
+            if v == extra then
+                start = i
+                break
+            end
+            
+            continue
+        end
+        
+        if v == 'FireServer' then
+            start = i
+            break
+        end
+    end
+
+    if not encrypted then
+        if type(constants[start - 2]) ~= 'string' then
+            return constants[start - 1]
+        end
+        
+        if constants[start - 4] == tell then
+            return constants[start - 3]
+        end
+        
+        return constants[start - 2] .. constants[start - 1]
+    end
+    
+    local dev = ''
+    for i = 1, #constants do
+        local cst = constants[start - i]
+        if type(cst) == 'function' or type(cst) == 'userdata' then
+            break
+        end
+        
+        if cst == tell then
+            break
+        end
+        
+        if type(cst) ~= 'string' then continue end
+        if table.find({'sub', 'reverse'}, cst) then
+            continue
+        end
+        
+        dev = dev.. cst
+    end
+    
+    dev = string.reverse(dev)
+    dev = string.split(dev, '')
+    
+    local highestscore = 0
+    local highest = ''
+        
+    for i, _ in keys do
+        if i == 'feqiwv0s' then continue end
+        if string.sub(i, 0, 1) ~= dev[1] then
+            continue
+        end
+        
+        local score = 0
+        for j, key in dev do
+            if string.find(i, key) then
+                score += 1
+            end
+        end
+        
+        if score > highestscore then
+            highestscore = score
+            highest = i
+        end
+    end
+    
+    return highest
+end
+
+--//
 
 local function fetchKey(callerFunction, keyIndex)
     keyIndex = keyIndex or 1
