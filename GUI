@@ -606,59 +606,77 @@ do
 			Position = UDim2.new(1, 0, 0, 0)
 		}, 0.2)
 		
-		-- callbacks
+		-- Callbacks
 		local active = true
 		local close = function()
+		    if not active then
+		        return
+		    end
 		
-			if not active then
-				return
-			end
-			
-			active = false
-			notification.ClipsDescendants = true
-			
-			library.lastNotification = notification.Position
-			notification.Flash.Position = UDim2.new(0, 0, 0, 0)
-			utility:Tween(notification.Flash, {Size = UDim2.new(1, 0, 1, 0)}, 0.2)
-			
-			wait(0.2)
-			utility:Tween(notification, {
-				Size = UDim2.new(0, 0, 0, 60),
-				Position = notification.Position + UDim2.new(0, textSize.X + 70, 0, 0)
-			}, 0.2)
-			
-			wait(0.2)
-			notification:Destroy()
+		    active = false
+		    notification.ClipsDescendants = true
+		
+		    -- Store the last notification's position
+		    library.lastNotification = notification.Position
+		
+		    -- Start the flash animation
+		    notification.Flash.Position = UDim2.new(0, 0, 0, 0)
+		    utility:Tween(notification.Flash, {Size = UDim2.new(1, 0, 1, 0)}, 0.2)
+		
+		    -- Wait for the flash animation to complete
+		    wait(0.2)
+		    
+		    -- Animate the notification to slide out
+		    utility:Tween(notification, {
+		        Size = UDim2.new(0, 0, 0, 60),
+		        Position = notification.Position + UDim2.new(0, textSize.X + 70, 0, 0)
+		    }, 0.2)
+		    
+		    -- Wait for the slide-out animation to complete
+		    wait(0.2)
+		    
+		    -- Destroy the notification
+		    notification:Destroy()
 		end
 		
-		self.activeNotification = close
+		-- Timer duration in seconds
+		local timerDuration = 5
 		
+		-- Function to close the notification after the timer expires
+		local function startTimer()
+		    wait(timerDuration)
+		    if active then
+		        close()
+		    end
+		end
+		
+		-- Start the timer
+		startTimer()
+		
+		-- Set up button callbacks
 		notification.Accept.MouseButton1Click:Connect(function()
-		
-			if not active then 
-				return
-			end
-			
-			if callback then
-				callback(true)
-			end
-			
-			close()
+		    if not active then 
+		        return
+		    end
+		    
+		    if callback then
+		        callback(true)
+		    end
+		    
+		    close()
 		end)
 		
 		notification.Decline.MouseButton1Click:Connect(function()
-		
-			if not active then 
-				return
-			end
-			
-			if callback then
-				callback(false)
-			end
-			
-			close()
+		    if not active then 
+		        return
+		    end
+		    
+		    if callback then
+		        callback(false)
+		    end
+		    
+		    close()
 		end)
-	end
 	
 	function section:addButton(title, callback)
 		local button = utility:Create("ImageButton", {
