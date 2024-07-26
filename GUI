@@ -579,9 +579,10 @@ do
 				ImageColor3 = themes.TextColor,
 				ZIndex = 4
 			})
-			wait(duration)
-			self.activeNotification:Destroy()
 		})
+
+		wait(duration)
+			self.activeNotification:Destroy()
 		
 		-- dragging
 		utility:DraggingEnabled(notification)
