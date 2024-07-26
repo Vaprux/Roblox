@@ -500,7 +500,7 @@ do
 	
 	-- new modules
 	
-	function library:Notify(title, duration, text, callback)
+	function library:Notify(title, text, callback)
 	
 		-- overwrite last notification
 		if self.activeNotification then
@@ -580,9 +580,6 @@ do
 				ZIndex = 4
 			})
 		})
-
-		wait(duration)
-			self.activeNotification:Destroy()
 		
 		-- dragging
 		utility:DraggingEnabled(notification)
