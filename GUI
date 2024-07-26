@@ -656,6 +656,7 @@ do
 		end)
 		
 		-- auto-close functionality
+		duration = duration or 20 -- Default duration is 20 seconds
 		delay(duration, close)
 	end
 	
