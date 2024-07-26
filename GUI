@@ -500,8 +500,7 @@ do
 	
 	-- new modules
 	
-	function library:Notify(title, text, callback)
-	
+	function library:Notify(title, text, callback, duration)
 		-- overwrite last notification
 		if self.activeNotification then
 			self.activeNotification = self.activeNotification()
@@ -609,7 +608,6 @@ do
 		-- callbacks
 		local active = true
 		local close = function()
-		
 			if not active then
 				return
 			end
@@ -634,7 +632,6 @@ do
 		self.activeNotification = close
 		
 		notification.Accept.MouseButton1Click:Connect(function()
-		
 			if not active then 
 				return
 			end
@@ -647,7 +644,6 @@ do
 		end)
 		
 		notification.Decline.MouseButton1Click:Connect(function()
-		
 			if not active then 
 				return
 			end
@@ -658,6 +654,10 @@ do
 			
 			close()
 		end)
+		
+		-- auto-close functionality
+		duration = duration or 5 -- Default duration is 5 seconds
+		delay(duration, close)
 	end
 	
 	function section:addButton(title, callback)
