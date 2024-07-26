@@ -500,7 +500,7 @@ do
 	
 	-- new modules
 	
-	function library:Notify(title, text, callback, duration)
+	function library:Notify(title, text, duration, callback)
 		-- overwrite last notification
 		if self.activeNotification then
 			self.activeNotification = self.activeNotification()
@@ -656,7 +656,7 @@ do
 		end)
 		
 		-- auto-close functionality
-		duration = duration or 5 -- Default duration is 5 seconds
+		if duration and duration > 0 then
 		delay(duration, close)
 	end
 	
