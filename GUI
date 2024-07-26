@@ -500,7 +500,7 @@ do
 	
 	-- new modules
 	
-	function library:Notify(title, text, duration, callback)
+	function library:Notify(title, text, callback, duration)
 		-- overwrite last notification
 		if self.activeNotification then
 			self.activeNotification = self.activeNotification()
