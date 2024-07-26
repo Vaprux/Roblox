@@ -500,7 +500,7 @@ do
 	
 	-- new modules
 	
-	function library:Notify(title, text, callback)
+	function library:Notify(title, duration, text, callback)
 	
 		-- overwrite last notification
 		if self.activeNotification then
@@ -579,6 +579,10 @@ do
 				ImageColor3 = themes.TextColor,
 				ZIndex = 4
 			})
+			if self.activeNotification == notification then
+				notification:Destroy()
+				self.activeNotification = nil
+			end
 		})
 		
 		-- dragging
