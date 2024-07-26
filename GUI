@@ -656,7 +656,7 @@ do
 		end)
 		
 		-- auto-close functionality
-		if duration and duration > 0 then
+		duration = duration or 5 -- Default duration is 5 seconds
 		delay(duration, close)
 	end
 	
