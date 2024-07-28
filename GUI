@@ -501,14 +501,15 @@ do
 	-- new modules
 	
 function library:Notify(title, text, callback, duration)
-	-- Overwrite last notification and move it up
-	if self.activeNotification then
-		local previousNotification = self.activeNotification
-		utility:Tween(previousNotification, {
-			Position = previousNotification.Position - UDim2.new(0, 0, 0, previousNotification.AbsoluteSize.Y + 10)
-		}, 0.2)
-		wait(0.2)
-		self.activeNotification = nil
+	-- Move all active notifications up
+	if self.activeNotifications then
+		for _, activeNotification in pairs(self.activeNotifications) do
+			utility:Tween(activeNotification, {
+				Position = activeNotification.Position - UDim2.new(0, 0, 0, activeNotification.AbsoluteSize.Y + 10)
+			}, 0.2)
+		end
+	else
+		self.activeNotifications = {}
 	end
 	
 	-- Create notification elements
@@ -596,7 +597,7 @@ function library:Notify(title, text, callback, duration)
 	
 	local padding = 10
 	local textSize = game:GetService("TextService"):GetTextSize(text, 12, Enum.Font.Gotham, Vector2.new(math.huge, 16))
-	notification.Position = library.lastNotification or UDim2.new(0, padding, 1, -(notification.AbsoluteSize.Y + padding))
+	notification.Position = UDim2.new(0, padding, 1, -(notification.AbsoluteSize.Y + padding))
 	notification.Size = UDim2.new(0, 0, 0, 60)
 	utility:Tween(notification, {Size = UDim2.new(0, textSize.X + 70, 0, 60)}, 0.2)
 	wait(0.2)
@@ -623,9 +624,10 @@ function library:Notify(title, text, callback, duration)
 		}, 0.2)
 		wait(0.2)
 		notification:Destroy()
+		table.remove(self.activeNotifications, table.find(self.activeNotifications, notification))
 	end
 	
-	self.activeNotification = notification
+	table.insert(self.activeNotifications, notification)
 	
 	notification.Accept.MouseButton1Click:Connect(function()
 		if not active then return end
