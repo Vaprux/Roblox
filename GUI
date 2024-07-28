@@ -499,7 +499,7 @@ do
 	end
 	
 	-- new modules
-
+	
 function library:Notify(title, text, callback, duration)
 	-- Overwrite last notification and move it up
 	if self.activeNotification then
@@ -507,6 +507,7 @@ function library:Notify(title, text, callback, duration)
 		utility:Tween(previousNotification, {
 			Position = previousNotification.Position - UDim2.new(0, 0, 0, previousNotification.AbsoluteSize.Y + 10)
 		}, 0.2)
+		wait(0.2)
 		self.activeNotification = nil
 	end
 	
@@ -624,7 +625,7 @@ function library:Notify(title, text, callback, duration)
 		notification:Destroy()
 	end
 	
-	self.activeNotification = close
+	self.activeNotification = notification
 	
 	notification.Accept.MouseButton1Click:Connect(function()
 		if not active then return end
