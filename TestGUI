@@ -684,9 +684,8 @@ end
 			utility:Pop(button, 10)
 			
 			text.TextSize = 0
-			utility:Tween(button.Title, {TextSize = 14}, 0.1)
-			wait(0.1)
-			utility:Tween(button.Title, {TextSize = 12}, 0.1)
+			utility:Tween(button.Title, {TextSize = 14}, 0.2)
+			utility:Tween(button.Title, {TextSize = 12}, 0.2)
 			
 			if callback then
 				callback(function(...)
