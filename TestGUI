@@ -646,26 +646,32 @@ function library:Notify(title, text, callback, duration)
 	delay(duration, close)
 end
 
-function section:addLabel(title)
-	local label = utility:Create("TextLabel", {
-		Name = "Label",
-		Parent = self.container,
-		BackgroundTransparency = 1,
-		BorderSizePixel = 0,
-		Size = UDim2.new(1, 0, 0, 30),
-		ZIndex = 2,
-		Font = Enum.Font.Gotham,
-		Text = title,
-		TextColor3 = themes.TextColor,
-		TextSize = 12,
-		TextTransparency = 0.10000000149012
-	})
-	
-	table.insert(self.modules, label)
-	--self:Resize()
-	
-	return label
-end
+	function section:addLabel(title)
+		-- Replace /n with newline characters
+		local formattedTitle = title:gsub("/n", "\n")
+		
+		local label = utility:Create("TextLabel", {
+			Name = "Label",
+			Parent = self.container,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Size = UDim2.new(1, 0, 0, 30),
+			ZIndex = 2,
+			Font = Enum.Font.Gotham,
+			Text = formattedTitle,
+			TextColor3 = themes.TextColor,
+			TextSize = 12,
+			TextTransparency = 0.10000000149012,
+			-- Ensure text wrapping
+			TextWrapped = true,
+			TextYAlignment = Enum.TextYAlignment.Top
+		})
+		
+		table.insert(self.modules, label)
+		--self:Resize()
+		
+		return label
+	end
 
 
 	
