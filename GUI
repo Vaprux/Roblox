@@ -647,7 +647,7 @@ function library:Notify(title, text, callback, duration)
 end
 
 	function section:addLabel(title, offset, size)
-		offset = offset or Enum.TextYAlignment.Center
+		offset = offset or Enum.TextXAlignment.Center
 		size = size or 12
 
 		local formattedTitle = title:gsub("/n", "\n")
