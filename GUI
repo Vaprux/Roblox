@@ -646,17 +646,9 @@ function library:Notify(title, text, callback, duration)
 	delay(duration, close)
 end
 
-	function section:addLabel(title, offset, size)
-		offset = offset or "Center"
+	function section:addLabel(title, size, offset)
+		offset = offset or Enum.TextXAlignment.Left
 		size = size or 12
-
-	local xAlignment = {
-		Left = Enum.TextXAlignment.Left,
-		Center = Enum.TextXAlignment.Center,
-		Right = Enum.TextXAlignment.Right
-	}
-
-	local alignment = xAlignment[offset]
 
 		local formattedTitle = title:gsub("/n", "\n")
 		local label = utility:Create("TextLabel", {
