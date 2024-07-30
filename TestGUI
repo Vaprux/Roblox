@@ -686,7 +686,7 @@ end
 			end
 			
 			-- animation
-			utility:Pop(button, 10)
+			utility:Pop(button, 0)
 			
 			debounce = true
 			text.TextSize = 0
