@@ -646,6 +646,31 @@ function library:Notify(title, text, callback, duration)
 	delay(duration, close)
 end
 
+	function section:addLabel(title, size)
+		size = size or 12
+
+		local formattedTitle = title:gsub("/n", "\n")
+		local label = utility:Create("TextLabel", {
+			Name = "Label",
+			Parent = self.container,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Size = UDim2.new(1, 0, 0, 30),
+			ZIndex = 2,
+			Font = Enum.Font.Gotham,
+			Text = formattedTitle,
+			TextColor3 = themes.TextColor,
+			TextSize = size,
+			TextTransparency = 0.10000000149012,
+			TextWrapped = true,
+			TextYAlignment = Enum.TextYAlignment.Top
+		})
+		
+		table.insert(self.modules, label)
+		--self:Resize()
+		
+		return label
+	end
 	
 	function section:addButton(title, callback)
 		local button = utility:Create("ImageButton", {
