@@ -1,5 +1,5 @@
--- venyx ui lib reuploaded by me
--- init
+-- venyx ui lib remodified by Vaprux :D
+
 local player = game:GetService('Players').LocalPlayer
 local mouse = player:GetMouse()
 
@@ -646,7 +646,8 @@ function library:Notify(title, text, callback, duration)
 	delay(duration, close)
 end
 
-	function section:addLabel(title, size)
+	function section:addLabel(title, offset, size)
+		offset = offset or "Center"
 		size = size or 12
 
 		local formattedTitle = title:gsub("/n", "\n")
@@ -663,6 +664,7 @@ end
 			TextSize = size,
 			TextTransparency = 0.10000000149012,
 			TextWrapped = true,
+			TextXAlignment = offset
 			TextYAlignment = Enum.TextYAlignment.Top
 		})
 		
