@@ -677,13 +677,9 @@ end
 		--self:Resize()
 		
 		local text = button.Title
-		local debounce
 		
 		button.MouseButton1Click:Connect(function()
 			
-			if debounce then
-				return
-			end
 			
 			if callback then
 				callback(function(...)
