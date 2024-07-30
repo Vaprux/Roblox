@@ -679,6 +679,9 @@ end
 		local text = button.Title
 		
 		button.MouseButton1Click:Connect(function()
+
+			text.TextSize = 0
+			
 			if callback then
 				callback(function(...)
 					self:updateButton(button, ...)
