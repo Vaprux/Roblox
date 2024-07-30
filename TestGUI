@@ -679,10 +679,7 @@ end
 		local text = button.Title
 		
 		button.MouseButton1Click:Connect(function()
-			utility:Pop(button, 0)
-			text.TextSize = 0
-			TextSize = 14
-			TextSize = 12
+			utility:Pop(button, 0
 			
 			if callback then
 				callback(function(...)
