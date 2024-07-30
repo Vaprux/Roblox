@@ -685,15 +685,7 @@ end
 				return
 			end
 			
-			-- animation
-			utility:Pop(button, 0)
-			
 			debounce = true
-			text.TextSize = 0
-			utility:Tween(button.Title, {TextSize = 14}, 0)
-			
-			wait()
-			utility:Tween(button.Title, {TextSize = 12}, 0)
 			
 			if callback then
 				callback(function(...)
