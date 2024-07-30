@@ -679,8 +679,6 @@ end
 		local text = button.Title
 		
 		button.MouseButton1Click:Connect(function()
-			utility:Pop(button, 0
-			
 			if callback then
 				callback(function(...)
 					self:updateButton(button, ...)
