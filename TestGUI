@@ -677,23 +677,22 @@ end
 		--self:Resize()
 		
 		local text = button.Title
-		local debounce
 		
 		button.MouseButton1Click:Connect(function()
 			
-			if debounce then
-				return
-			end
+			-- animation
+			utility:Pop(button, 10)
 			
-			debounce = true
+			text.TextSize = 0
+			utility:Tween(button.Title, {TextSize = 14}, 0.1)
+			wait(0.1)
+			utility:Tween(button.Title, {TextSize = 12}, 0.1)
 			
 			if callback then
 				callback(function(...)
 					self:updateButton(button, ...)
 				end)
 			end
-			
-			debounce = false
 		end)
 		
 		return button
