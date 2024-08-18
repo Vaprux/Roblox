@@ -621,6 +621,15 @@ function library:Notify(title, text, callback, duration)
         wait(0.2)
         notification:Destroy()
         table.remove(self.activeNotifications, table.find(self.activeNotifications, notification))
+
+        -- Adjust positions of remaining notifications to fill the gap
+        for i = 1, #self.activeNotifications do
+            local activeNotification = self.activeNotifications[i]
+            utility:Tween(activeNotification, {
+                Position = UDim2.new(activeNotification.Position.X.Scale, activeNotification.Position.X.Offset, 
+                                     activeNotification.Position.Y.Scale, activeNotification.Position.Y.Offset + notification.AbsoluteSize.Y + 10)
+            }, 0.2)
+        end
     end
 
     table.insert(self.activeNotifications, notification)
