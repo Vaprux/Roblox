@@ -503,13 +503,15 @@ do
 function library:Notify(title, text, callback, duration)
     self.activeNotifications = self.activeNotifications or {}
 
-    -- Move all active notifications up
+    -- Calculate the position for the new notification
     local yOffset = 0
-    for _, activeNotification in pairs(self.activeNotifications) do
-        yOffset = yOffset + activeNotification.AbsoluteSize.Y + 10
-        utility:Tween(activeNotification, {
-            Position = UDim2.new(0, 10, 1, -(yOffset + activeNotification.AbsoluteSize.Y + 10))
-        }, 0.2)
+    if #self.activeNotifications > 0 then
+        for _, activeNotification in pairs(self.activeNotifications) do
+            yOffset = yOffset + activeNotification.AbsoluteSize.Y + 10
+            utility:Tween(activeNotification, {
+                Position = UDim2.new(0, 10, 1, -(yOffset + activeNotification.AbsoluteSize.Y + 10))
+            }, 0.2)
+        end
     end
 
     -- Create notification elements
@@ -609,7 +611,6 @@ function library:Notify(title, text, callback, duration)
         if not active then return end
         active = false
         notification.ClipsDescendants = true
-        library.lastNotification = notification.Position
         utility:Tween(notification.Flash, {Size = UDim2.new(1, 0, 1, 0)}, 0.2)
         wait(0.2)
         utility:Tween(notification, {Size = UDim2.new(0, 0, 0, 60), Position = notification.Position + UDim2.new(0, textSize.X + 70, 0, 0)}, 0.2)
@@ -633,7 +634,6 @@ function library:Notify(title, text, callback, duration)
     -- Auto-close functionality
     delay(duration or 5, close)
 end
-
 	
 	function section:addButton(title, callback)
 		local button = utility:Create("ImageButton", {
