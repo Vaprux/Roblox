@@ -500,24 +500,14 @@ do
 	
 	-- new modules
 	
--- Table to keep track of shown notifications
-local shownNotifications = {}
-
 function library:Notify(title, text, callback, duration)
-    -- Check if the notification text has already been used
-    if shownNotifications[text] then
-        return  -- Exit if the text is already shown
-    end
+    self.activeNotifications = self.activeNotifications or {}
 
     -- Move all active notifications up
-    if self.activeNotifications then
-        for _, activeNotification in pairs(self.activeNotifications) do
-            utility:Tween(activeNotification, {
-                Position = activeNotification.Position - UDim2.new(0, 0, 0, activeNotification.AbsoluteSize.Y + 10)
-            }, 0.2)
-        end
-    else
-        self.activeNotifications = {}
+    for _, activeNotification in pairs(self.activeNotifications) do
+        utility:Tween(activeNotification, {
+            Position = activeNotification.Position - UDim2.new(0, 0, 0, activeNotification.AbsoluteSize.Y + 10)
+        }, 0.2)
     end
 
     -- Create notification elements
@@ -560,8 +550,9 @@ function library:Notify(title, text, callback, duration)
             ZIndex = 4,
             Font = Enum.Font.GothamSemibold,
             TextColor3 = themes.TextColor,
-            TextSize = 14.000,
-            TextXAlignment = Enum.TextXAlignment.Left
+            TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Text = title or "Notification"
         }),
         utility:Create("TextLabel", {
             Name = "Text",
@@ -571,8 +562,9 @@ function library:Notify(title, text, callback, duration)
             ZIndex = 4,
             Font = Enum.Font.Gotham,
             TextColor3 = themes.TextColor,
-            TextSize = 12.000,
-            TextXAlignment = Enum.TextXAlignment.Left
+            TextSize = 12,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Text = text or ""
         }),
         utility:Create("ImageButton", {
             Name = "Accept",
@@ -593,70 +585,50 @@ function library:Notify(title, text, callback, duration)
             ZIndex = 4
         })
     })
-    
+
     -- Enable dragging
     utility:DraggingEnabled(notification)
-    
-    -- Set position and size
-    title = title or "Notification"
-    text = text or ""
-    notification.Title.Text = title
-    notification.Text.Text = text
-    
+
+    -- Adjust size and position based on text
     local padding = 10
     local textSize = game:GetService("TextService"):GetTextSize(text, 12, Enum.Font.Gotham, Vector2.new(math.huge, 16))
     notification.Position = UDim2.new(0, padding, 1, -(notification.AbsoluteSize.Y + padding))
     notification.Size = UDim2.new(0, 0, 0, 60)
     utility:Tween(notification, {Size = UDim2.new(0, textSize.X + 70, 0, 60)}, 0.2)
+    
     wait(0.2)
-    
     notification.ClipsDescendants = false
-    utility:Tween(notification.Flash, {
-        Size = UDim2.new(0, 0, 0, 60),
-        Position = UDim2.new(1, 0, 0, 0)
-    }, 0.2)
-    
+    utility:Tween(notification.Flash, {Size = UDim2.new(0, 0, 0, 60), Position = UDim2.new(1, 0, 0, 0)}, 0.2)
+
     -- Callbacks
     local active = true
-    local close = function()
+    local function close()
         if not active then return end
         active = false
         notification.ClipsDescendants = true
         library.lastNotification = notification.Position
-        notification.Flash.Position = UDim2.new(0, 0, 0, 0)
         utility:Tween(notification.Flash, {Size = UDim2.new(1, 0, 1, 0)}, 0.2)
         wait(0.2)
-        utility:Tween(notification, {
-            Size = UDim2.new(0, 0, 0, 60),
-            Position = notification.Position + UDim2.new(0, textSize.X + 70, 0, 0)
-        }, 0.2)
+        utility:Tween(notification, {Size = UDim2.new(0, 0, 0, 60), Position = notification.Position + UDim2.new(0, textSize.X + 70, 0, 0)}, 0.2)
         wait(0.2)
         notification:Destroy()
         table.remove(self.activeNotifications, table.find(self.activeNotifications, notification))
-        -- Remove the text from the shown notifications table
-        shownNotifications[text] = nil
     end
-    
-    -- Add the text to the shown notifications table
-    shownNotifications[text] = true
-    
+
     table.insert(self.activeNotifications, notification)
-    
+
     notification.Accept.MouseButton1Click:Connect(function()
-        if not active then return end
-        if callback then callback(true) end
+        if active and callback then callback(true) end
         close()
     end)
-    
+
     notification.Decline.MouseButton1Click:Connect(function()
-        if not active then return end
-        if callback then callback(false) end
+        if active and callback then callback(false) end
         close()
     end)
-    
+
     -- Auto-close functionality
-    duration = duration or 5
-    delay(duration, close)
+    delay(duration or 5, close)
 end
 
 	
