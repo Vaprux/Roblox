@@ -503,25 +503,15 @@ do
 function library:Notify(title, text, callback, duration)
     self.activeNotifications = self.activeNotifications or {}
 
-    -- Calculate the yOffset for the new notification
+    -- Calculate yOffset for the new notification
     local yOffset = 0
     if #self.activeNotifications > 0 then
-        -- Calculate the position for the new notification
-        for _, activeNotification in pairs(self.activeNotifications) do
+        for _, activeNotification in ipairs(self.activeNotifications) do
             yOffset = yOffset + activeNotification.AbsoluteSize.Y + 10
         end
     end
 
-    -- Move existing notifications up
-    if #self.activeNotifications > 0 then
-        for _, activeNotification in pairs(self.activeNotifications) do
-            utility:Tween(activeNotification, {
-                Position = activeNotification.Position - UDim2.new(0, 0, 0, activeNotification.AbsoluteSize.Y + 10)
-            }, 0.2)
-        end
-    end
-
-    -- Create notification elements
+    -- Create the notification elements
     local notification = utility:Create("ImageLabel", {
         Name = "Notification",
         Parent = self.container,
@@ -597,22 +587,27 @@ function library:Notify(title, text, callback, duration)
         })
     })
 
-    -- Enable dragging
-    utility:DraggingEnabled(notification)
-
-    -- Set the initial position for the new notification
+    -- Set the initial position and size for the new notification
     local padding = 10
     notification.Position = UDim2.new(0, padding, 1, -(yOffset + 60 + padding))
     notification.Size = UDim2.new(0, 0, 0, 60)
     utility:Tween(notification, {Size = UDim2.new(0, 200, 0, 60)}, 0.2)
 
-    -- Set the text content
-    notification.Title.Text = title or "Notification"
-    notification.Text.Text = text or ""
+    -- Enable dragging
+    utility:DraggingEnabled(notification)
 
     wait(0.2)
     notification.ClipsDescendants = false
     utility:Tween(notification.Flash, {Size = UDim2.new(0, 0, 0, 60), Position = UDim2.new(1, 0, 0, 0)}, 0.2)
+
+    -- Move existing notifications up (after positioning the new one)
+    if #self.activeNotifications > 0 then
+        for _, activeNotification in ipairs(self.activeNotifications) do
+            utility:Tween(activeNotification, {
+                Position = activeNotification.Position - UDim2.new(0, 0, 0, activeNotification.AbsoluteSize.Y + 10)
+            }, 0.2)
+        end
+    end
 
     -- Callbacks
     local active = true
