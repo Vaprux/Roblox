@@ -503,13 +503,20 @@ do
 function library:Notify(title, text, callback, duration)
     self.activeNotifications = self.activeNotifications or {}
 
-    -- Calculate the position for the new notification
+    -- Calculate the yOffset for the new notification
     local yOffset = 0
     if #self.activeNotifications > 0 then
+        -- Calculate the position for the new notification
         for _, activeNotification in pairs(self.activeNotifications) do
             yOffset = yOffset + activeNotification.AbsoluteSize.Y + 10
+        end
+    end
+
+    -- Move existing notifications up
+    if #self.activeNotifications > 0 then
+        for _, activeNotification in pairs(self.activeNotifications) do
             utility:Tween(activeNotification, {
-                Position = UDim2.new(0, 10, 1, -(yOffset + activeNotification.AbsoluteSize.Y + 10))
+                Position = activeNotification.Position - UDim2.new(0, 0, 0, activeNotification.AbsoluteSize.Y + 10)
             }, 0.2)
         end
     end
@@ -593,14 +600,16 @@ function library:Notify(title, text, callback, duration)
     -- Enable dragging
     utility:DraggingEnabled(notification)
 
-    -- Adjust size and position based on text
+    -- Set the initial position for the new notification
     local padding = 10
-    local textSize = game:GetService("TextService"):GetTextSize(text, 12, Enum.Font.Gotham, Vector2.new(math.huge, 16))
-    local finalYPosition = -(yOffset + 60 + padding)
-    notification.Position = UDim2.new(0, padding, 1, finalYPosition)
+    notification.Position = UDim2.new(0, padding, 1, -(yOffset + 60 + padding))
     notification.Size = UDim2.new(0, 0, 0, 60)
-    utility:Tween(notification, {Size = UDim2.new(0, textSize.X + 70, 0, 60)}, 0.2)
-    
+    utility:Tween(notification, {Size = UDim2.new(0, 200, 0, 60)}, 0.2)
+
+    -- Set the text content
+    notification.Title.Text = title or "Notification"
+    notification.Text.Text = text or ""
+
     wait(0.2)
     notification.ClipsDescendants = false
     utility:Tween(notification.Flash, {Size = UDim2.new(0, 0, 0, 60), Position = UDim2.new(1, 0, 0, 0)}, 0.2)
@@ -613,7 +622,7 @@ function library:Notify(title, text, callback, duration)
         notification.ClipsDescendants = true
         utility:Tween(notification.Flash, {Size = UDim2.new(1, 0, 1, 0)}, 0.2)
         wait(0.2)
-        utility:Tween(notification, {Size = UDim2.new(0, 0, 0, 60), Position = notification.Position + UDim2.new(0, textSize.X + 70, 0, 0)}, 0.2)
+        utility:Tween(notification, {Size = UDim2.new(0, 0, 0, 60), Position = notification.Position + UDim2.new(0, 200, 0, 0)}, 0.2)
         wait(0.2)
         notification:Destroy()
         table.remove(self.activeNotifications, table.find(self.activeNotifications, notification))
