@@ -692,6 +692,29 @@ end
 		
 		return button
 	end
+
+	function section:addLabel(title)
+	    title = title:gsub("/n", "\n")
+	    
+	    local label = utility:Create("TextLabel", {
+	        Name = "Label",
+	        Parent = self.container,
+	        BackgroundTransparency = 1,
+	        Size = UDim2.new(1, 0, 0, 30),
+	        ZIndex = 3,
+	        Font = Enum.Font.Gotham,
+	        Text = title,
+	        TextColor3 = themes.TextColor,
+	        TextSize = 12,
+	        TextTransparency = 0.1,
+	        TextWrapped = true -- Ensure text wraps to the next line
+	    })
+	
+	    -- Optionally, you can insert the label into a modules table if needed
+	    table.insert(self.modules, label)
+	
+	    return label
+	end
 	
 	function section:addToggle(title, default, callback)
 		local toggle = utility:Create("ImageButton", {
