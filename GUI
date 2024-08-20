@@ -695,27 +695,25 @@ end
 
 	function section:addLabel(title, size)
 	    title = title:gsub("/n", "\n")
-	    
-	    local labelSize = size or UDim2.new(1, 0, 0, 30)
+
 	    local textSize = size and size or 12
-	
+	    
 	    local label = utility:Create("TextLabel", {
 	        Name = "Label",
 	        Parent = self.container,
-	        BackgroundTransparency = 0,
-	        BackgroundColor3 = themes.Accent,
-	        Size = labelSize,
+	        BackgroundTransparency = 1,
+	        Size = UDim2.new(1, 0, 0, 0), -- Set initial height to 0
 	        ZIndex = 3,
 	        Font = Enum.Font.Gotham,
 	        Text = title,
 	        TextColor3 = themes.TextColor,
 	        TextSize = textSize,
 	        TextTransparency = 0.1,
-	        TextWrapped = true, -- Ensure text wraps to the next line
-	        TextXAlignment = Enum.TextXAlignment.Left -- Align text to the left
+	        TextWrapped = true -- Ensure text wraps to the next line
 	    })
 	
-	    -- Optionally, you can insert the label into a modules table if needed
+	    label.Size = UDim2.new(1, 0, 0, label.TextBounds.Y)
+	
 	    table.insert(self.modules, label)
 	
 	    return label
