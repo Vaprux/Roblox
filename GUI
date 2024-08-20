@@ -692,38 +692,6 @@ end
 		
 		return button
 	end
-
-function section:addLabel(title, size)
-    -- Replace /n with a newline character
-    title = title:gsub("/n", "\n")
-
-    local textSize = size or 12
-    
-    -- Create the text label
-    local label = utility:Create("TextLabel", {
-        Name = "Label",
-        Parent = self.container,
-        BackgroundTransparency = 0,
-        Size = UDim2.new(1, 0, 0, 0), -- Set initial height to 0
-        ZIndex = 3,
-        Font = Enum.Font.Gotham,
-        Text = title,
-        TextColor3 = themes.TextColor,
-        TextSize = textSize,
-        TextTransparency = 0.1,
-        TextWrapped = true -- Ensure text wraps to the next line
-    })
-
-    -- Wait a short time to ensure the label is rendered before adjusting size
-    wait(0.1)
-    
-    -- Adjust the label's size based on the text content
-    label.Size = UDim2.new(1, 0, 0, label.TextBounds.Y)
-
-    table.insert(self.modules, label)
-
-    return label
-end
 	
 	function section:addToggle(title, default, callback)
 		local toggle = utility:Create("ImageButton", {
