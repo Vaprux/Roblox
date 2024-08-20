@@ -695,8 +695,8 @@ end
 
 	function section:addLabel(title, size)
 	    title = title:gsub("/n", "\n")
-
-	    local textSize = size and size or 12
+	
+	    local textSize = size or 12
 	    
 	    local label = utility:Create("TextLabel", {
 	        Name = "Label",
@@ -711,6 +711,9 @@ end
 	        TextTransparency = 0.1,
 	        TextWrapped = true -- Ensure text wraps to the next line
 	    })
+	
+	    -- Adjust the label's size based on the text content
+	    label.Size = UDim2.new(1, 0, 0, label.TextBounds.Y)
 	
 	    table.insert(self.modules, label)
 	
