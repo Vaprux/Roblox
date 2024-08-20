@@ -693,9 +693,11 @@ end
 		return button
 	end
 
-	Make this auto size function section:addLabel(title)
+	function section:addLabel(title)
+	    -- Replace /n with a newline character
 	    title = title:gsub("/n", "\n")
 	    
+	    -- Create the text label
 	    local label = utility:Create("TextLabel", {
 	        Name = "Label",
 	        Parent = self.container,
@@ -710,6 +712,7 @@ end
 	        TextWrapped = true -- Ensure text wraps to the next line
 	    })
 	
+	    -- Optionally, you can insert the label into a modules table if needed
 	    table.insert(self.modules, label)
 	
 	    return label
