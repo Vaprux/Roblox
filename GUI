@@ -693,11 +693,11 @@ end
 		return button
 	end
 
-	function section:addLabel(title)
-	    -- Replace /n with a newline character
+	function section:addLabel(title, size)
 	    title = title:gsub("/n", "\n")
-	    
-	    -- Create the text label
+
+	    size = size or 12
+
 	    local label = utility:Create("TextLabel", {
 	        Name = "Label",
 	        Parent = self.container,
@@ -707,12 +707,10 @@ end
 	        Font = Enum.Font.Gotham,
 	        Text = title,
 	        TextColor3 = themes.TextColor,
-	        TextSize = 12,
+	        TextSize = size,
 	        TextTransparency = 0.1,
-	        TextWrapped = true -- Ensure text wraps to the next line
+	        TextWrapped = true
 	    })
-	
-	    -- Optionally, you can insert the label into a modules table if needed
 	    table.insert(self.modules, label)
 	
 	    return label
