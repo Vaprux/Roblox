@@ -693,24 +693,38 @@ end
 		return button
 	end
 
-	function section:addLabel(title, size)
+	function section:addLabel(title, textSize)
+	    -- Replace /n with a newline character
 	    title = title:gsub("/n", "\n")
-
-	    size = size or 12
-
+	    
+	    -- Set the text size, defaulting to 12 if not provided
+	    textSize = textSize or 12
+	    
+	    -- Validate textSize to be within a reasonable range
+	    textSize = math.clamp(textSize, 8, 36) -- Example range: 8 to 36
+	    
+	    -- Create the text label
 	    local label = utility:Create("TextLabel", {
 	        Name = "Label",
 	        Parent = self.container,
 	        BackgroundTransparency = 1,
-	        Size = UDim2.new(1, 0, 0, 30),
+	        Size = UDim2.new(1, 0, 0, 50), -- Start with a default height
 	        ZIndex = 3,
 	        Font = Enum.Font.Gotham,
 	        Text = title,
 	        TextColor3 = themes.TextColor,
-	        TextSize = size,
-	        TextTransparency = 0,
-	        TextWrapped = true
+	        TextSize = textSize,
+	        TextTransparency = 0.1,
+	        TextWrapped = true, -- Ensure text wraps to the next line
+	        TextYAlignment = Enum.TextYAlignment.Top
 	    })
+	
+	    -- Calculate and set the height based on text content
+	    local textService = game:GetService("TextService")
+	    local textBounds = textService:GetTextSize(title, textSize, Enum.Font.Gotham, Vector2.new(label.Size.X.Offset, math.huge))
+	    label.Size = UDim2.new(1, 0, 0, textBounds.Y)
+	    
+	    -- Optionally, you can insert the label into a modules table if needed
 	    table.insert(self.modules, label)
 	
 	    return label
