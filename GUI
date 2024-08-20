@@ -704,7 +704,7 @@ end
 	        ZIndex = 3,
 	        Font = Enum.Font.Gotham,
 	        Text = title,
-	        TextColor3 = themes.TextColor,
+	        TextColor3 = themes.DarkContrast,
 	        TextSize = 12,
 	        TextTransparency = 0.1,
 	        TextWrapped = true -- Ensure text wraps to the next line
