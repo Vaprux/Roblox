@@ -505,8 +505,8 @@ do
 	
 	    -- Calculate the position for the new notification
 	    local yOffset = 0
-	    for _, activeNotification in pairs(self.activeNotifications) do
-	        yOffset = yOffset + activeNotification.AbsoluteSize.Y + 10
+	    for _, activeNotification in ipairs(self.activeNotifications) do
+	        yOffset = yOffset + activeNotification.AbsoluteSize.Y
 	    end
 	
 	    -- Create notification elements
@@ -589,7 +589,7 @@ do
 	    utility:DraggingEnabled(notification)
 	
 	    -- Adjust size and position based on text
-	    local padding = 10
+	    local padding = 0  -- No padding to avoid extra spaces
 	    local textSize = game:GetService("TextService"):GetTextSize(text, 12, Enum.Font.Gotham, Vector2.new(math.huge, 16))
 	    notification.Position = UDim2.new(0, padding, 1, -(yOffset + 60 + padding))
 	    notification.Size = UDim2.new(0, 0, 0, 60)
