@@ -1777,6 +1777,12 @@ end
 			self:Resize()
 		end)
 		
+		-- Add clearText method
+		function dropdown:clearText()
+			search.TextBox.Text = "" -- Clear the text
+			self:updateDropdown(dropdown, nil, list, callback) -- Optionally update the dropdown list
+		end
+		
 		return dropdown
 	end
 	
