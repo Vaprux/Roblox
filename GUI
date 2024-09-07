@@ -503,13 +503,10 @@ do
 	function library:Notify(title, text, callback, duration)
 	    self.activeNotifications = self.activeNotifications or {}
 	
-	    -- Move all active notifications up
+	    -- Calculate the position for the new notification
 	    local yOffset = 0
 	    for _, activeNotification in pairs(self.activeNotifications) do
 	        yOffset = yOffset + activeNotification.AbsoluteSize.Y + 10
-	        utility:Tween(activeNotification, {
-	            Position = UDim2.new(0, 10, 1, -(yOffset + activeNotification.AbsoluteSize.Y + 10))
-	        }, 0.2)
 	    end
 	
 	    -- Create notification elements
@@ -594,8 +591,7 @@ do
 	    -- Adjust size and position based on text
 	    local padding = 10
 	    local textSize = game:GetService("TextService"):GetTextSize(text, 12, Enum.Font.Gotham, Vector2.new(math.huge, 16))
-	    local finalYPosition = -(yOffset + 60 + padding)
-	    notification.Position = UDim2.new(0, padding, 1, finalYPosition)
+	    notification.Position = UDim2.new(0, padding, 1, -(yOffset + 60 + padding))
 	    notification.Size = UDim2.new(0, 0, 0, 60)
 	    utility:Tween(notification, {Size = UDim2.new(0, textSize.X + 70, 0, 60)}, 0.2)
 	    
