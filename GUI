@@ -2064,6 +2064,8 @@ end
 	end
 	
 function section:updateDropdown(dropdown, title, list, callback)
+    print("Starting updateDropdown")
+
     -- Clear previous items
     local frame = dropdown.List.Frame
     frame:ClearAllChildren()
@@ -2073,6 +2075,8 @@ function section:updateDropdown(dropdown, title, list, callback)
 
     if list then
         for i, item in pairs(list) do
+            print("Creating list item:", item)
+            
             local listItem = utility:Create("TextButton", {
                 Text = item,
                 BackgroundTransparency = 1,
@@ -2083,25 +2087,31 @@ function section:updateDropdown(dropdown, title, list, callback)
                 ZIndex = 3
             })
 
-            listItem.MouseButton1Click:Connect(function()
-                -- Set all other list items back to default background color
-                for _, otherItem in pairs(frame:GetChildren()) do
-                    if otherItem:IsA("TextButton") then
-                        otherItem.BackgroundTransparency = 1
+            if listItem then
+                listItem.MouseButton1Click:Connect(function()
+                    print("Item clicked:", item)
+                    
+                    -- Set all other list items back to default background color
+                    for _, otherItem in pairs(frame:GetChildren()) do
+                        if otherItem:IsA("TextButton") then
+                            otherItem.BackgroundTransparency = 1
+                        end
                     end
-                end
+                    
+                    -- Set the clicked item's background to red
+                    listItem.BackgroundTransparency = 0
+                    listItem.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+
+                    -- Process the callback
+                    if callback then
+                        callback(item)
+                    end
+                end)
                 
-                -- Set the clicked item's background to red
-                listItem.BackgroundTransparency = 0
-                listItem.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-
-                -- Process the callback
-                if callback then
-                    callback(item)
-                end
-            end)
-
-            listItem.Parent = frame
+                listItem.Parent = frame
+            else
+                print("Failed to create list item")
+            end
         end
 
         -- Adjust the canvas size to fit the new items
@@ -2109,6 +2119,8 @@ function section:updateDropdown(dropdown, title, list, callback)
     else
         frame.CanvasSize = UDim2.new(0, 0, 0, 0)
     end
+
+    print("Dropdown updated")
 end
 
 return library
