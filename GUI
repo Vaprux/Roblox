@@ -2115,7 +2115,6 @@ function section:updateDropdown(dropdown, title, list, callback)
                 end)    
             end
 
-            dropdown.selectedItem = value
             self:updateDropdown(dropdown, value, nil, callback)
         end)
 
