@@ -2105,7 +2105,7 @@ function section:updateDropdown(dropdown, title, list, callback)
         end
 
         -- Adjust the canvas size to fit the new items
-        frame.CanvasSize = UDim2.new(0, 0, 0, #list * 34)
+        frame.CanvasSize = UDim2.new(0, 0, 0, #list * 30) -- Adjusted height to match item size
     else
         frame.CanvasSize = UDim2.new(0, 0, 0, 0)
     end
