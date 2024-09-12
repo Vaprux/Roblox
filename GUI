@@ -1782,98 +1782,98 @@ end
 	
 	-- class functions
 	
-	function library:SelectPage(page, toggle)
-		
-		if toggle and self.focusedPage == page then -- already selected
-			return
-		end
-		
-		local button = page.button
-		
-		if toggle then
-			-- page button
-			button.Title.TextTransparency = 0
-			button.Title.Font = Enum.Font.GothamSemibold
-			
-			if button:FindFirstChild("Icon") then
-				button.Icon.ImageTransparency = 0
-			end
-			
-			-- update selected page
-			local focusedPage = self.focusedPage
-			self.focusedPage = page
-			
-			if focusedPage then
-				self:SelectPage(focusedPage)
-			end
-			
-			-- sections
-			local existingSections = focusedPage and #focusedPage.sections or 0
-			local sectionsRequired = #page.sections - existingSections
-			
-			page:Resize()
-			
-			for i, section in pairs(page.sections) do
-				section.container.Parent.ImageTransparency = 0
-			end
-			
-			if sectionsRequired < 0 then -- "hides" some sections
-				for i = existingSections, #page.sections + 1, -1 do
-					local section = focusedPage.sections[i].container.Parent
-					
-					utility:Tween(section, {ImageTransparency = 1}, 0.1)
-				end
-			end
-			
-			wait(0.1)
-			page.container.Visible = true
-			
-			if focusedPage then
-				focusedPage.container.Visible = false
-			end
-			
-			if sectionsRequired > 0 then -- "creates" more section
-				for i = existingSections + 1, #page.sections do
-					local section = page.sections[i].container.Parent
-					
-					section.ImageTransparency = 1
-					utility:Tween(section, {ImageTransparency = 0}, 0.05)
-				end
-			end
-			
-			wait(0.05)
-			
-			for i, section in pairs(page.sections) do
-			
-				utility:Tween(section.container.Title, {TextTransparency = 0}, 0.1)
-				section:Resize(true)
-				
-				wait(0.05)
-			end
-			
-			wait(0.05)
-			page:Resize(true)
-		else
-			-- page button
-			button.Title.Font = Enum.Font.Gotham
-			button.Title.TextTransparency = 0.65
-			
-			if button:FindFirstChild("Icon") then
-				button.Icon.ImageTransparency = 0.65
-			end
-			
-			-- sections
-			for i, section in pairs(page.sections) do	
-				utility:Tween(section.container.Parent, {Size = UDim2.new(1, -10, 0, 28)}, 0.1)
-				utility:Tween(section.container.Title, {TextTransparency = 1}, 0.1)
-			end
-			
-			wait(0.1)
-			
-			page.lastPosition = page.container.CanvasPosition.Y
-			page:Resize()
-		end
-	end
+function library:SelectPage(page, toggle)
+    if toggle and self.focusedPage == page then -- already selected
+        return
+    end
+
+    local button = page.button
+
+    if toggle then
+        -- page button
+        button.Title.TextTransparency = 0
+        button.Title.Font = Enum.Font.GothamSemibold
+        button.Title.TextColor3 = Color3.fromRGB(255, 0, 0) -- Set text color to red
+
+        if button:FindFirstChild("Icon") then
+            button.Icon.ImageTransparency = 0
+        end
+
+        -- update selected page
+        local focusedPage = self.focusedPage
+        self.focusedPage = page
+
+        if focusedPage then
+            self:SelectPage(focusedPage)
+        end
+
+        -- sections
+        local existingSections = focusedPage and #focusedPage.sections or 0
+        local sectionsRequired = #page.sections - existingSections
+
+        page:Resize()
+
+        for i, section in pairs(page.sections) do
+            section.container.Parent.ImageTransparency = 0
+        end
+
+        if sectionsRequired < 0 then -- "hides" some sections
+            for i = existingSections, #page.sections + 1, -1 do
+                local section = focusedPage.sections[i].container.Parent
+
+                utility:Tween(section, {ImageTransparency = 1}, 0.1)
+            end
+        end
+
+        wait(0.1)
+        page.container.Visible = true
+
+        if focusedPage then
+            focusedPage.container.Visible = false
+        end
+
+        if sectionsRequired > 0 then -- "creates" more section
+            for i = existingSections + 1, #page.sections do
+                local section = page.sections[i].container.Parent
+
+                section.ImageTransparency = 1
+                utility:Tween(section, {ImageTransparency = 0}, 0.05)
+            end
+        end
+
+        wait(0.05)
+
+        for i, section in pairs(page.sections) do
+            utility:Tween(section.container.Title, {TextTransparency = 0}, 0.1)
+            section:Resize(true)
+
+            wait(0.05)
+        end
+
+        wait(0.05)
+        page:Resize(true)
+    else
+        -- page button
+        button.Title.Font = Enum.Font.Gotham
+        button.Title.TextTransparency = 0.65
+        button.Title.TextColor3 = Color3.fromRGB(255, 255, 255) -- Reset text color to white
+
+        if button:FindFirstChild("Icon") then
+            button.Icon.ImageTransparency = 0.65
+        end
+
+        -- sections
+        for i, section in pairs(page.sections) do    
+            utility:Tween(section.container.Parent, {Size = UDim2.new(1, -10, 0, 28)}, 0.1)
+            utility:Tween(section.container.Title, {TextTransparency = 1}, 0.1)
+        end
+
+        wait(0.1)
+
+        page.lastPosition = page.container.CanvasPosition.Y
+        page:Resize()
+    end
+end
 	
 	function page:Resize(scroll)
 		local padding = 10
@@ -2063,83 +2063,82 @@ end
 		return value
 	end
 	
-function section:updateDropdown(dropdown, title, list, callback)
-    dropdown = self:getModule(dropdown)
-    
-    if title then
-        dropdown.Search.TextBox.Text = title
-    end
+	function section:updateDropdown(dropdown, title, list, callback)
+		dropdown = self:getModule(dropdown)
+		
+		if title then
+			dropdown.Search.TextBox.Text = title
+		end
+		
+		local entries = 0
+		
+		utility:Pop(dropdown.Search, 10)
+		
+		for i, button in pairs(dropdown.List.Frame:GetChildren()) do
+			if button:IsA("ImageButton") then
+				button:Destroy()
+			end
+		end
+			
+		for i, value in pairs(list or {}) do
+			local button = utility:Create("ImageButton", {
+				Parent = dropdown.List.Frame,
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				Size = UDim2.new(1, 0, 0, 30),
+				ZIndex = 2,
+				Image = "rbxassetid://5028857472",
+				ImageColor3 = themes.DarkContrast,
+				ScaleType = Enum.ScaleType.Slice,
+				SliceCenter = Rect.new(2, 2, 298, 298)
+			}, {
+				utility:Create("TextLabel", {
+					BackgroundTransparency = 1,
+					Position = UDim2.new(0, 10, 0, 0),
+					Size = UDim2.new(1, -10, 1, 0),
+					ZIndex = 3,
+					Font = Enum.Font.Gotham,
+					Text = value,
+					TextColor3 = themes.TextColor,
+					TextSize = 12,
+					TextXAlignment = "Left",
+					TextTransparency = 0.10000000149012
+				})
+			})
+			
+			button.MouseButton1Click:Connect(function()
+				if callback then
+					callback(value, function(...)
+						self:updateDropdown(dropdown, ...)
+					end)	
+				end
 
-    local entries = 0
-    local selectedItem = dropdown.selectedItem or nil
-
-    utility:Pop(dropdown.Search, 10)
-
-    for i, button in pairs(dropdown.List.Frame:GetChildren()) do
-        if button:IsA("ImageButton") then
-            button:Destroy()
-        end
-    end
-
-    for i, value in pairs(list or {}) do
-        local isSelected = value == selectedItem
-        local button = utility:Create("ImageButton", {
-            Parent = dropdown.List.Frame,
-            BackgroundTransparency = 1,
-            BorderSizePixel = 0,
-            Size = UDim2.new(1, 0, 0, 30),
-            ZIndex = 2,
-            Image = "rbxassetid://5028857472",
-            ImageColor3 = isSelected and Color3.fromRGB(0, 100, 255) or themes.DarkContrast, -- Change the color if selected
-            ScaleType = Enum.ScaleType.Slice,
-            SliceCenter = Rect.new(2, 2, 298, 298)
-        }, {
-            utility:Create("TextLabel", {
-                BackgroundTransparency = 1,
-                Position = UDim2.new(0, 10, 0, 0),
-                Size = UDim2.new(1, -10, 1, 0),
-                ZIndex = 3,
-                Font = Enum.Font.Gotham,
-                Text = value,
-                TextColor3 = isSelected and Color3.fromRGB(255, 255, 255) or themes.TextColor, -- Change the text color if selected
-                TextSize = 12,
-                TextXAlignment = "Left",
-                TextTransparency = isSelected and 0 or 0.1
-            })
-        })
-
-        button.MouseButton1Click:Connect(function()
-            if callback then
-                callback(value, function(...)
-                    self:updateDropdown(dropdown, ...)
-                end)    
-            end
-
-            self:updateDropdown(dropdown, value, nil, callback)
-        end)
-
-        entries = entries + 1
-    end
-
-    local frame = dropdown.List.Frame
-    frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-
-    utility:Tween(dropdown, {Size = UDim2.new(1, 0, 0, (entries == 0 and 30) or math.clamp(entries, 0, 10) * 34 + 38)}, 0.3)
-    utility:Tween(dropdown.Search.Button, {Rotation = list and 180 or 0}, 0.3)
-
-    if entries > 3 then
-        for i, button in pairs(dropdown.List.Frame:GetChildren()) do
-            if button:IsA("ImageButton") then
-                button.Size = UDim2.new(1, -6, 0, 30)
-            end
-        end
-
-        frame.CanvasSize = UDim2.new(0, 0, 0, (entries * 34) - 4)
-        frame.ScrollBarImageTransparency = 0
-    else
-        frame.CanvasSize = UDim2.new(0, 0, 0, 0)
-        frame.ScrollBarImageTransparency = 1
-    end
+				self:updateDropdown(dropdown, value, nil, callback)
+			end)
+			
+			entries = entries + 1
+		end
+		
+		local frame = dropdown.List.Frame
+		
+		utility:Tween(dropdown, {Size = UDim2.new(1, 0, 0, (entries == 0 and 30) or math.clamp(entries, 0, 10) * 34 + 38)}, 0.3)
+		utility:Tween(dropdown.Search.Button, {Rotation = list and 180 or 0}, 0.3)
+		
+		if entries > 3 then
+		
+			for i, button in pairs(dropdown.List.Frame:GetChildren()) do
+				if button:IsA("ImageButton") then
+					button.Size = UDim2.new(1, -6, 0, 30)
+				end
+			end
+			
+			frame.CanvasSize = UDim2.new(0, 0, 0, (entries * 34) - 4)
+			frame.ScrollBarImageTransparency = 0
+		else
+			frame.CanvasSize = UDim2.new(0, 0, 0, 0)
+			frame.ScrollBarImageTransparency = 1
+		end
+	end
 end
 
 return library
