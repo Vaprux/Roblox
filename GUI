@@ -2063,82 +2063,82 @@ end
 		return value
 	end
 	
-	function section:updateDropdown(dropdown, title, list, callback)
-		dropdown = self:getModule(dropdown)
-		
-		if title then
-			dropdown.Search.TextBox.Text = title
-		end
-		
-		local entries = 0
-		
-		utility:Pop(dropdown.Search, 10)
-		
-		for i, button in pairs(dropdown.List.Frame:GetChildren()) do
-			if button:IsA("ImageButton") then
-				button:Destroy()
-			end
-		end
-			
-		for i, value in pairs(list or {}) do
-			local button = utility:Create("ImageButton", {
-				Parent = dropdown.List.Frame,
-				BackgroundTransparency = 1,
-				BorderSizePixel = 0,
-				Size = UDim2.new(1, 0, 0, 30),
-				ZIndex = 2,
-				Image = "rbxassetid://5028857472",
-				ImageColor3 = themes.DarkContrast,
-				ScaleType = Enum.ScaleType.Slice,
-				SliceCenter = Rect.new(2, 2, 298, 298)
-			}, {
-				utility:Create("TextLabel", {
-					BackgroundTransparency = 1,
-					Position = UDim2.new(0, 10, 0, 0),
-					Size = UDim2.new(1, -10, 1, 0),
-					ZIndex = 3,
-					Font = Enum.Font.Gotham,
-					Text = value,
-					TextColor3 = themes.TextColor,
-					TextSize = 12,
-					TextXAlignment = "Left",
-					TextTransparency = 0.10000000149012
-				})
-			})
-			
-			button.MouseButton1Click:Connect(function()
-				if callback then
-					callback(value, function(...)
-						self:updateDropdown(dropdown, ...)
-					end)	
-				end
+function section:updateDropdown(dropdown, title, list, callback, selectedValue)
+	dropdown = self:getModule(dropdown)
 
-				self:updateDropdown(dropdown, value, nil, callback)
-			end)
-			
-			entries = entries + 1
-		end
-		
-		local frame = dropdown.List.Frame
-		
-		utility:Tween(dropdown, {Size = UDim2.new(1, 0, 0, (entries == 0 and 30) or math.clamp(entries, 0, 10) * 34 + 38)}, 0.3)
-		utility:Tween(dropdown.Search.Button, {Rotation = list and 180 or 0}, 0.3)
-		
-		if entries > 3 then
-		
-			for i, button in pairs(dropdown.List.Frame:GetChildren()) do
-				if button:IsA("ImageButton") then
-					button.Size = UDim2.new(1, -6, 0, 30)
-				end
-			end
-			
-			frame.CanvasSize = UDim2.new(0, 0, 0, (entries * 34) - 4)
-			frame.ScrollBarImageTransparency = 0
-		else
-			frame.CanvasSize = UDim2.new(0, 0, 0, 0)
-			frame.ScrollBarImageTransparency = 1
+	if title then
+		dropdown.Search.TextBox.Text = title
+	end
+	
+	local entries = 0
+	
+	utility:Pop(dropdown.Search, 10)
+	
+	for i, button in pairs(dropdown.List.Frame:GetChildren()) do
+		if button:IsA("ImageButton") then
+			button:Destroy()
 		end
 	end
+		
+	for i, value in pairs(list or {}) do
+		local button = utility:Create("ImageButton", {
+			Parent = dropdown.List.Frame,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Size = UDim2.new(1, 0, 0, 30),
+			ZIndex = 2,
+			Image = "rbxassetid://5028857472",
+			ImageColor3 = themes.DarkContrast,
+			ScaleType = Enum.ScaleType.Slice,
+			SliceCenter = Rect.new(2, 2, 298, 298)
+		}, {
+			utility:Create("TextLabel", {
+				BackgroundTransparency = 1,
+				Position = UDim2.new(0, 10, 0, 0),
+				Size = UDim2.new(1, -10, 1, 0),
+				ZIndex = 3,
+				Font = Enum.Font.Gotham,
+				Text = value,
+				TextColor3 = value == selectedValue and Color3.fromRGB(255, 0, 0) or themes.TextColor, -- Set text color to red if selected
+				TextSize = 12,
+				TextXAlignment = "Left",
+				TextTransparency = 0.10000000149012
+			})
+		})
+		
+		button.MouseButton1Click:Connect(function()
+			if callback then
+				callback(value, function(...)
+					self:updateDropdown(dropdown, ..., value) -- Pass selected value to callback
+				end)	
+			end
+
+			self:updateDropdown(dropdown, value, nil, callback, value) -- Set the clicked value as selected
+		end)
+		
+		entries = entries + 1
+	end
+	
+	local frame = dropdown.List.Frame
+	
+	utility:Tween(dropdown, {Size = UDim2.new(1, 0, 0, (entries == 0 and 30) or math.clamp(entries, 0, 10) * 34 + 38)}, 0.3)
+	utility:Tween(dropdown.Search.Button, {Rotation = list and 180 or 0}, 0.3)
+	
+	if entries > 3 then
+	
+		for i, button in pairs(dropdown.List.Frame:GetChildren()) do
+			if button:IsA("ImageButton") then
+				button.Size = UDim2.new(1, -6, 0, 30)
+			end
+		end
+		
+		frame.CanvasSize = UDim2.new(0, 0, 0, (entries * 34) - 4)
+		frame.ScrollBarImageTransparency = 0
+	else
+		frame.CanvasSize = UDim2.new(0, 0, 0, 0)
+		frame.ScrollBarImageTransparency = 1
+	end
 end
+
 
 return library
