@@ -2064,7 +2064,12 @@ end
 	end
 	
 function section:updateDropdown(dropdown, title, list, callback)
+	-- Check if utility.Create exists
+	assert(utility.Create, "utility.Create is not defined")
+	
+	-- Ensure dropdown exists
 	dropdown = self:getModule(dropdown)
+	assert(dropdown, "Dropdown is nil")
 
 	if title then
 		dropdown.Search.TextBox.Text = title
@@ -2110,6 +2115,8 @@ function section:updateDropdown(dropdown, title, list, callback)
 			})
 		})
 
+		assert(button, "Failed to create button")
+		
 		button.MouseButton1Click:Connect(function()
 			-- Reset the color of the previously selected button, if there is one
 			if selectedButton and selectedButton ~= button then
@@ -2125,6 +2132,8 @@ function section:updateDropdown(dropdown, title, list, callback)
 				callback(value, function(...)
 					self:updateDropdown(dropdown, ...)
 				end)
+			else
+				warn("Callback is nil for dropdown item: ", value)
 			end
 
 			-- Update the dropdown to show the selected value
