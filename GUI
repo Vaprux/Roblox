@@ -2064,103 +2064,51 @@ end
 	end
 	
 function section:updateDropdown(dropdown, title, list, callback)
-	-- Check if utility.Create exists
-	assert(utility.Create, "utility.Create is not defined")
-	
-	-- Ensure dropdown exists
-	dropdown = self:getModule(dropdown)
-	assert(dropdown, "Dropdown is nil")
+    -- Clear previous items
+    local frame = dropdown.List.Frame
+    frame:ClearAllChildren()
 
-	if title then
-		dropdown.Search.TextBox.Text = title
-	end
+    -- Update rotation of the dropdown arrow
+    dropdown.Search.Button.Rotation = list and 180 or 0
 
-	local entries = 0
-	utility:Pop(dropdown.Search, 10)
+    if list then
+        for i, item in pairs(list) do
+            local listItem = utility:Create("TextButton", {
+                Text = item,
+                BackgroundTransparency = 1,
+                TextColor3 = themes.TextColor,
+                TextSize = 12,
+                Font = Enum.Font.Gotham,
+                Size = UDim2.new(1, -8, 0, 30),
+                ZIndex = 3
+            })
 
-	-- Clear previous buttons
-	for i, button in pairs(dropdown.List.Frame:GetChildren()) do
-		if button:IsA("ImageButton") then
-			button:Destroy()
-		end
-	end
+            listItem.MouseButton1Click:Connect(function()
+                -- Set all other list items back to default background color
+                for _, otherItem in pairs(frame:GetChildren()) do
+                    if otherItem:IsA("TextButton") then
+                        otherItem.BackgroundTransparency = 1
+                    end
+                end
+                
+                -- Set the clicked item's background to red
+                listItem.BackgroundTransparency = 0
+                listItem.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 
-	-- Variable to store selected button
-	local selectedButton = nil
+                -- Process the callback
+                if callback then
+                    callback(item)
+                end
+            end)
 
-	-- Create new buttons for the list
-	for i, value in pairs(list or {}) do
-		local button = utility:Create("ImageButton", {
-			Parent = dropdown.List.Frame,
-			BackgroundTransparency = 1,
-			BorderSizePixel = 0,
-			Size = UDim2.new(1, 0, 0, 30),
-			ZIndex = 2,
-			Image = "rbxassetid://5028857472",
-			ImageColor3 = themes.DarkContrast, -- Default button color
-			ScaleType = Enum.ScaleType.Slice,
-			SliceCenter = Rect.new(2, 2, 298, 298)
-		}, {
-			utility:Create("TextLabel", {
-				BackgroundTransparency = 1,
-				Position = UDim2.new(0, 10, 0, 0),
-				Size = UDim2.new(1, -10, 1, 0),
-				ZIndex = 3,
-				Font = Enum.Font.Gotham,
-				Text = value,
-				TextColor3 = themes.TextColor,
-				TextSize = 12,
-				TextXAlignment = "Left",
-				TextTransparency = 0.10000000149012
-			})
-		})
+            listItem.Parent = frame
+        end
 
-		assert(button, "Failed to create button")
-		
-		button.MouseButton1Click:Connect(function()
-			-- Reset the color of the previously selected button, if there is one
-			if selectedButton and selectedButton ~= button then
-				selectedButton.ImageColor3 = themes.DarkContrast -- Reset color to default
-			end
-
-			-- Change the color of the selected button
-			button.ImageColor3 = Color3.fromRGB(100, 180, 255) -- Change to your selected color
-			selectedButton = button -- Store the currently selected button
-
-			-- Trigger the callback if provided
-			if callback then
-				callback(value, function(...)
-					self:updateDropdown(dropdown, ...)
-				end)
-			else
-				warn("Callback is nil for dropdown item: ", value)
-			end
-
-			-- Update the dropdown to show the selected value
-			self:updateDropdown(dropdown, value, nil, callback)
-		end)
-
-		entries = entries + 1
-	end
-
-	local frame = dropdown.List.Frame
-
-	utility:Tween(dropdown, {Size = UDim2.new(1, 0, 0, (entries == 0 and 30) or math.clamp(entries, 0, 10) * 34 + 38)}, 0.3)
-	utility:Tween(dropdown.Search.Button, {Rotation = list and 180 or 0}, 0.3)
-
-	if entries > 3 then
-		for i, button in pairs(dropdown.List.Frame:GetChildren()) do
-			if button:IsA("ImageButton") then
-				button.Size = UDim2.new(1, -6, 0, 30)
-			end
-		end
-
-		frame.CanvasSize = UDim2.new(0, 0, 0, (entries * 34) - 4)
-		frame.ScrollBarImageTransparency = 0
-	else
-		frame.CanvasSize = UDim2.new(0, 0, 0, 0)
-		frame.ScrollBarImageTransparency = 1
-	end
+        -- Adjust the canvas size to fit the new items
+        frame.CanvasSize = UDim2.new(0, 0, 0, #list * 34)
+    else
+        frame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    end
 end
 
 return library
