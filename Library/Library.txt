@@ -67,18 +67,16 @@ table.insert(Library.Signals, RenderStepped:Connect(function(Delta)
 end))
 
 local function GetPlayersString()
-    local PlayerList = Players:GetPlayers()
+    local PlayerList = Players:GetPlayers();
 
     for i = 1, #PlayerList do
-        -- Check if DisplayName exists, fallback to Name if it doesn't
-        local displayName = PlayerList[i].DisplayName or PlayerList[i].Name
-        PlayerList[i] = displayName .. " (" .. PlayerList[i].Name .. ")"
-    end
+        PlayerList[i] = PlayerList[i].Name;
+    end;
 
-    table.sort(PlayerList, function(str1, str2) return str1 < str2 end)
+    table.sort(PlayerList, function(str1, str2) return str1 < str2 end);
 
-    return PlayerList
-end
+    return PlayerList;
+end;
 
 local function GetTeamsString()
     local TeamList = Teams:GetTeams();
