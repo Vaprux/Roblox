@@ -2369,7 +2369,8 @@ do
                 Element:Destroy()
             end
         end
-
+    
+        -- Add search bar
         local SearchBar = Library:Create('TextBox', {
             BackgroundColor3 = Library.MainColor;
             BorderColor3 = Library.OutlineColor;
@@ -2388,20 +2389,27 @@ do
         })
     
         local function FilterDropdownItems(searchText)
-            for Button, Table in next, Buttons do
+            local visibleCount = 0
+    
+            for Button, Table in pairs(Buttons) do
                 local Value = Table.Value
                 if Value:lower():find(searchText:lower()) then
                     Button.Visible = true
+                    visibleCount = visibleCount + 1
                 else
                     Button.Visible = false
                 end
             end
+
+            Scrolling.CanvasSize = UDim2.fromOffset(0, (visibleCount * 20) + 1)
+            local Y = math.clamp(visibleCount * 20, 0, MAX_DROPDOWN_ITEMS * 20) + 1
+            RecalculateListSize(Y)
         end
     
         SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
             FilterDropdownItems(SearchBar.Text)
         end)
-
+    
         local Count = 0
     
         for Idx, Value in next, Values do
@@ -2494,12 +2502,14 @@ do
                 end
             end)
     
+            Table.Value = Value
             Table:UpdateButton()
             Dropdown:Display()
     
             Buttons[Button] = Table
         end
     
+        -- Recalculate scrolling canvas size and list size after adding all buttons
         Scrolling.CanvasSize = UDim2.fromOffset(0, (Count * 20) + 1)
         local Y = math.clamp(Count * 20, 0, MAX_DROPDOWN_ITEMS * 20) + 1
         RecalculateListSize(Y)
