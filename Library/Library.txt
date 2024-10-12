@@ -2364,12 +2364,14 @@ function Dropdown:BuildDropdownList()
     local Values = Dropdown.Values
     local Buttons = {}
 
+    -- Clear previous items
     for _, Element in next, Scrolling:GetChildren() do
         if not Element:IsA('UIListLayout') then
             Element:Destroy()
         end
     end
 
+    -- Add search bar
     local SearchBar = Library:Create('TextBox', {
         BackgroundColor3 = Library.MainColor;
         BorderColor3 = Library.OutlineColor;
@@ -2387,10 +2389,11 @@ function Dropdown:BuildDropdownList()
         BorderColor3 = 'OutlineColor';
     })
 
+    -- Function to filter dropdown items based on search text
     local function FilterDropdownItems(searchText)
         local visibleCount = 0
-        local lowerSearchText = searchText:lower()
-    
+        local lowerSearchText = searchText:lower()  -- Convert the search text to lower case
+
         for Button, Table in pairs(Buttons) do
             local Value = Table.Value:lower()  -- Convert the button value to lower case
             if Value:find(lowerSearchText) then  -- Check for substring match
@@ -2400,16 +2403,19 @@ function Dropdown:BuildDropdownList()
                 Button.Visible = false
             end
         end
-    
+
+        -- Update the scrolling canvas size based on visible items
         Scrolling.CanvasSize = UDim2.fromOffset(0, (visibleCount * 20) + 1)
         local Y = math.clamp(visibleCount * 20, 0, MAX_DROPDOWN_ITEMS * 20) + 1
         RecalculateListSize(Y)
     end
 
+    -- Connect search bar to filtering logic
     SearchBar:GetPropertyChangedSignal("Text"):Connect(function()
         FilterDropdownItems(SearchBar.Text)
     end)
 
+    -- Now add the dropdown items after the search bar
     local Count = 0
 
     for Idx, Value in next, Values do
@@ -2509,6 +2515,7 @@ function Dropdown:BuildDropdownList()
         Buttons[Button] = Table
     end
 
+    -- Recalculate scrolling canvas size and list size after adding all buttons
     Scrolling.CanvasSize = UDim2.fromOffset(0, (Count * 20) + 1)
     local Y = math.clamp(Count * 20, 0, MAX_DROPDOWN_ITEMS * 20) + 1
     RecalculateListSize(Y)
