@@ -2389,17 +2389,18 @@ function Dropdown:BuildDropdownList()
 
     local function FilterDropdownItems(searchText)
         local visibleCount = 0
-
+        local lowerSearchText = searchText:lower()
+    
         for Button, Table in pairs(Buttons) do
-            local Value = Table.Value
-            if Value:lower():find(searchText:lower()) then
+            local Value = Table.Value:lower()  -- Convert the button value to lower case
+            if Value:find(lowerSearchText) then  -- Check for substring match
                 Button.Visible = true
                 visibleCount = visibleCount + 1
             else
                 Button.Visible = false
             end
         end
-
+    
         Scrolling.CanvasSize = UDim2.fromOffset(0, (visibleCount * 20) + 1)
         local Y = math.clamp(visibleCount * 20, 0, MAX_DROPDOWN_ITEMS * 20) + 1
         RecalculateListSize(Y)
