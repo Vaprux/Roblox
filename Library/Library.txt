@@ -2392,18 +2392,18 @@ function Dropdown:BuildDropdownList()
     -- Function to filter dropdown items based on search text
     local function FilterDropdownItems(searchText)
         local visibleCount = 0
-        local lowerSearchText = searchText:lower()  -- Convert the search text to lower case
-
+        local searchLower = searchText:lower() -- Convert search text to lowercase once
+    
         for Button, Table in pairs(Buttons) do
-            local Value = Table.Value:lower()  -- Convert the button value to lower case
-            if Value:find(lowerSearchText) then  -- Check for substring match
+            local Value = Table.Value:lower() -- Convert value to lowercase for comparison
+            if Value:find(searchLower, 1, true) then -- Use the 3rd argument 'true' for plain search
                 Button.Visible = true
                 visibleCount = visibleCount + 1
             else
                 Button.Visible = false
             end
         end
-
+    
         -- Update the scrolling canvas size based on visible items
         Scrolling.CanvasSize = UDim2.fromOffset(0, (visibleCount * 20) + 1)
         local Y = math.clamp(visibleCount * 20, 0, MAX_DROPDOWN_ITEMS * 20) + 1
