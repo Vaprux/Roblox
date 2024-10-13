@@ -78,14 +78,14 @@ function Nofitication:Notify(nofdebug, middledebug, all)
             Window.Size = UDim2.new(0, 230, 0, 80)
             Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
     
-            wait(middledebug.Time)
+            task.wait()
         
             ambientShadow:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Linear", 0.2)
             
             wait(0.2)
             ambientShadow:Destroy()
         end
-        
+        coroutine.wrap(ORBHB_fake_script)()
     elseif SelectedType == "image" then
         ambientShadow:TweenSize(UDim2.new(0, 240, 0, 90), "Out", "Linear", 0.2)
         Window.Size = UDim2.new(0, 230, 0, 80)
@@ -107,14 +107,14 @@ function Nofitication:Notify(nofdebug, middledebug, all)
         
             Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
 
-            wait(middledebug.Time)
+            task.wait()
         
             ambientShadow:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Linear", 0.2)
             
             wait(0.2)
             ambientShadow:Destroy()
         end
-        
+        coroutine.wrap(ORBHB_fake_script)()
     elseif SelectedType == "option" then
         ambientShadow:TweenSize(UDim2.new(0, 240, 0, 110), "Out", "Linear", 0.2)
         Window.Size = UDim2.new(0, 230, 0, 100)
@@ -174,7 +174,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
             
             Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
     
-            wait(middledebug.Time)
+            task.wait()
 
             if Stilthere == true then
         
@@ -184,6 +184,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
                 ambientShadow:Destroy()
             end
         end
+        coroutine.wrap(ORBHB_fake_script)()
     end
 end
 
