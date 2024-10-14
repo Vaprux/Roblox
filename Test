@@ -68,25 +68,29 @@ function NotificationLibrary:Notify(TitleText, Desc, Delay)
     Description.TextStrokeTransparency = 0.500
     Description.TextXAlignment = Enum.TextXAlignment.Left
 
+    -- Animate notification in
     Notification:TweenPosition(UDim2.new(1, -400, 0, yOffset), "Out", "Sine", 0.35)
+
+    -- Add to the activeNotifications table
     table.insert(activeNotifications, Notification)
-    
+
     wait(0.35)
     Line:TweenSize(UDim2.new(0, 450, 0, 4), "Out", "Linear", Delay)
     wait(Delay)
-    
+
+    -- Animate notification out
     Notification:TweenPosition(UDim2.new(1, 5, 0, yOffset), "Out", "Sine", 0.35)
     wait(0.35)
     Notification:Destroy()
-    
-    -- Remove from active notifications
+
+    -- Remove the notification from the list and reposition the others
     for i, notif in ipairs(activeNotifications) do
         if notif == Notification then
             table.remove(activeNotifications, i)
             break
         end
     end
-    
+
     -- Reposition remaining notifications
     for i, notif in ipairs(activeNotifications) do
         local newY = 75 + ((i - 1) * 70)
