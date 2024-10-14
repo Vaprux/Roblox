@@ -1,6 +1,9 @@
 local Notification = {}
 local GUI = game:GetService("CoreGui"):FindFirstChild("STX_Notification") or Instance.new("ScreenGui", game.CoreGui)
 
+Notification.notificationOffset = 0
+local notificationHeight = 90  -- Adjusted height to match the notification size
+
 function Notification:Notify(notificationData, config)
     local SelectedType = string.lower(tostring(config.Type))
     local TweenService = game:GetService("TweenService")
@@ -17,7 +20,7 @@ function Notification:Notify(notificationData, config)
     ambientShadow.AnchorPoint = Vector2.new(0.5, 0.5)
     ambientShadow.BackgroundTransparency = 1
     ambientShadow.BorderSizePixel = 0
-    ambientShadow.Position = UDim2.new(0.915, 0, 0.06, 0)
+    ambientShadow.Position = UDim2.new(0.915, 0, 0, 20 + Notification.notificationOffset)
     ambientShadow.Size = UDim2.new(0, 0, 0, 0)
     ambientShadow.Image = "rbxassetid://1316045217"
     ambientShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
@@ -70,6 +73,8 @@ function Notification:Notify(notificationData, config)
     WindowDescription.TextYAlignment = Enum.TextYAlignment.Top
 
     local function showNotification()
+        local currentOffset = Notification.notificationOffset
+        Notification.notificationOffset = Notification.notificationOffset + notificationHeight
         local tweenIn = TweenService:Create(ambientShadow, TweenInfo.new(0.2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2.new(0, 240, 0, 90)})
         tweenIn:Play()
         tweenIn.Completed:Wait()
@@ -82,13 +87,13 @@ function Notification:Notify(notificationData, config)
         tweenOut:Play()
         tweenOut.Completed:Wait()
 
+        Notification.notificationOffset = Notification.notificationOffset - notificationHeight
         ambientShadow:Destroy()
     end
 
     if SelectedType == "default" then
         showNotification()
     elseif SelectedType == "image" then
-        -- Adjustments for image type
         local ImageButton = Instance.new("ImageButton")
         ImageButton.Parent = Window
         ImageButton.BackgroundTransparency = 1
@@ -101,7 +106,6 @@ function Notification:Notify(notificationData, config)
         ImageButton.ImageColor3 = config.ImageColor
         showNotification()
     elseif SelectedType == "option" then
-        -- Adjustments for option type
         local Uncheck = Instance.new("ImageButton")
         local Check = Instance.new("ImageButton")
 
