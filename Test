@@ -4,7 +4,9 @@ AbyssGUI.Name = "Abyss"
 AbyssGUI.Parent = game.CoreGui
 AbyssGUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-local activeNotifications = {}
+-- Track the height offset for notifications
+local notificationOffset = 0
+local notificationHeight = 70 -- height of each notification including spacing
 
 function NotificationLibrary:Notify(TitleText, Desc, Delay)
     local Notification = Instance.new("Frame")
@@ -19,11 +21,8 @@ function NotificationLibrary:Notify(TitleText, Desc, Delay)
     Notification.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     Notification.BackgroundTransparency = 0.400
     Notification.BorderSizePixel = 0
+    Notification.Position = UDim2.new(1, 5, 0, 75 + notificationOffset) -- Position based on offset
     Notification.Size = UDim2.new(0, 450, 0, 60)
-
-    -- Calculate the vertical position based on the number of active notifications
-    local yOffset = 75 + (#activeNotifications * 70) -- 70px height for each notification
-    Notification.Position = UDim2.new(1, 5, 0, yOffset)
 
     Line.Name = "Line"
     Line.Parent = Notification
@@ -69,34 +68,22 @@ function NotificationLibrary:Notify(TitleText, Desc, Delay)
     Description.TextXAlignment = Enum.TextXAlignment.Left
 
     -- Animate notification in
-    Notification:TweenPosition(UDim2.new(1, -400, 0, yOffset), "Out", "Sine", 0.35)
+    Notification:TweenPosition(UDim2.new(1, -400, 0, 75 + notificationOffset), "Out", "Sine", 0.35)
 
-    -- Add to the activeNotifications table
-    table.insert(activeNotifications, Notification)
+    -- Increase the offset for the next notification
+    notificationOffset = notificationOffset + notificationHeight
 
     wait(0.35)
     Line:TweenSize(UDim2.new(0, 450, 0, 4), "Out", "Linear", Delay)
     wait(Delay)
 
     -- Animate notification out
-    Notification:TweenPosition(UDim2.new(1, 5, 0, yOffset), "Out", "Sine", 0.35)
+    Notification:TweenPosition(UDim2.new(1, 5, 0, 75 + (notificationOffset - notificationHeight)), "Out", "Sine", 0.35)
     wait(0.35)
+
+    -- Reset the offset after the notification is removed
+    notificationOffset = notificationOffset - notificationHeight
     Notification:Destroy()
-
-    -- Remove the notification from the list
-    for i = #activeNotifications, 1, -1 do
-        if activeNotifications[i] == Notification then
-            table.remove(activeNotifications, i)
-            break
-        end
-    end
-
-    -- Reposition remaining notifications
-    for i = 1, #activeNotifications do
-        local notif = activeNotifications[i]
-        local newY = 75 + ((i - 1) * 70) -- Adjust for each remaining notification
-        notif.Position = UDim2.new(1, 5, 0, newY) -- Update the position directly
-    end
 end
 
 return NotificationLibrary
