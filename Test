@@ -93,8 +93,8 @@ function NotificationLibrary:Notify(TitleText, Desc, Delay)
 
     -- Reposition remaining notifications
     for i, notif in ipairs(activeNotifications) do
-        local newY = 75 + ((i - 1) * 70)
-        notif:TweenPosition(UDim2.new(1, -400, 0, newY), "Out", "Sine", 0.35)
+        local newY = 75 + ((i - 1) * 70) -- Adjust for each remaining notification
+        notif.Position = UDim2.new(1, 5, 0, newY) -- Update the position directly
     end
 end
 
