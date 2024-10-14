@@ -1,29 +1,30 @@
 local Notification = {}
-local GUI = game:GetService("CoreGui"):FindFirstChild("STX_Notification")
+local GUI = game:GetService("CoreGui"):FindFirstChild("STX_Notification") or Instance.new("ScreenGui", game.CoreGui)
 
 function Notification:Notify(notificationData, config)
     local SelectedType = string.lower(tostring(config.Type))
+    local TweenService = game:GetService("TweenService")
     local ambientShadow = Instance.new("ImageLabel")
     local Window = Instance.new("Frame")
     local Outline_A = Instance.new("Frame")
     local WindowTitle = Instance.new("TextLabel")
     local WindowDescription = Instance.new("TextLabel")
-    
+
     local outlineColor = config.OutlineColor or Color3.fromRGB(80, 80, 80)
-    
+
     ambientShadow.Name = "ambientShadow"
     ambientShadow.Parent = GUI
     ambientShadow.AnchorPoint = Vector2.new(0.5, 0.5)
     ambientShadow.BackgroundTransparency = 1
     ambientShadow.BorderSizePixel = 0
-    ambientShadow.Position = UDim2.new(0.915, 0, 0.06, 0)  -- Starts from the top
+    ambientShadow.Position = UDim2.new(0.915, 0, 0.06, 0)
     ambientShadow.Size = UDim2.new(0, 0, 0, 0)
     ambientShadow.Image = "rbxassetid://1316045217"
     ambientShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
     ambientShadow.ImageTransparency = 0.4
     ambientShadow.ScaleType = Enum.ScaleType.Slice
     ambientShadow.SliceCenter = Rect.new(10, 10, 118, 118)
-    
+
     Window.Name = "Window"
     Window.Parent = ambientShadow
     Window.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -31,7 +32,7 @@ function Notification:Notify(notificationData, config)
     Window.Position = UDim2.new(0, 5, 0, 5)
     Window.Size = UDim2.new(0, 230, 0, 80)
     Window.ZIndex = 2
-    
+
     Outline_A.Name = "Outline_A"
     Outline_A.Parent = Window
     Outline_A.BackgroundColor3 = outlineColor
@@ -39,7 +40,7 @@ function Notification:Notify(notificationData, config)
     Outline_A.Position = UDim2.new(0, 0, 0, 25)
     Outline_A.Size = UDim2.new(0, 230, 0, 2)
     Outline_A.ZIndex = 5
-    
+
     WindowTitle.Name = "WindowTitle"
     WindowTitle.Parent = Window
     WindowTitle.BackgroundTransparency = 1
@@ -52,7 +53,7 @@ function Notification:Notify(notificationData, config)
     WindowTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
     WindowTitle.TextSize = 12
     WindowTitle.TextXAlignment = Enum.TextXAlignment.Left
-    
+
     WindowDescription.Name = "WindowDescription"
     WindowDescription.Parent = Window
     WindowDescription.BackgroundTransparency = 1
@@ -68,20 +69,26 @@ function Notification:Notify(notificationData, config)
     WindowDescription.TextXAlignment = Enum.TextXAlignment.Left
     WindowDescription.TextYAlignment = Enum.TextYAlignment.Top
 
-    local function showDefaultNotification()
-        ambientShadow:TweenSize(UDim2.new(0, 240, 0, 90), "Out", "Linear", 0.2)
-        Window.Size = UDim2.new(0, 230, 0, 80)
-        Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", config.Time)
-        wait(config.Time)
-        ambientShadow:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Linear", 0.2)
-        wait(0.2)
+    local function showNotification()
+        local tweenIn = TweenService:Create(ambientShadow, TweenInfo.new(0.2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2.new(0, 240, 0, 90)})
+        tweenIn:Play()
+        tweenIn.Completed:Wait()
+
+        local outlineTween = TweenService:Create(Outline_A, TweenInfo.new(config.Time, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2.new(0, 0, 0, 2)})
+        outlineTween:Play()
+        outlineTween.Completed:Wait()
+
+        local tweenOut = TweenService:Create(ambientShadow, TweenInfo.new(0.2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2.new(0, 0, 0, 0)})
+        tweenOut:Play()
+        tweenOut.Completed:Wait()
+
         ambientShadow:Destroy()
     end
 
-    local function showImageNotification()
-        ambientShadow:TweenSize(UDim2.new(0, 240, 0, 90), "Out", "Linear", 0.2)
-        Window.Size = UDim2.new(0, 230, 0, 80)
-        WindowTitle.Position = UDim2.new(0, 24, 0, 2)
+    if SelectedType == "default" then
+        showNotification()
+    elseif SelectedType == "image" then
+        -- Adjustments for image type
         local ImageButton = Instance.new("ImageButton")
         ImageButton.Parent = Window
         ImageButton.BackgroundTransparency = 1
@@ -92,15 +99,12 @@ function Notification:Notify(notificationData, config)
         ImageButton.AutoButtonColor = false
         ImageButton.Image = config.Image
         ImageButton.ImageColor3 = config.ImageColor
-        showDefaultNotification()
-    end
-
-    local function showOptionNotification()
-        ambientShadow:TweenSize(UDim2.new(0, 240, 0, 110), "Out", "Linear", 0.2)
-        Window.Size = UDim2.new(0, 230, 0, 100)
+        showNotification()
+    elseif SelectedType == "option" then
+        -- Adjustments for option type
         local Uncheck = Instance.new("ImageButton")
         local Check = Instance.new("ImageButton")
-        
+
         Uncheck.Name = "Uncheck"
         Uncheck.Parent = Window
         Uncheck.BackgroundTransparency = 1
@@ -111,7 +115,7 @@ function Notification:Notify(notificationData, config)
         Uncheck.AutoButtonColor = false
         Uncheck.Image = "http://www.roblox.com/asset/?id=6031094678"
         Uncheck.ImageColor3 = Color3.fromRGB(255, 84, 84)
-        
+
         Check.Name = "Check"
         Check.Parent = Window
         Check.BackgroundTransparency = 1
@@ -122,34 +126,21 @@ function Notification:Notify(notificationData, config)
         Check.AutoButtonColor = false
         Check.Image = "http://www.roblox.com/asset/?id=6031094667"
         Check.ImageColor3 = Color3.fromRGB(83, 230, 50)
-        
+
         local function handleOptionSelection(selected)
             pcall(function()
                 config.Callback(selected)
             end)
-            ambientShadow:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Linear", 0.2)
-            wait(0.2)
-            ambientShadow:Destroy()
+            showNotification()
         end
-        
+
         Uncheck.MouseButton1Click:Connect(function()
             handleOptionSelection(false)
         end)
-        
+
         Check.MouseButton1Click:Connect(function()
             handleOptionSelection(true)
         end)
-        
-        Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", config.Time)
-        wait(config.Time)
-    end
-
-    if SelectedType == "default" then
-        showDefaultNotification()
-    elseif SelectedType == "image" then
-        showImageNotification()
-    elseif SelectedType == "option" then
-        showOptionNotification()
     end
 end
 
