@@ -1,14 +1,18 @@
 local Nofitication = {}
 
 local GUI = game:GetService("CoreGui"):FindFirstChild("STX_Nofitication")
-function Nofitication:Notify(nofdebug, middledebug, all)
+
+function Nofitication:Notify(nofdebug, middledebug)
     local SelectedType = string.lower(tostring(middledebug.Type))
     local ambientShadow = Instance.new("ImageLabel")
     local Window = Instance.new("Frame")
     local Outline_A = Instance.new("Frame")
     local WindowTitle = Instance.new("TextLabel")
     local WindowDescription = Instance.new("TextLabel")
-    
+
+    -- Set a default outline color if not provided
+    local outlineColor = middledebug.OutlineColor or Color3.fromRGB(80, 80, 80)
+
     ambientShadow.Name = "ambientShadow"
     ambientShadow.Parent = GUI
     ambientShadow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -21,7 +25,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
     ambientShadow.ImageTransparency = 0.400
     ambientShadow.ScaleType = Enum.ScaleType.Slice
     ambientShadow.SliceCenter = Rect.new(10, 10, 118, 118)
-    
+
     Window.Name = "Window"
     Window.Parent = ambientShadow
     Window.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -29,15 +33,15 @@ function Nofitication:Notify(nofdebug, middledebug, all)
     Window.Position = UDim2.new(0, 5, 0, 5)
     Window.Size = UDim2.new(0, 230, 0, 80)
     Window.ZIndex = 2
-    
+
     Outline_A.Name = "Outline_A"
     Outline_A.Parent = Window
-    Outline_A.BackgroundColor3 = middledebug.OutlineColor
+    Outline_A.BackgroundColor3 = outlineColor
     Outline_A.BorderSizePixel = 0
     Outline_A.Position = UDim2.new(0, 0, 0, 25)
     Outline_A.Size = UDim2.new(0, 230, 0, 2)
     Outline_A.ZIndex = 5
-    
+
     WindowTitle.Name = "WindowTitle"
     WindowTitle.Parent = Window
     WindowTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -52,7 +56,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
     WindowTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
     WindowTitle.TextSize = 12.000
     WindowTitle.TextXAlignment = Enum.TextXAlignment.Left
-    
+
     WindowDescription.Name = "WindowDescription"
     WindowDescription.Parent = Window
     WindowDescription.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -77,7 +81,7 @@ function Nofitication:Notify(nofdebug, middledebug, all)
             ambientShadow:TweenSize(UDim2.new(0, 240, 0, 90), "Out", "Linear", 0.2)
             Window.Size = UDim2.new(0, 230, 0, 80)
             Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
-    
+
             wait(middledebug.Time)
         
             ambientShadow:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Linear", 0.2)
@@ -169,20 +173,21 @@ function Nofitication:Notify(nofdebug, middledebug, all)
                 ambientShadow:Destroy()
                 Stilthere = false
             end
-            Uncheck.MouseButton1Click:Connect(Unchecked)
-            Check.MouseButton1Click:Connect(Checked)
             
-            Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
-    
-            wait(middledebug.Time)
+            Uncheck.MouseButton1Click:Connect(function()
+                if Stilthere == true then
+                    Unchecked()
+                end
+            end)
+            Check.MouseButton1Click:Connect(function()
+                if Stilthere == true then
+                    Checked()
+                end
+            end)
 
-            if Stilthere == true then
-        
-                ambientShadow:TweenSize(UDim2.new(0, 0, 0, 0), "Out", "Linear", 0.2)
-                
-                wait(0.2)
-                ambientShadow:Destroy()
-            end
+            Outline_A:TweenSize(UDim2.new(0, 0, 0, 2), "Out", "Linear", middledebug.Time)
+
+            wait(middledebug.Time)
         end
         coroutine.wrap(ORBHB_fake_script)()
     end
