@@ -83,16 +83,17 @@ function NotificationLibrary:Notify(TitleText, Desc, Delay)
     wait(0.35)
     Notification:Destroy()
 
-    -- Remove the notification from the list and reposition the others
-    for i, notif in ipairs(activeNotifications) do
-        if notif == Notification then
+    -- Remove the notification from the list
+    for i = #activeNotifications, 1, -1 do
+        if activeNotifications[i] == Notification then
             table.remove(activeNotifications, i)
             break
         end
     end
 
     -- Reposition remaining notifications
-    for i, notif in ipairs(activeNotifications) do
+    for i = 1, #activeNotifications do
+        local notif = activeNotifications[i]
         local newY = 75 + ((i - 1) * 70) -- Adjust for each remaining notification
         notif.Position = UDim2.new(1, 5, 0, newY) -- Update the position directly
     end
