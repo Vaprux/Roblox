@@ -161,7 +161,7 @@ do -- Load items
     Folder_2.BackgroundTransparency = 1.000
     Folder_2.Size = UDim2.new(1, 0, 0, 20)
     Folder_2.Image = "rbxassetid://3570695787"
-    Folder_2.ImageColor3 = Color3.fromRGB(122, 10, 10)
+    Folder_2.ImageColor3 = Color3.fromRGB(120, 10, 10)
     Folder_2.ScaleType = Enum.ScaleType.Slice
     Folder_2.SliceCenter = Rect.new(100, 100, 100, 100)
     Folder_2.SliceScale = 0.050
@@ -402,7 +402,7 @@ do -- Load items
     ImageLabel.Size = UDim2.new(1, 0, 1, 0)
     ImageLabel.ZIndex = 2
     ImageLabel.Image = "rbxassetid://3570695787"
-    ImageLabel.ImageColor3 = Color3.fromRGB(122, 10, 10)
+    ImageLabel.ImageColor3 = Color3.fromRGB(120, 10, 10)
     ImageLabel.ScaleType = Enum.ScaleType.Slice
     ImageLabel.SliceCenter = Rect.new(100, 100, 100, 100)
     ImageLabel.SliceScale = 0.050
@@ -467,14 +467,14 @@ do -- Load items
     Inner.Position = UDim2.new(0, 2, 0, 2)
     Inner.Size = UDim2.new(1, -4, 1, -4)
     Inner.Image = "rbxassetid://3570695787"
-    Inner.ImageColor3 = Color3.fromRGB(122, 10, 10)
+    Inner.ImageColor3 = Color3.fromRGB(120, 10, 10)
     Inner.ScaleType = Enum.ScaleType.Slice
     Inner.SliceCenter = Rect.new(100, 100, 100, 100)
     Inner.SliceScale = 0.050
 
     Slider_2.Name = "Slider"
     Slider_2.Parent = Inner
-    Slider_2.BackgroundColor3 = Color3.fromRGB(122, 10, 10)
+    Slider_2.BackgroundColor3 = Color3.fromRGB(120, 10, 10)
     Slider_2.BorderSizePixel = 0
     Slider_2.Position = UDim2.new(0, 10, 0, 0)
     Slider_2.Size = UDim2.new(0, 5, 1, 0)
@@ -522,7 +522,7 @@ do -- Load items
     ImageLabel_2.Size = UDim2.new(1, 0, 1, 0)
     ImageLabel_2.ZIndex = 2
     ImageLabel_2.Image = "rbxassetid://3570695787"
-    ImageLabel_2.ImageColor3 = Color3.fromRGB(122, 10, 10)
+    ImageLabel_2.ImageColor3 = Color3.fromRGB(120, 10, 10)
     ImageLabel_2.ScaleType = Enum.ScaleType.Slice
     ImageLabel_2.SliceCenter = Rect.new(100, 100, 100, 100)
     ImageLabel_2.SliceScale = 0.050
@@ -670,7 +670,7 @@ do -- Load items
     Layer_4.Selectable = true
     Layer_4.Size = UDim2.new(1, 0, 1, 0)
     Layer_4.Image = "rbxassetid://3570695787"
-    Layer_4.ImageColor3 = Color3.fromRGB(127, 0, 0)
+    Layer_4.ImageColor3 = Color3.fromRGB(120, 0, 0)
     Layer_4.ScaleType = Enum.ScaleType.Slice
     Layer_4.SliceCenter = Rect.new(100, 100, 100, 100)
     Layer_4.SliceScale = 0.050
@@ -710,7 +710,7 @@ do -- Load items
     ImageLabel_6.Size = UDim2.new(1, 0, 1, 0)
     ImageLabel_6.ZIndex = 2
     ImageLabel_6.Image = "rbxassetid://3570695787"
-    ImageLabel_6.ImageColor3 = Color3.fromRGB(42, 44, 46)
+    ImageLabel_6.ImageColor3 = Color3.fromRGB(40, 40, 40)
     ImageLabel_6.ScaleType = Enum.ScaleType.Slice
     ImageLabel_6.SliceCenter = Rect.new(100, 100, 100, 100)
     ImageLabel_6.SliceScale = 0.050
@@ -835,7 +835,7 @@ do -- Load items
     Inner_2.Position = UDim2.new(0, 2, 0, 2)
     Inner_2.Size = UDim2.new(1, -4, 1, -4)
     Inner_2.Image = "rbxassetid://3570695787"
-    Inner_2.ImageColor3 = Color3.fromRGB(122, 10, 10)
+    Inner_2.ImageColor3 = Color3.fromRGB(120, 10, 10)
     Inner_2.ScaleType = Enum.ScaleType.Slice
     Inner_2.SliceCenter = Rect.new(100, 100, 100, 100)
     Inner_2.SliceScale = 0.050
@@ -1003,7 +1003,7 @@ do -- Load items
 
     Indicator_2.Name = "Indicator"
     Indicator_2.Parent = Saturation
-    Indicator_2.BackgroundColor3 = Color3.fromRGB(122, 10, 10)
+    Indicator_2.BackgroundColor3 = Color3.fromRGB(120, 10, 10)
     Indicator_2.BorderSizePixel = 0
     Indicator_2.Size = UDim2.new(1, 0, 0, 2)
 
@@ -1075,7 +1075,7 @@ do -- Load items
     Inner_3.Position = UDim2.new(0, 2, 0, 2)
     Inner_3.Size = UDim2.new(1, -4, 1, -4)
     Inner_3.Image = "rbxassetid://3570695787"
-    Inner_3.ImageColor3 = Color3.fromRGB(122, 10, 10)
+    Inner_3.ImageColor3 = Color3.fromRGB(120, 10, 10)
     Inner_3.ScaleType = Enum.ScaleType.Slice
     Inner_3.SliceCenter = Rect.new(100, 100, 100, 100)
     Inner_3.SliceScale = 0.050
@@ -1396,7 +1396,7 @@ local library library = {
             size = Vector2.new(300, 200),
             shadow = 10,
             transparency = 0.2,
-            color = Color3.fromRGB(122, 10, 10),
+            color = Color3.fromRGB(120, 10, 10),
             boardcolor = Color3.fromRGB(20, 20, 20),
             rounding = 5,
             animation = 0.1,
@@ -1993,9 +1993,9 @@ local library library = {
                     dropdownOptions = settings.new({
                         text = "New Dropdown",
                         size = 150,
-                        color = Color3.fromRGB(122, 10, 10),
+                        color = Color3.fromRGB(120, 10, 10),
                         rounding = options.rounding,
-                        selectioncolor = Color3.fromRGB(122, 10, 10),
+                        selectioncolor = Color3.fromRGB(120, 10, 10),
                     }).handle(dropdownOptions)
 
                     local dropdownButton = new("Dropdown")
@@ -2105,7 +2105,7 @@ local library library = {
 								if not v then continue end
                                 v.selected = false
                                 resize(v.object, { TextColor3 = Color3.fromRGB(178, 178, 178) }, 0.1)
-                                resize(v.object:GetChildren()[1], { ImageColor3 = Color3.fromRGB(42, 44, 46) }, 0.1)
+                                resize(v.object:GetChildren()[1], { ImageColor3 = Color3.fromRGB(40, 40, 40) }, 0.1)
                             end
                             dropdownObjects[name].selected = true
                             resize(dropdownOption, { TextColor3 = Color3.new(1, 1, 1) }, 0.1)
