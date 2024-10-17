@@ -41,7 +41,7 @@ Create('UIListLayout', {
 })
 
 function NotificationModule:Notify(Text, Time)
-    local TextSize = 20
+    local TextSize = 17
     local XSize, YSize = GetTextBounds(Text, Enum.Font.GothamSemibold, TextSize)
     YSize = YSize + 7
 
