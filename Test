@@ -6,7 +6,7 @@ local TextService = game:GetService('TextService')
 local CoreGui = game:GetService('CoreGui')
 
 -- Colors
-local AccentColor = Color3.fromRGB(0, 85, 255)
+local AccentColor = Color3.fromRGB(120, 10, 10)
 local MainColor = Color3.fromRGB(28, 28, 28)
 local OutlineColor = Color3.fromRGB(50, 50, 50)
 
@@ -34,8 +34,8 @@ local NotificationArea = Create('ScreenGui', {
 
 local NotificationContainer = Create('Frame', {
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 0, 0, 40),
-    Size = UDim2.new(1, 0, 1, -40),
+    Position = UDim2.new(0, 0, 0, 100),  -- Adjusted spawn position lower
+    Size = UDim2.new(1, 0, 1, -100),
     ZIndex = 100,
     Parent = NotificationArea
 })
