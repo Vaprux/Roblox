@@ -34,8 +34,8 @@ local NotificationArea = Create('ScreenGui', {
 
 local NotificationContainer = Create('Frame', {
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 0, 0, 100),  -- Adjusted spawn position lower
-    Size = UDim2.new(1, 0, 1, -100),
+    Position = UDim2.new(0, 0, 0, 150),  -- Lowered position further
+    Size = UDim2.new(1, 0, 1, -150),
     ZIndex = 100,
     Parent = NotificationArea
 })
