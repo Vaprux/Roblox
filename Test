@@ -1,151 +1,133 @@
-local Notification = {}
-local GUI = game:GetService("CoreGui"):FindFirstChild("STX_Notification") or Instance.new("ScreenGui", game.CoreGui)
+-- This is your notification module script
+local NotificationModule = {}
 
-Notification.notificationOffset = 0
-local notificationHeight = 90  -- Adjusted height to match the notification size
+-- Services
+local TextService = game:GetService('TextService')
+local CoreGui = game:GetService('CoreGui')
 
-function Notification:Notify(notificationData, config)
-    local SelectedType = string.lower(tostring(config.Type))
-    local TweenService = game:GetService("TweenService")
-    local ambientShadow = Instance.new("ImageLabel")
-    local Window = Instance.new("Frame")
-    local Outline_A = Instance.new("Frame")
-    local WindowTitle = Instance.new("TextLabel")
-    local WindowDescription = Instance.new("TextLabel")
+-- Colors
+local AccentColor = Color3.fromRGB(0, 85, 255)
+local MainColor = Color3.fromRGB(28, 28, 28)
+local OutlineColor = Color3.fromRGB(50, 50, 50)
 
-    local outlineColor = config.OutlineColor or Color3.fromRGB(80, 80, 80)
-
-    ambientShadow.Name = "ambientShadow"
-    ambientShadow.Parent = GUI
-    ambientShadow.AnchorPoint = Vector2.new(0.5, 0.5)
-    ambientShadow.BackgroundTransparency = 1
-    ambientShadow.BorderSizePixel = 0
-    ambientShadow.Position = UDim2.new(0.915, 0, 0, 20 + Notification.notificationOffset)
-    ambientShadow.Size = UDim2.new(0, 0, 0, 0)
-    ambientShadow.Image = "rbxassetid://1316045217"
-    ambientShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    ambientShadow.ImageTransparency = 0.4
-    ambientShadow.ScaleType = Enum.ScaleType.Slice
-    ambientShadow.SliceCenter = Rect.new(10, 10, 118, 118)
-
-    Window.Name = "Window"
-    Window.Parent = ambientShadow
-    Window.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    Window.BorderSizePixel = 0
-    Window.Position = UDim2.new(0, 5, 0, 5)
-    Window.Size = UDim2.new(0, 230, 0, 80)
-    Window.ZIndex = 2
-
-    Outline_A.Name = "Outline_A"
-    Outline_A.Parent = Window
-    Outline_A.BackgroundColor3 = outlineColor
-    Outline_A.BorderSizePixel = 0
-    Outline_A.Position = UDim2.new(0, 0, 0, 25)
-    Outline_A.Size = UDim2.new(0, 230, 0, 2)
-    Outline_A.ZIndex = 5
-
-    WindowTitle.Name = "WindowTitle"
-    WindowTitle.Parent = Window
-    WindowTitle.BackgroundTransparency = 1
-    WindowTitle.BorderSizePixel = 0
-    WindowTitle.Position = UDim2.new(0, 8, 0, 2)
-    WindowTitle.Size = UDim2.new(0, 222, 0, 22)
-    WindowTitle.ZIndex = 4
-    WindowTitle.Font = Enum.Font.GothamSemibold
-    WindowTitle.Text = notificationData.Title
-    WindowTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
-    WindowTitle.TextSize = 12
-    WindowTitle.TextXAlignment = Enum.TextXAlignment.Left
-
-    WindowDescription.Name = "WindowDescription"
-    WindowDescription.Parent = Window
-    WindowDescription.BackgroundTransparency = 1
-    WindowDescription.BorderSizePixel = 0
-    WindowDescription.Position = UDim2.new(0, 8, 0, 34)
-    WindowDescription.Size = UDim2.new(0, 216, 0, 40)
-    WindowDescription.ZIndex = 4
-    WindowDescription.Font = Enum.Font.GothamSemibold
-    WindowDescription.Text = notificationData.Description
-    WindowDescription.TextColor3 = Color3.fromRGB(180, 180, 180)
-    WindowDescription.TextSize = 12
-    WindowDescription.TextWrapped = true
-    WindowDescription.TextXAlignment = Enum.TextXAlignment.Left
-    WindowDescription.TextYAlignment = Enum.TextYAlignment.Top
-
-    local function showNotification()
-        local currentOffset = Notification.notificationOffset
-        Notification.notificationOffset = Notification.notificationOffset + notificationHeight
-        local tweenIn = TweenService:Create(ambientShadow, TweenInfo.new(0.2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2.new(0, 240, 0, 90)})
-        tweenIn:Play()
-        tweenIn.Completed:Wait()
-
-        local outlineTween = TweenService:Create(Outline_A, TweenInfo.new(config.Time, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2.new(0, 0, 0, 2)})
-        outlineTween:Play()
-        outlineTween.Completed:Wait()
-
-        local tweenOut = TweenService:Create(ambientShadow, TweenInfo.new(0.2, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {Size = UDim2.new(0, 0, 0, 0)})
-        tweenOut:Play()
-        tweenOut.Completed:Wait()
-
-        Notification.notificationOffset = Notification.notificationOffset - notificationHeight
-        ambientShadow:Destroy()
+-- Utility function to create UI elements
+local function Create(Class, Properties)
+    local _Instance = Instance.new(Class)
+    for Property, Value in pairs(Properties) do
+        _Instance[Property] = Value
     end
-
-    if SelectedType == "default" then
-        showNotification()
-    elseif SelectedType == "image" then
-        local ImageButton = Instance.new("ImageButton")
-        ImageButton.Parent = Window
-        ImageButton.BackgroundTransparency = 1
-        ImageButton.BorderSizePixel = 0
-        ImageButton.Position = UDim2.new(0, 4, 0, 4)
-        ImageButton.Size = UDim2.new(0, 18, 0, 18)
-        ImageButton.ZIndex = 5
-        ImageButton.AutoButtonColor = false
-        ImageButton.Image = config.Image
-        ImageButton.ImageColor3 = config.ImageColor
-        showNotification()
-    elseif SelectedType == "option" then
-        local Uncheck = Instance.new("ImageButton")
-        local Check = Instance.new("ImageButton")
-
-        Uncheck.Name = "Uncheck"
-        Uncheck.Parent = Window
-        Uncheck.BackgroundTransparency = 1
-        Uncheck.BorderSizePixel = 0
-        Uncheck.Position = UDim2.new(0, 7, 0, 76)
-        Uncheck.Size = UDim2.new(0, 18, 0, 18)
-        Uncheck.ZIndex = 5
-        Uncheck.AutoButtonColor = false
-        Uncheck.Image = "http://www.roblox.com/asset/?id=6031094678"
-        Uncheck.ImageColor3 = Color3.fromRGB(255, 84, 84)
-
-        Check.Name = "Check"
-        Check.Parent = Window
-        Check.BackgroundTransparency = 1
-        Check.BorderSizePixel = 0
-        Check.Position = UDim2.new(0, 28, 0, 76)
-        Check.Size = UDim2.new(0, 18, 0, 18)
-        Check.ZIndex = 5
-        Check.AutoButtonColor = false
-        Check.Image = "http://www.roblox.com/asset/?id=6031094667"
-        Check.ImageColor3 = Color3.fromRGB(83, 230, 50)
-
-        local function handleOptionSelection(selected)
-            pcall(function()
-                config.Callback(selected)
-            end)
-            showNotification()
-        end
-
-        Uncheck.MouseButton1Click:Connect(function()
-            handleOptionSelection(false)
-        end)
-
-        Check.MouseButton1Click:Connect(function()
-            handleOptionSelection(true)
-        end)
-    end
+    return _Instance
 end
 
-return Notification
+-- Utility function to get text size
+local function GetTextBounds(Text, Font, Size, Resolution)
+    local Bounds = TextService:GetTextSize(Text, Size, Font, Resolution or Vector2.new(1920, 1080))
+    return Bounds.X, Bounds.Y
+end
+
+-- Notification UI area
+local NotificationArea = Create('ScreenGui', {
+    Name = "NotificationArea",
+    Parent = CoreGui,
+    IgnoreGuiInset = true
+})
+
+local NotificationContainer = Create('Frame', {
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 0, 0, 40),
+    Size = UDim2.new(1, 0, 1, -40),
+    ZIndex = 100,
+    Parent = NotificationArea
+})
+
+-- Add layout to notification area
+Create('UIListLayout', {
+    Padding = UDim.new(0, 4),
+    FillDirection = Enum.FillDirection.Vertical,
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Parent = NotificationContainer,
+})
+
+-- Notify function
+function NotificationModule:Notify(Text, Time)
+    local XSize, YSize = GetTextBounds(Text, Enum.Font.GothamSemibold, 14)
+    YSize = YSize + 7
+
+    -- Outer frame for notification
+    local NotifyOuter = Create('Frame', {
+        BorderColor3 = Color3.new(0, 0, 0),
+        Position = UDim2.new(0.5, -XSize / 2, 0, 10),
+        Size = UDim2.new(0, 0, 0, YSize),
+        ClipsDescendants = true,
+        ZIndex = 100,
+        BackgroundTransparency = 1,
+        Parent = NotificationContainer,
+    })
+
+    -- Inner frame
+    local NotifyInner = Create('Frame', {
+        BackgroundColor3 = MainColor,
+        BorderColor3 = OutlineColor,
+        BorderMode = Enum.BorderMode.Inset,
+        Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = 101,
+        Parent = NotifyOuter,
+    })
+
+    -- Inner content frame
+    local InnerFrame = Create('Frame', {
+        BackgroundColor3 = Color3.new(1, 1, 1),
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 1, 0, 1),
+        Size = UDim2.new(1, -2, 1, -2),
+        ZIndex = 102,
+        Parent = NotifyInner,
+    })
+
+    -- Gradient effect
+    Create('UIGradient', {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, MainColor:lerp(Color3.new(0, 0, 0), 0.3)),
+            ColorSequenceKeypoint.new(1, MainColor),
+        }),
+        Rotation = -90,
+        Parent = InnerFrame,
+    })
+
+    -- Notification text label
+    Create('TextLabel', {
+        Position = UDim2.new(0, 4, 0, 0),
+        Size = UDim2.new(1, -4, 1, 0),
+        Text = Text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Font = Enum.Font.GothamSemibold,
+        TextSize = 14,
+        BackgroundTransparency = 1,
+        TextColor3 = Color3.new(1, 1, 1),
+        ZIndex = 103,
+        Parent = InnerFrame,
+    })
+
+    -- Left color bar (Accent color)
+    Create('Frame', {
+        BackgroundColor3 = AccentColor,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, -1, 0, -1),
+        Size = UDim2.new(0, 3, 1, 2),
+        ZIndex = 104,
+        Parent = NotifyOuter,
+    })
+
+    -- Tween the notification frame to slide in
+    NotifyOuter:TweenSize(UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true)
+
+    -- Handle automatic dismissal after `Time` seconds
+    task.spawn(function()
+        wait(Time or 5)
+        NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true)
+        wait(0.4)
+        NotifyOuter:Destroy()
+    end)
+end
+
+return NotificationModule
