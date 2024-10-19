@@ -2528,7 +2528,7 @@ end
 
 -- Notification System
 
-local Library = {}
+local library = {}
 
 local NotificationModule = {}
 local TextService = game:GetService('TextService')
@@ -2645,7 +2645,7 @@ function NotificationModule:Notify(Text, Time)
     end)
 end
 
-Library.Notify = function(Text, Time)
+library.Notify = function(Text, Time)
     NotificationModule:Notify(Text, Time)
 end
 
