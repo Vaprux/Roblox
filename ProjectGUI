@@ -2528,7 +2528,6 @@ end
 
 -- Notification System
 
--- This is your notification module script
 local NotificationModule = {}
 local TextService = game:GetService('TextService')
 local CoreGui = game:GetService('CoreGui')
@@ -2571,7 +2570,7 @@ Create('UIListLayout', {
     Parent = NotificationContainer,
 })
 
-function NotificationModule:Notify(Text, Time)
+function library:Notify(Text, Time)
     local TextSize = 17
     local XSize, YSize = GetTextBounds(Text, Enum.Font.Arial, TextSize)
     YSize = YSize + 7
@@ -2644,14 +2643,5 @@ function NotificationModule:Notify(Text, Time)
         NotifyOuter:Destroy()
     end)
 end
-
-getgenv().library = {
-    Notify = function(Text, Time)
-        NotificationModule:Notify(Text, Time)
-    end
-}
-
--- Example call
-library:Notify('Hello, world!', 3)
 
 return library
