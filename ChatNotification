@@ -1,0 +1,130 @@
+local NotificationModule = {}
+local TextService = game:GetService('TextService')
+local CoreGui = game:GetService('CoreGui')
+
+local AccentColor = Color3.fromRGB(120, 10, 10)
+local MainColor = Color3.fromRGB(40, 40, 40)
+
+local function Create(Class, Properties)
+    local _Instance = Instance.new(Class)
+    for Property, Value in pairs(Properties) do
+        _Instance[Property] = Value
+    end
+    return _Instance
+end
+
+local function GetTextBounds(Text, Font, Size, Resolution)
+    local Bounds = TextService:GetTextSize(Text, Size, Font, Resolution or Vector2.new(1920, 1080))
+    return Bounds.X, Bounds.Y
+end
+
+local NotificationArea = Create('ScreenGui', {
+    Name = "NotificationArea",
+    Parent = CoreGui,
+    IgnoreGuiInset = true
+})
+
+local NotificationContainer = Create('Frame', {
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 0, 0, 400),
+    Size = UDim2.new(1, 0, 1, -40),
+    ZIndex = 100,
+    Parent = NotificationArea
+})
+
+Create('UIListLayout', {
+    Padding = UDim.new(0, 8),
+    FillDirection = Enum.FillDirection.Vertical,
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    HorizontalAlignment = Enum.HorizontalAlignment.Center,
+    Parent = NotificationContainer,
+})
+
+function NotificationModule:Notify(Text, Time)
+    local TextSize = 17
+    local XSize, YSize = GetTextBounds(Text, Enum.Font.Gotham, TextSize)
+    YSize = YSize + 10
+
+    local NotifyOuter = Create('Frame', {
+        BorderSizePixel = 0,
+        Position = UDim2.new(0.5, -XSize / 2, 0, 10),
+        Size = UDim2.new(0, 0, 0, YSize),
+        ClipsDescendants = true,
+        BackgroundTransparency = 1,
+        ZIndex = 100,
+        Parent = NotificationContainer,
+    })
+
+    local NotifyInner = Create('Frame', {
+        BackgroundColor3 = MainColor,
+        Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = 101,
+        Parent = NotifyOuter,
+    })
+
+    Create('UICorner', {
+        CornerRadius = UDim.new(0, 6),
+        Parent = NotifyInner,
+    })
+
+    local InnerFrame = Create('Frame', {
+        BackgroundColor3 = MainColor:lerp(Color3.new(0, 0, 0), 0.1),
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 1, 0, 1),
+        Size = UDim2.new(1, -2, 1, -2),
+        ZIndex = 102,
+        Parent = NotifyInner,
+    })
+
+    Create('UICorner', {
+        CornerRadius = UDim.new(0, 6),
+        Parent = InnerFrame,
+    })
+
+    Create('UIGradient', {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, MainColor),
+            ColorSequenceKeypoint.new(1, MainColor:lerp(Color3.new(0, 0, 0), 0.2)),
+        }),
+        Rotation = -90,
+        Parent = InnerFrame,
+    })
+
+    Create('TextLabel', {
+        Position = UDim2.new(0, 8, 0, 0),
+        Size = UDim2.new(1, -16, 1, 0),
+        Text = Text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Font = Enum.Font.Gotham,
+        TextSize = TextSize,
+        BackgroundTransparency = 1,
+        TextColor3 = Color3.new(1, 1, 1),
+        ZIndex = 103,
+        Parent = InnerFrame,
+    })
+
+    local AccentBar = Create('Frame', {
+        BackgroundColor3 = AccentColor,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(0, 6, 1, 0),
+        ZIndex = 104,
+        Parent = NotifyInner,
+    })
+
+    Create('UICorner', {
+        CornerRadius = UDim.new(0, 3),
+        Parent = AccentBar,
+    })
+
+    NotifyOuter:TweenSize(UDim2.new(0, XSize + 16, 0, YSize + 4), 'Out', 'Quad', 0.4, true)
+
+    task.spawn(function()
+        wait(Time or 5)
+        NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true)
+        wait(0.4)
+        NotifyOuter:Destroy()
+    end)
+end
+
+return NotificationModule
