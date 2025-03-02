@@ -7,7 +7,7 @@
 
 	MODIFIED BY: NitrixVenom
 	
-	v1: Changed Color to green. [10, 120, 10]
+	v1: Changed Color to Green. [10, 120, 10]
 	v2: Updated font to Arial using Enum.Font.Code.
 --]]
 
