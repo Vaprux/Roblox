@@ -5,7 +5,7 @@
         https://v3rmillion.net/member.php?action=profile&uid=947830
         Singularity#5490
 
-	MODIFIED BY: NitrixVenom
+	MODIFIED BY: Vaprux
 	
 	v1: Changed Color to Green. [10, 120, 10]
 	v2: Updated font to Arial using Enum.Font.Code.
