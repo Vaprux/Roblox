@@ -1,3 +1,7 @@
+if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then
+    game:GetService("CoreGui"):FindFirstChild("NotificationArea"):Destroy()
+end
+
 local NotificationModule = {}
 local TextService = game:GetService('TextService')
 local CoreGui = game:GetService('CoreGui')
