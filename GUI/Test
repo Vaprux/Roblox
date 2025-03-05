@@ -13,18 +13,6 @@
 
 Library.Theme = Color3.fromRGB(120, 10, 10) -- Default color
 
-function Library:SetTheme(color)
-    self.Theme = color -- Update stored theme color
-    for _, v in pairs(self.GUI:GetDescendants()) do
-        if v:IsA("Frame") or v:IsA("TextBox") or v:IsA("TextLabel") or v:IsA("TextButton") then
-            v.BackgroundColor3 = color -- Apply new color
-        end
-        if v:IsA("TextLabel") or v:IsA("TextButton") then
-            v.TextColor3 = Color3.fromRGB(255, 255, 255) -- Keep text readable
-        end
-    end
-end
-
 repeat wait() until game:GetService("Players").LocalPlayer
 if game:GetService("CoreGui"):FindFirstChild("imgui2") then
     game:GetService("CoreGui"):FindFirstChild("imgui2"):Destroy()
