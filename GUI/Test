@@ -28,36 +28,6 @@ local Themes = {
     orange = Color3.fromRGB(255, 165, 0),
 }
 
-local function updateTheme()
-    local themeColor = Themes[Library.Theme] or Themes.red  -- Default to red if invalid theme
-
-    -- List of UI elements that should change color
-    local elementsToColor = {
-        ScreenGui:FindFirstChild("Main"),
-        ScreenGui:FindFirstChild("Title_2"),
-        ScreenGui:FindFirstChild("Content"),
-        ScreenGui:FindFirstChild("Tabs"),
-    }
-    
-    for _, element in pairs(elementsToColor) do
-        if element then
-            element.ImageColor3 = themeColor
-        end
-    end
-end
-
--- Apply theme on startup
-updateTheme()
-
-setmetatable(Library, {
-    __newindex = function(t, k, v)
-        rawset(t, k, v)  -- Set the new value
-        if k == "Theme" then
-            updateTheme()  -- Update the UI theme in real-time
-        end
-    end
-})
-
 do -- Load items
     local imgui2 = Instance.new("ScreenGui")
     local Presets = Instance.new("Frame")
@@ -1620,6 +1590,36 @@ local library library = {
                     self.event = event.new()
                     return self
                 end
+
+local function updateTheme()
+    local themeColor = Themes[Library.Theme] or Themes.red  -- Default to red if invalid theme
+
+    -- List of UI elements that should change color
+    local elementsToColor = {
+        ScreenGui:FindFirstChild("Main"),
+        ScreenGui:FindFirstChild("Title_2"),
+        ScreenGui:FindFirstChild("Content"),
+        ScreenGui:FindFirstChild("Tabs"),
+    }
+    
+    for _, element in pairs(elementsToColor) do
+        if element then
+            element.ImageColor3 = themeColor
+        end
+    end
+end
+
+-- Apply theme on startup
+updateTheme()
+
+setmetatable(Library, {
+    __newindex = function(t, k, v)
+        rawset(t, k, v)  -- Set the new value
+        if k == "Theme" then
+            updateTheme()  -- Update the UI theme in real-time
+        end
+    end
+})
 
                 function types.switch(switchOptions)
                     local self = { }
