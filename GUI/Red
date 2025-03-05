@@ -11,7 +11,6 @@
 	v2: Updated font to Arial using Enum.Font.Code.
 --]]
 
-repeat wait() until game:GetService("Players").LocalPlayer
 if game:GetService("CoreGui"):FindFirstChild("imgui2") then
     game:GetService("CoreGui"):FindFirstChild("imgui2"):Destroy()
 end
