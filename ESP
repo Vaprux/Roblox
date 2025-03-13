@@ -71,14 +71,24 @@ function ESP:GetPlrFromChar(char)
 end
 
 function ESP:Toggle(bool)
-    self.Enabled = bool
-    if not bool then
-        for i,v in pairs(self.Objects) do
+    -- Check if any feature is enabled
+    local anyFeatureEnabled = self.Boxes or self.Names or self.Tracers or self.Players or self.TeamColor
+
+    -- If any feature is enabled, turn on ESP
+    if anyFeatureEnabled then
+        self.Enabled = true
+    else
+        self.Enabled = false
+    end
+
+    if not self.Enabled then
+        -- Disable all visuals if ESP is turned off
+        for i, v in pairs(self.Objects) do
             if v.Type == "Box" then --fov circle etc
                 if v.Temporary then
                     v:Remove()
                 else
-                    for i,v in pairs(v.Components) do
+                    for i, v in pairs(v.Components) do
                         v.Visible = false
                     end
                 end
