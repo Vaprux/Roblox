@@ -2006,7 +2006,7 @@ local library library = {
                     local text = dropdownButton:FindFirstChild("Text")
                     local outer = dropdownButton:FindFirstChild("Outer")
                     local inner = outer:FindFirstChild("Inner")
-		    print(inner:GetChildren())
+		    print(outer:GetChildren().Name)
                     inner.ImageColor3 = dropdownOptions.color
                     outer.SliceScale = dropdownOptions.rounding / 100
                     inner.SliceScale = dropdownOptions.rounding / 100
