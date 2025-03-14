@@ -6,7 +6,7 @@
         Singularity#5490
 
 	MODIFIED BY: Vaprux
-	v2: Updated font to Arial using Enum.Font.Code.
+	v1: Updated font to Arial using Enum.Font.Code.
 --]]
 
 if game:GetService("CoreGui"):FindFirstChild("imgui2") then
