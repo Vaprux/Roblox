@@ -465,7 +465,7 @@ do -- Load items
     Inner.Position = UDim2.new(0, 2, 0, 2)
     Inner.Size = UDim2.new(1, -4, 1, -4)
     Inner.Image = "rbxassetid://3570695787"
-    Inner.ImageColor3 = dropdownOptions.color
+    Inner.ImageColor3 = Color3.fromRGB(32, 59, 97)
     Inner.ScaleType = Enum.ScaleType.Slice
     Inner.SliceCenter = Rect.new(100, 100, 100, 100)
     Inner.SliceScale = 0.050
@@ -2007,6 +2007,7 @@ local library library = {
                     local outer = dropdownButton:FindFirstChild("Outer")
                     local inner = outer:FindFirstChild("Inner")
                     inner.ImageColor3 = dropdownOptions.color
+		    Inner.ImageColor3 = dropdownOptions.color
                     outer.SliceScale = dropdownOptions.rounding / 100
                     inner.SliceScale = dropdownOptions.rounding / 100
                     inner:FindFirstChild("Value").Text = "[...]"
