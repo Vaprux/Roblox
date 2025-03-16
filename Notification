@@ -6,7 +6,7 @@ local NotificationModule = {}
 local TextService = game:GetService('TextService')
 local CoreGui = game:GetService('CoreGui')
 
-local AccentColor = Color3.fromRGB(120, 10, 10)
+local AccentColor = Color3.fromRGB(75, 10, 120)
 local MainColor = Color3.fromRGB(28, 28, 28)
 local OutlineColor = Color3.fromRGB(50, 50, 50)
 
@@ -44,7 +44,7 @@ Create('UIListLayout', {
     Parent = NotificationContainer,
 })
 
-function NotificationModule:Notify(Text, Time)
+function NotificationModule:Notify(Text, Color, Time)
     local TextSize = 17
     local XSize, YSize = GetTextBounds(Text, Enum.Font.Arial, TextSize)
     YSize = YSize + 7
@@ -99,8 +99,9 @@ function NotificationModule:Notify(Text, Time)
         Parent = InnerFrame,
     })
 
+    -- Use the provided Color argument instead of AccentColor
     Create('Frame', {
-        BackgroundColor3 = AccentColor,
+        BackgroundColor3 = Color or AccentColor, -- Default to AccentColor if none is provided
         BorderSizePixel = 0,
         Position = UDim2.new(0, -1, 0, -1),
         Size = UDim2.new(0, 3, 1, 2),
@@ -117,5 +118,6 @@ function NotificationModule:Notify(Text, Time)
         NotifyOuter:Destroy()
     end)
 end
+
 
 return NotificationModule
