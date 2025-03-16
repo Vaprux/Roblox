@@ -36,8 +36,8 @@ local NotificationArea = Create("ScreenGui", {
 
 local NotificationContainer = Create("Frame", {
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 0, 0, 370),
-    Size = UDim2.new(1, 0, 1, -40),
+    Position = UDim2.new(0.5, -200, 0, 370), -- Centered on screen
+    Size = UDim2.new(0, 400, 1, -40),
     ZIndex = 100,
     Parent = NotificationArea
 })
@@ -46,6 +46,7 @@ Create("UIListLayout", {
     Padding = UDim.new(0, 4),
     FillDirection = Enum.FillDirection.Vertical,
     SortOrder = Enum.SortOrder.LayoutOrder,
+    HorizontalAlignment = Enum.HorizontalAlignment.Center,
     Parent = NotificationContainer,
 })
 
@@ -75,66 +76,39 @@ function NotificationModule:Notify(Text, Color, Time)
 
     local NotifyOuter = Create("Frame", {
         BackgroundColor3 = MainColor, -- Ensure it's visible
-        BorderColor3 = Color3.new(0, 0, 0),
-        Position = UDim2.new(0.5, -XSize / 2, 0, 10),
-        Size = UDim2.new(0, 0, 0, YSize),
+        BorderColor3 = OutlineColor,
+        BorderSizePixel = 1,
+        Size = UDim2.new(0, XSize + 24, 0, YSize),
         ClipsDescendants = true,
         ZIndex = 100,
         Parent = NotificationContainer,
     })
 
-    local NotifyInner = Create("Frame", {
-        BackgroundColor3 = MainColor,
-        BorderColor3 = OutlineColor,
-        BorderMode = Enum.BorderMode.Inset,
-        Size = UDim2.new(1, 0, 1, 0),
-        ZIndex = 101,
-        Parent = NotifyOuter,
-    })
-
-    local InnerFrame = Create("Frame", {
-        BackgroundColor3 = Color3.new(1, 1, 1),
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 1, 0, 1),
-        Size = UDim2.new(1, -2, 1, -2),
-        ZIndex = 102,
-        Parent = NotifyInner,
-    })
-
-    Create("UIGradient", {
-        Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, MainColor:lerp(Color3.new(0, 0, 0), 0.3)),
-            ColorSequenceKeypoint.new(1, MainColor),
-        }),
-        Rotation = -90,
-        Parent = InnerFrame,
-    })
-
     local TextLabel = Create("TextLabel", {
-        BackgroundColor3 = MainColor, -- Fix transparency
-        Position = UDim2.new(0, 4, 0, 0),
-        Size = UDim2.new(1, -4, 1, 0),
+        BackgroundTransparency = 1, -- No blocking layers
+        Position = UDim2.new(0, 8, 0, 0),
+        Size = UDim2.new(1, -8, 1, 0),
         Text = Text,
         TextXAlignment = Enum.TextXAlignment.Left,
         Font = Enum.Font.GothamBold,
         TextSize = TextSize,
-        BackgroundTransparency = 0, -- Ensure text label is visible
         TextColor3 = Color3.new(1, 1, 1),
-        ZIndex = 103,
-        Parent = InnerFrame,
+        ZIndex = 101,
+        Parent = NotifyOuter,
     })
 
     Create("Frame", {
         BackgroundColor3 = Color or AccentColor,
         BorderSizePixel = 0,
-        Position = UDim2.new(0, -1, 0, -1),
-        Size = UDim2.new(0, 3, 1, 2),
-        ZIndex = 104,
+        Position = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.new(0, 3, 1, 0),
+        ZIndex = 102,
         Parent = NotifyOuter,
     })
 
     -- Animate the notification
-    NotifyOuter:TweenSize(UDim2.new(0, XSize + 12, 0, YSize), "Out", "Quad", 0.4, true)
+    NotifyOuter.Size = UDim2.new(0, 0, 0, YSize)
+    NotifyOuter:TweenSize(UDim2.new(0, XSize + 24, 0, YSize), "Out", "Quad", 0.4, true)
 
     -- Store the active notification
     ActiveNotifications[Text] = NotifyOuter
