@@ -10,9 +10,9 @@ local CoreGui = game:GetService('CoreGui')
 
 -- Colors
 local AccentColor = Color3.fromRGB(75, 10, 120)
-local MainColor = Color3.fromRGB(20, 20, 20)
-local OutlineColor = Color3.fromRGB(50, 50, 50)
-local BorderColor = Color3.fromRGB(100, 100, 100) -- Border color
+local MainColor = Color3.fromRGB(25, 25, 25) -- Slightly lighter for the background
+local OutlineColor = Color3.fromRGB(50, 50, 50) -- Dark outline for depth
+local BorderColor = Color3.fromRGB(100, 100, 100) -- Lighter border
 
 -- Helper function to create instances
 local function Create(Class, Properties)
@@ -47,7 +47,7 @@ local NotificationContainer = Create('Frame', {
 
 -- Layout for notifications
 Create('UIListLayout', {
-    Padding = UDim.new(0, 4),
+    Padding = UDim.new(0, 10),
     FillDirection = Enum.FillDirection.Vertical,
     SortOrder = Enum.SortOrder.LayoutOrder,
     Parent = NotificationContainer,
@@ -55,23 +55,32 @@ Create('UIListLayout', {
 
 -- Notify function to create notifications
 function NotificationModule:Notify(Text, Color, Time)
-    local TextSize = 17
+    local TextSize = 18
     local XSize, YSize = GetTextBounds(Text, Enum.Font.Arial, TextSize)
-    YSize = YSize + 7 -- Add padding for text
+    YSize = YSize + 10 -- Padding for text
 
-    -- Outer Frame for the notification
+    -- Outer Frame for the notification with rounded corners and shadow
     local NotifyOuter = Create('Frame', {
         BorderColor3 = BorderColor, -- Set the border color here
-        BorderSizePixel = 4, -- Adjust border thickness
+        BorderSizePixel = 3, -- Thicker border for better visibility
         Position = UDim2.new(0.5, -XSize / 2, 0, 10),
         Size = UDim2.new(0, 0, 0, YSize),
         ClipsDescendants = true,
-        ZIndex = 100, -- Ensure it's on top
-        BackgroundTransparency = 1, -- No background color
+        ZIndex = 100,
+        BackgroundTransparency = 1,
         Parent = NotificationContainer,
     })
 
-    -- Inner Frame for the notification
+    -- Add shadow effect to outer frame
+    Create('UIStroke', {
+        Color = Color3.fromRGB(0, 0, 0),
+        Thickness = 4,
+        Transparency = 0.5,
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+        Parent = NotifyOuter,
+    })
+
+    -- Inner Frame for the notification with smooth gradient
     local NotifyInner = Create('Frame', {
         BackgroundColor3 = MainColor,
         BorderColor3 = OutlineColor,
@@ -79,6 +88,7 @@ function NotificationModule:Notify(Text, Color, Time)
         Size = UDim2.new(1, 0, 1, 0),
         ZIndex = 101,
         Parent = NotifyOuter,
+        UICorner = {Radius = 12}, -- Rounded corners
     })
 
     -- White inner frame for gradient effect
@@ -103,8 +113,8 @@ function NotificationModule:Notify(Text, Color, Time)
 
     -- Text label inside the notification
     Create('TextLabel', {
-        Position = UDim2.new(0, 4, 0, 0),
-        Size = UDim2.new(1, -4, 1, 0),
+        Position = UDim2.new(0, 10, 0, 0),
+        Size = UDim2.new(1, -20, 1, 0),
         Text = Text,
         TextXAlignment = Enum.TextXAlignment.Left,
         Font = Enum.Font.Arial,
@@ -115,7 +125,7 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = InnerFrame,
     })
 
-    -- Adjusted accent line on the left
+    -- Accent line on the left to match the color theme
     Create('Frame', {
         BackgroundColor3 = Color,
         BorderSizePixel = 0,
@@ -126,7 +136,7 @@ function NotificationModule:Notify(Text, Color, Time)
     })
 
     -- Tween notification size and animation
-    NotifyOuter:TweenSize(UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true)
+    NotifyOuter:TweenSize(UDim2.new(0, XSize + 16, 0, YSize), 'Out', 'Quad', 0.4, true)
 
     -- Auto-remove notification after a set time
     task.spawn(function()
