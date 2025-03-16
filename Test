@@ -70,7 +70,7 @@ function NotificationModule:Notify(Text, Color, Time)
                 task.wait(0.2)
             end
         end)
-        return -- Prevent duplicate notifications
+        return -- Prevent duplicate notifications from being created
     end
 
     -- Create new notification
