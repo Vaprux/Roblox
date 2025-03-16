@@ -1,17 +1,16 @@
-if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then  
-    game:GetService("CoreGui"):FindFirstChild("NotificationArea"):Destroy()
-end
+-- NotificationModule.lua
 
 local NotificationModule = {}
 local TextService = game:GetService('TextService')
 local CoreGui = game:GetService('CoreGui')
 
-local AccentColor = Color3.fromRGB(75, 10, 120)  -- Keep this for accent color
-local MainColor = Color3.fromRGB(28, 28, 28)  -- Main dark color
-local OutlineColor = Color3.fromRGB(50, 50, 50)  -- Outline color
+local AccentColor = Color3.fromRGB(75, 10, 120)  -- Accent color for notifications
+local MainColor = Color3.fromRGB(28, 28, 28)     -- Main dark color
+local OutlineColor = Color3.fromRGB(50, 50, 50)  -- Outline color for frames
 
 local ActiveNotifications = {} -- Stores active notifications
 
+-- Helper function to create new instances
 local function Create(Class, Properties)
     local _Instance = Instance.new(Class)
     for Property, Value in pairs(Properties) do
@@ -20,11 +19,13 @@ local function Create(Class, Properties)
     return _Instance
 end
 
+-- Function to calculate the text size
 local function GetTextBounds(Text, Font, Size, Resolution)
     local Bounds = TextService:GetTextSize(Text, Size, Font, Resolution or Vector2.new(1920, 1080))
     return Bounds.X, Bounds.Y
 end
 
+-- Create the Notification Area at the top of the screen
 local NotificationArea = Create('ScreenGui', {
     Name = "NotificationArea",
     Parent = CoreGui,
@@ -33,12 +34,13 @@ local NotificationArea = Create('ScreenGui', {
 
 local NotificationContainer = Create('Frame', {
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 0, 0, 370),
+    Position = UDim2.new(0, 0, 0, 10),  -- Positioned closer to the top of the screen
     Size = UDim2.new(1, 0, 1, -40),
     ZIndex = 100,
     Parent = NotificationArea
 })
 
+-- Layout to stack notifications vertically
 Create('UIListLayout', {
     Padding = UDim.new(0, 4),
     FillDirection = Enum.FillDirection.Vertical,
@@ -46,6 +48,7 @@ Create('UIListLayout', {
     Parent = NotificationContainer,
 })
 
+-- Notification function
 function NotificationModule:Notify(Text, Color, Time)
     -- If the notification already exists, flash it
     if ActiveNotifications[Text] then
@@ -54,27 +57,17 @@ function NotificationModule:Notify(Text, Color, Time)
         local TextLabel = NotifyOuter:FindFirstChild("TextLabel") -- Find the text label
         
         -- Flash effect (Purple)
--- Flash effect (Purple)
-task.spawn(function()
-    local originalColor = AccentBar and AccentBar.BackgroundColor3 or Color3.fromRGB(75, 10, 120)  -- Default to AccentColor if AccentBar is nil
-    if TextLabel then  -- Ensure TextLabel exists before modifying
-        for i = 1, 3 do
-            if AccentBar then  -- Ensure AccentBar exists before modifying
+        task.spawn(function()
+            local originalColor = AccentBar.BackgroundColor3
+            for i = 1, 3 do
                 AccentBar.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Flash purple
-            end
-            TextLabel.TextColor3 = Color3.fromRGB(128, 0, 128) -- Flash purple
-            task.wait(0.2)
-            if AccentBar then  -- Ensure AccentBar exists before reverting color
+                TextLabel.TextColor3 = Color3.fromRGB(200, 150, 255) -- Lighter purple text
+                task.wait(0.2)
                 AccentBar.BackgroundColor3 = originalColor
+                TextLabel.TextColor3 = Color3.new(1, 1, 1) -- Back to white
+                task.wait(0.2)
             end
-            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            task.wait(0.2)
-        end
-    else
-        warn("TextLabel not found in notification!")
-    end
-end)
-
+        end)
         return -- Prevent duplicate notifications from being created
     end
 
@@ -83,6 +76,7 @@ end)
     local XSize, YSize = GetTextBounds(Text, Enum.Font.GothamBold, TextSize)  -- Changed font to match GTA 5 style
     YSize = YSize + 10  -- Added some space for a more stylish appearance
 
+    -- Notification outer frame
     local NotifyOuter = Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0),
         Position = UDim2.new(0.5, -XSize / 2, 0, 10),
@@ -93,6 +87,7 @@ end)
         Parent = NotificationContainer,
     })
 
+    -- Notification inner frame
     local NotifyInner = Create('Frame', {
         BackgroundColor3 = MainColor,
         BorderColor3 = OutlineColor,
@@ -102,6 +97,7 @@ end)
         Parent = NotifyOuter,
     })
 
+    -- Inner frame gradient
     local InnerFrame = Create('Frame', {
         BackgroundColor3 = Color3.new(1, 1, 1),
         BorderSizePixel = 0,
@@ -111,6 +107,7 @@ end)
         Parent = NotifyInner,
     })
 
+    -- Gradient effect
     Create('UIGradient', {
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, MainColor:lerp(Color3.new(0, 0, 0), 0.3)),
@@ -120,12 +117,13 @@ end)
         Parent = InnerFrame,
     })
 
+    -- Notification text label
     Create('TextLabel', {
         Position = UDim2.new(0, 4, 0, 0),
         Size = UDim2.new(1, -4, 1, 0),
         Text = Text,
         TextXAlignment = Enum.TextXAlignment.Left,
-        Font = Enum.Font.GothamBold,  -- Changed font to match GTA style
+        Font = Enum.Font.GothamBold,  -- Changed font to match GTA 5 style
         TextSize = TextSize,
         BackgroundTransparency = 1,
         TextColor3 = Color3.new(1, 1, 1),
@@ -135,8 +133,8 @@ end)
 
     -- Notification border accent line
     Create('Frame', {
-        Name = "AccentBar",  -- Name the frame so it can be identified later
-        BackgroundColor3 = Color or AccentColor,  -- Use the provided color
+        Name = "AccentBar",
+        BackgroundColor3 = Color or AccentColor,  -- Use the provided color or the default accent color
         BorderSizePixel = 0,
         Position = UDim2.new(0, -1, 0, -1),
         Size = UDim2.new(0, 3, 1, 2),
@@ -150,7 +148,7 @@ end)
     -- Store the active notification
     ActiveNotifications[Text] = NotifyOuter
 
-    -- Destroy notification after time
+    -- Destroy notification after the specified time
     task.spawn(function()
         wait(Time or 5)
         NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true)
