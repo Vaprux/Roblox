@@ -2006,7 +2006,11 @@ local library library = {
 
                     local text = dropdownButton:FindFirstChild("Text")
                     local outer = dropdownButton:FindFirstChild("Outer")
+                    print(outer) -- Should print an Instance (e.g., Frame, ImageLabel, etc.)
+                    print(outer:FindFirstChild("Inner")) -- Should print an Instance or nil
                     local inner = outer:FindFirstChild("Inner")
+                    print(inner) -- should print the instance, not nil
+                    print(type(inner)) -- Should print "Instance", not "table"
                     inner.ImageColor3 = dropdownOptions.color
                     outer.SliceScale = dropdownOptions.rounding / 100
                     inner.SliceScale = dropdownOptions.rounding / 100
