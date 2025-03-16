@@ -2010,7 +2010,7 @@ local library library = {
                     local text = dropdownButton:FindFirstChild("Text")
                     local outer = dropdownButton:FindFirstChild("Outer")
                     local inner = outer:FindFirstChild("Inner")
-                    inner.ImageColor3 = dropdownOptions.color
+                    inner.ImageColor3 = options.color
                     outer.SliceScale = dropdownOptions.rounding / 100
                     inner.SliceScale = dropdownOptions.rounding / 100
                     inner:FindFirstChild("Value").Text = "[...]"
@@ -2111,7 +2111,7 @@ local library library = {
                             end
                             dropdownObjects[name].selected = true
                             resize(dropdownOption, { TextColor3 = Color3.new(1, 1, 1) }, 0.1)
-                            resize(dropdownOption:GetChildren()[1], { ImageColor3 = dropdownOptions.color }, 0.1)
+                            resize(dropdownOption:GetChildren()[1], { ImageColor3 = options.color }, 0.1)
                             inner:FindFirstChild("Value").Text = string.format("[ %s ]", name)
                             dropdownWindow:FindFirstChild("Content"):FindFirstChild("Selected").Text = string.format("[ %s ]", name)
                             if not self.eventBlock then
@@ -2144,7 +2144,7 @@ local library library = {
                     do -- search bar
                         local TextBox = dropdownWindow:FindFirstChild("Content"):FindFirstChild("Search"):FindFirstChild("Outer"):FindFirstChild("Inner"):FindFirstChild("TextBox")
                         local inTextBox = false
-                        dropdownWindow:FindFirstChild("Content"):FindFirstChild("Search"):FindFirstChild("Outer"):FindFirstChild("Inner").ImageColor3 = dropdownOptions.color
+                        dropdownWindow:FindFirstChild("Content"):FindFirstChild("Search"):FindFirstChild("Outer"):FindFirstChild("Inner").ImageColor3 = options.color
                         TextBox.MouseEnter:Connect(function()
                             inTextBox = true
                         end)
