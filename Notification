@@ -1,4 +1,4 @@
-if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then
+if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then 
     game:GetService("CoreGui"):FindFirstChild("NotificationArea"):Destroy()
 end
 
@@ -6,9 +6,9 @@ local NotificationModule = {}
 local TextService = game:GetService('TextService')
 local CoreGui = game:GetService('CoreGui')
 
-local AccentColor = Color3.fromRGB(75, 10, 120)
-local MainColor = Color3.fromRGB(28, 28, 28)
-local OutlineColor = Color3.fromRGB(50, 50, 50)
+local AccentColor = Color3.fromRGB(75, 10, 120)  -- Keep this for accent color
+local MainColor = Color3.fromRGB(28, 28, 28)  -- Main dark color
+local OutlineColor = Color3.fromRGB(50, 50, 50)  -- Outline color
 
 local function Create(Class, Properties)
     local _Instance = Instance.new(Class)
@@ -31,7 +31,7 @@ local NotificationArea = Create('ScreenGui', {
 
 local NotificationContainer = Create('Frame', {
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 0, 0, 400),
+    Position = UDim2.new(0, 0, 0, 370),
     Size = UDim2.new(1, 0, 1, -40),
     ZIndex = 100,
     Parent = NotificationArea
@@ -46,8 +46,8 @@ Create('UIListLayout', {
 
 function NotificationModule:Notify(Text, Color, Time)
     local TextSize = 17
-    local XSize, YSize = GetTextBounds(Text, Enum.Font.Arial, TextSize)
-    YSize = YSize + 7
+    local XSize, YSize = GetTextBounds(Text, Enum.Font.GothamBold, TextSize)  -- Changed font to match GTA 5 style
+    YSize = YSize + 10  -- Added some space for a more stylish appearance
 
     local NotifyOuter = Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0),
@@ -91,7 +91,7 @@ function NotificationModule:Notify(Text, Color, Time)
         Size = UDim2.new(1, -4, 1, 0),
         Text = Text,
         TextXAlignment = Enum.TextXAlignment.Left,
-        Font = Enum.Font.Arial,
+        Font = Enum.Font.GothamBold,  -- Changed font to match GTA style
         TextSize = TextSize,
         BackgroundTransparency = 1,
         TextColor3 = Color3.new(1, 1, 1),
@@ -99,9 +99,9 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = InnerFrame,
     })
 
-    -- Use the provided Color argument instead of AccentColor
+    -- Notification border accent line
     Create('Frame', {
-        BackgroundColor3 = Color or AccentColor, -- Default to AccentColor if none is provided
+        BackgroundColor3 = Color or AccentColor,  -- Use the provided color
         BorderSizePixel = 0,
         Position = UDim2.new(0, -1, 0, -1),
         Size = UDim2.new(0, 3, 1, 2),
@@ -109,6 +109,7 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotifyOuter,
     })
 
+    -- Smoothly animate the notification appearance
     NotifyOuter:TweenSize(UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true)
 
     task.spawn(function()
