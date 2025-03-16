@@ -54,17 +54,27 @@ function NotificationModule:Notify(Text, Color, Time)
         local TextLabel = NotifyOuter:FindFirstChild("TextLabel") -- Find the text label
         
         -- Flash effect (Purple)
-        task.spawn(function()
-            local originalColor = AccentBar.BackgroundColor3
-            for i = 1, 3 do
+-- Flash effect (Purple)
+task.spawn(function()
+    local originalColor = AccentBar and AccentBar.BackgroundColor3 or Color3.fromRGB(75, 10, 120)  -- Default to AccentColor if AccentBar is nil
+    if TextLabel then  -- Ensure TextLabel exists before modifying
+        for i = 1, 3 do
+            if AccentBar then  -- Ensure AccentBar exists before modifying
                 AccentBar.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Flash purple
-                TextLabel.TextColor3 = Color3.fromRGB(128, 0, 128) -- Flash purple
-                task.wait(0.2)
-                AccentBar.BackgroundColor3 = originalColor
-                TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-                task.wait(0.2)
             end
-        end)
+            TextLabel.TextColor3 = Color3.fromRGB(128, 0, 128) -- Flash purple
+            task.wait(0.2)
+            if AccentBar then  -- Ensure AccentBar exists before reverting color
+                AccentBar.BackgroundColor3 = originalColor
+            end
+            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            task.wait(0.2)
+        end
+    else
+        warn("TextLabel not found in notification!")
+    end
+end)
+
         return -- Prevent duplicate notifications from being created
     end
 
@@ -149,5 +159,3 @@ function NotificationModule:Notify(Text, Color, Time)
         ActiveNotifications[Text] = nil
     end)
 end
-
-return NotificationModule
