@@ -113,14 +113,26 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = InnerFrame,
     })
 
-    -- Small accent line on the left
+    -- Enhanced accent bar with increased saturation for the 'Color'
     Create('Frame', {
-        BackgroundColor3 = Color,
+        BackgroundColor3 = Color:lerp(Color3.fromRGB(255, 0, 0), 0.3),  -- Lerp to make it more vibrant
         BorderSizePixel = 0,
         Position = UDim2.new(0, -1, 0, -1),
-        Size = UDim2.new(0, 3, 1, 2),
+        Size = UDim2.new(0, 6, 1, 2),  -- Thicker accent
         ZIndex = 104,
         Parent = NotifyOuter,
+    })
+
+    -- Glow effect (outer glow around the Color bar for more prominence)
+    Create('Frame', {
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, -4, 0, -4),
+        Size = UDim2.new(0, 14, 1, 6),
+        ZIndex = 105,
+        Parent = NotifyOuter,
+        BackgroundTransparency = 0.8,
+        CornerRadius = UDim.new(0, 8),
     })
 
     -- Tween notification size and animation
