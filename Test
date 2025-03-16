@@ -2004,8 +2004,8 @@ local library library = {
                     dragger.new(dropdownWindow)
                     dropdownButton.Parent = items
 
-                    local text = dropdownButton:FindFirstChild("Text")
-                    local outer = dropdownButton:FindFirstChild("Outer")
+                    local text = dropdownWindow:FindFirstChild("Text")
+                    local outer = dropdownWindow:FindFirstChild("Outer")
                     print(outer) -- Should print an Instance (e.g., Frame, ImageLabel, etc.)
                     print(outer:FindFirstChild("Inner")) -- Should print an Instance or nil
                     local inner = outer:FindFirstChild("Inner")
