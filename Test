@@ -55,14 +55,18 @@ function NotificationModule:Notify(Text, Color, Time)
     -- If the notification already exists, flash it
     if ActiveNotifications[Text] then
         local NotifyOuter = ActiveNotifications[Text]
-
+        local AccentBar = NotifyOuter:FindFirstChild("AccentBar") -- Find the accent frame
+        local TextLabel = NotifyOuter:FindFirstChild("TextLabel") -- Find the text label
+        
         -- Flash effect (Purple)
         task.spawn(function()
-            local originalColor = NotifyOuter.BackgroundColor3
+            local originalColor = AccentBar.BackgroundColor3
             for i = 1, 3 do
-                NotifyOuter.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Purple
+                AccentBar.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Flash purple
+                TextLabel.TextColor3 = Color3.fromRGB(200, 150, 255) -- Lighter purple text
                 task.wait(0.2)
-                NotifyOuter.BackgroundColor3 = originalColor
+                AccentBar.BackgroundColor3 = originalColor
+                TextLabel.TextColor3 = Color3.new(1, 1, 1) -- Back to white
                 task.wait(0.2)
             end
         end)
@@ -85,6 +89,7 @@ function NotificationModule:Notify(Text, Color, Time)
     })
 
     local TextLabel = Create("TextLabel", {
+        Name = "TextLabel",
         BackgroundTransparency = 1, -- No blocking layers
         Position = UDim2.new(0, 8, 0, 0),
         Size = UDim2.new(1, -8, 1, 0),
@@ -97,7 +102,8 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotifyOuter,
     })
 
-    Create("Frame", {
+    local AccentBar = Create("Frame", {
+        Name = "AccentBar",
         BackgroundColor3 = Color or AccentColor,
         BorderSizePixel = 0,
         Position = UDim2.new(0, 0, 0, 0),
