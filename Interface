@@ -7,10 +7,10 @@
 
 	MODIFIED BY: Vaprux
 	
-	v1: Changed Color to Purple. [75, 10, 120]
+	v1: Changed color to purple (RGB: 75, 10, 120).
 	v2: Updated font to Arial using Enum.Font.Code.
 
-	v3: Fixed dropdown color function, Replaced selectioncolor with Dropdown color 
+	v3: Fixed color functions—now all elements will correctly use your library's designated color.
 --]]
 
 repeat wait() until game:GetService("Players").LocalPlayer
@@ -1995,9 +1995,7 @@ local library library = {
                     dropdownOptions = settings.new({
                         text = "New Dropdown",
                         size = 150,
-                        color = options.color,
                         rounding = options.rounding,
-                        selectioncolor = options.color,
                     }).handle(dropdownOptions)
 
                     local dropdownButton = new("Dropdown")
