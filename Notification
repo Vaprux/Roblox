@@ -38,7 +38,7 @@ local NotificationContainer = Create('Frame', {
 })
 
 Create('UIListLayout', {
-    Padding = UDim.new(0, 8),  -- Increased padding for better spacing
+    Padding = UDim.new(0, 4),
     FillDirection = Enum.FillDirection.Vertical,
     SortOrder = Enum.SortOrder.LayoutOrder,
     Parent = NotificationContainer,
@@ -46,24 +46,19 @@ Create('UIListLayout', {
 
 function NotificationModule:Notify(Text, Color, Time)
     local TextSize = 17
-    local XSize, YSize = GetTextBounds(Text, Enum.Font.SourceSans, TextSize) -- Changed to SourceSans for better clarity
-    YSize = YSize + 10  -- Increased YSize for a more spacious look
+    local XSize, YSize = GetTextBounds(Text, Enum.Font.Arial, TextSize)
+    YSize = YSize + 7
 
     local NotifyOuter = Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0),
         Position = UDim2.new(0.5, -XSize / 2, 0, 10),
-        Size = UDim2.new(0, 0, 0, YSize),
+        Size = UDim2.new(0, XSize + 20, 0, YSize),  -- Increase padding for a bigger frame
         ClipsDescendants = true,
         ZIndex = 100,
         BackgroundTransparency = 1,
         Parent = NotificationContainer,
     })
 
-    -- Add UICorner to create rounded corners on the outer frame
-    local OuterCorner = Create('UICorner', {
-        Parent = NotifyOuter,
-    })
-    
     local NotifyInner = Create('Frame', {
         BackgroundColor3 = MainColor,
         BorderColor3 = OutlineColor,
@@ -71,11 +66,6 @@ function NotificationModule:Notify(Text, Color, Time)
         Size = UDim2.new(1, 0, 1, 0),
         ZIndex = 101,
         Parent = NotifyOuter,
-    })
-
-    -- Add UICorner to create rounded corners on the inner frame
-    local InnerCorner = Create('UICorner', {
-        Parent = NotifyInner,
     })
 
     local InnerFrame = Create('Frame', {
@@ -97,16 +87,15 @@ function NotificationModule:Notify(Text, Color, Time)
     })
 
     Create('TextLabel', {
-        Position = UDim2.new(0, 12, 0, 0), -- Increased padding for text
-        Size = UDim2.new(1, -12, 1, 0),
+        Position = UDim2.new(0, 4, 0, 0),
+        Size = UDim2.new(1, -4, 1, 0),
         Text = Text,
         TextXAlignment = Enum.TextXAlignment.Left,
-        Font = Enum.Font.SourceSans,  -- Using SourceSans for better readability
+        Font = Enum.Font.Arial,
         TextSize = TextSize,
         BackgroundTransparency = 1,
         TextColor3 = Color3.new(1, 1, 1),
         ZIndex = 103,
-        TextStrokeTransparency = 0.8,  -- Adding slight stroke for text readability
         Parent = InnerFrame,
     })
 
@@ -115,27 +104,18 @@ function NotificationModule:Notify(Text, Color, Time)
         BackgroundColor3 = Color or AccentColor, -- Default to AccentColor if none is provided
         BorderSizePixel = 0,
         Position = UDim2.new(0, -1, 0, -1),
-        Size = UDim2.new(0, 4, 1, 2),
+        Size = UDim2.new(0, 5, 1, 2),  -- Increase the size of the color frame
         ZIndex = 104,
         Parent = NotifyOuter,
     })
 
-    NotifyOuter:TweenSize(UDim2.new(0, XSize + 16, 0, YSize), 'Out', 'Quad', 0.6, true) -- Smooth animation
-
-    -- Apply a subtle shadow to the notification
-    Create('Frame', {
-        BackgroundColor3 = Color3.new(0, 0, 0),
-        Position = UDim2.new(0, 4, 0, 4), -- Slight offset for shadow
-        Size = UDim2.new(1, 0, 1, 0),
-        ZIndex = 99,
-        Parent = NotifyOuter,
-        Transparency = 0.5,
-    })
+    -- Smooth and slower animation for the notification
+    NotifyOuter:TweenSize(UDim2.new(0, XSize + 20, 0, YSize), 'Out', 'Quad', 0.6, true)  -- Increased tween duration
 
     task.spawn(function()
         wait(Time or 5)
-        NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.6, true) -- Smooth exit
-        wait(0.6)
+        NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.6, true)  -- Increased tween duration
+        wait(0.6)  -- Match the duration of the tween
         NotifyOuter:Destroy()
     end)
 end
