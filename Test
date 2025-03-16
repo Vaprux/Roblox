@@ -2012,6 +2012,7 @@ local library library = {
                     print(inner) -- should print the instance, not nil
                     print(type(inner)) -- Should print "Instance", not "table"
                     inner.ImageColor3 = dropdownOptions.color
+			print(inner.ImageColor3)
                     outer.SliceScale = dropdownOptions.rounding / 100
                     inner.SliceScale = dropdownOptions.rounding / 100
                     inner:FindFirstChild("Value").Text = "[...]"
