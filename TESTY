@@ -159,3 +159,5 @@ end)
         ActiveNotifications[Text] = nil
     end)
 end
+
+return NotificationModule
