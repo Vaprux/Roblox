@@ -99,9 +99,8 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = InnerFrame,
     })
 
-    -- Use the provided Color argument instead of AccentColor
     Create('Frame', {
-        BackgroundColor3 = Color or AccentColor, -- Default to AccentColor if none is provided
+        BackgroundColor3 = Color,
         BorderSizePixel = 0,
         Position = UDim2.new(0, -1, 0, -1),
         Size = UDim2.new(0, 3, 1, 2),
