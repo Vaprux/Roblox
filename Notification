@@ -59,6 +59,11 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotificationContainer,
     })
 
+    -- Add UICorner to create rounded corners on the outer frame
+    local OuterCorner = Create('UICorner', {
+        Parent = NotifyOuter,
+    })
+    
     local NotifyInner = Create('Frame', {
         BackgroundColor3 = MainColor,
         BorderColor3 = OutlineColor,
@@ -66,7 +71,11 @@ function NotificationModule:Notify(Text, Color, Time)
         Size = UDim2.new(1, 0, 1, 0),
         ZIndex = 101,
         Parent = NotifyOuter,
-        CornerRadius = UDim.new(0, 10), -- Added rounded corners
+    })
+
+    -- Add UICorner to create rounded corners on the inner frame
+    local InnerCorner = Create('UICorner', {
+        Parent = NotifyInner,
     })
 
     local InnerFrame = Create('Frame', {
@@ -76,7 +85,6 @@ function NotificationModule:Notify(Text, Color, Time)
         Size = UDim2.new(1, -2, 1, -2),
         ZIndex = 102,
         Parent = NotifyInner,
-        CornerRadius = UDim.new(0, 8), -- Added rounded corners
     })
 
     Create('UIGradient', {
@@ -110,7 +118,6 @@ function NotificationModule:Notify(Text, Color, Time)
         Size = UDim2.new(0, 4, 1, 2),
         ZIndex = 104,
         Parent = NotifyOuter,
-        CornerRadius = UDim.new(0, 8), -- Rounded border
     })
 
     NotifyOuter:TweenSize(UDim2.new(0, XSize + 16, 0, YSize), 'Out', 'Quad', 0.6, true) -- Smooth animation
@@ -122,7 +129,6 @@ function NotificationModule:Notify(Text, Color, Time)
         Size = UDim2.new(1, 0, 1, 0),
         ZIndex = 99,
         Parent = NotifyOuter,
-        CornerRadius = UDim.new(0, 12),
         Transparency = 0.5,
     })
 
