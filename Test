@@ -36,7 +36,7 @@ local NotificationArea = Create("ScreenGui", {
 
 local NotificationContainer = Create("Frame", {
     BackgroundTransparency = 1,
-    Position = UDim2.new(0.5, -200, 0, 370), -- Centered on screen
+    Position = UDim2.new(0.5, -200, 0, 500), -- Position below the player (adjust Y value as needed)
     Size = UDim2.new(0, 400, 1, -40),
     ZIndex = 100,
     Parent = NotificationArea
