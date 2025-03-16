@@ -150,6 +150,4 @@ function NotificationModule:Notify(Text, Color, Time)
     end)
 end
 
-NotificationModule:Notify("FUCKKKK!", Color3.fromRGB(255, 0, 0), 5) -- Will flash instead of duplicating
-
 return NotificationModule
