@@ -53,15 +53,25 @@ function NotificationModule:Notify(Text, Color, Time)
         local AccentBar = NotifyOuter:FindFirstChild("AccentBar") -- Find the accent frame
         local TextLabel = NotifyOuter:FindFirstChild("TextLabel") -- Find the text label
         
-        -- Flash effect (Purple)
+        -- Flash effect (Improved smooth transition)
         task.spawn(function()
             local originalColor = AccentBar.BackgroundColor3
+            local originalTextColor = TextLabel.TextColor3
+            local originalTransparency = AccentBar.BackgroundTransparency
+
             for i = 1, 3 do
-                AccentBar.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Flash purple
-                TextLabel.TextColor3 = Color3.fromRGB(200, 150, 255) -- Lighter purple text
+                -- Smooth transition (to purple)
+                AccentBar:TweenBackgroundColor3(Color3.fromRGB(128, 0, 128), 'Out', 'Quad', 0.2, true)
+                TextLabel:TweenTextColor3(Color3.fromRGB(200, 150, 255), 'Out', 'Quad', 0.2, true)
+                AccentBar:TweenTransparency(0.5, 'Out', 'Quad', 0.2, true)  -- Fade in transparency
+                
                 task.wait(0.2)
-                AccentBar.BackgroundColor3 = originalColor
-                TextLabel.TextColor3 = Color3.new(1, 1, 1) -- Back to white
+
+                -- Back to original color
+                AccentBar:TweenBackgroundColor3(originalColor, 'Out', 'Quad', 0.2, true)
+                TextLabel:TweenTextColor3(originalTextColor, 'Out', 'Quad', 0.2, true)
+                AccentBar:TweenTransparency(originalTransparency, 'Out', 'Quad', 0.2, true)  -- Fade out transparency
+
                 task.wait(0.2)
             end
         end)
