@@ -10,6 +10,8 @@ local AccentColor = Color3.fromRGB(75, 10, 120)  -- Keep this for accent color
 local MainColor = Color3.fromRGB(28, 28, 28)  -- Main dark color
 local OutlineColor = Color3.fromRGB(50, 50, 50)  -- Outline color
 
+local ActiveNotifications = {}  -- Stores active notifications
+
 local function Create(Class, Properties)
     local _Instance = Instance.new(Class)
     for Property, Value in pairs(Properties) do
@@ -31,7 +33,7 @@ local NotificationArea = Create('ScreenGui', {
 
 local NotificationContainer = Create('Frame', {
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 0, 0, 370), -- Position below the player
+    Position = UDim2.new(0, 0, 0, 370),  -- Position below the player
     Size = UDim2.new(1, 0, 1, -40),
     ZIndex = 100,
     Parent = NotificationArea
@@ -45,6 +47,23 @@ Create('UIListLayout', {
 })
 
 function NotificationModule:Notify(Text, Color, Time)
+    -- Check if notification already exists
+    if ActiveNotifications[Text] then
+        local existingNotify = ActiveNotifications[Text]
+
+        -- Flashing effect on duplicate notification
+        task.spawn(function()
+            local originalColor = existingNotify.BackgroundColor3
+            for i = 1, 3 do
+                existingNotify.BackgroundColor3 = Color3.fromRGB(128, 0, 128)  -- Purple flash
+                task.wait(0.2)
+                existingNotify.BackgroundColor3 = originalColor
+                task.wait(0.2)
+            end
+        end)
+        return  -- Prevent duplicate notification
+    end
+
     local TextSize = 17
     local XSize, YSize = GetTextBounds(Text, Enum.Font.GothamBold, TextSize)  -- Changed font to match GTA 5 style
     YSize = YSize + 10  -- Added some space for a more stylish appearance
@@ -112,11 +131,16 @@ function NotificationModule:Notify(Text, Color, Time)
     -- Smoothly animate the notification appearance
     NotifyOuter:TweenSize(UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true)
 
+    -- Store this notification in active notifications
+    ActiveNotifications[Text] = NotifyOuter
+
+    -- Destroy notification after time
     task.spawn(function()
         wait(Time or 5)
         NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true)
         wait(0.4)
         NotifyOuter:Destroy()
+        ActiveNotifications[Text] = nil  -- Remove from active notifications
     end)
 end
 
