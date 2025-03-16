@@ -12,6 +12,7 @@ local CoreGui = game:GetService('CoreGui')
 local AccentColor = Color3.fromRGB(75, 10, 120)
 local MainColor = Color3.fromRGB(20, 20, 20)
 local OutlineColor = Color3.fromRGB(50, 50, 50)
+local BorderColor = Color3.fromRGB(100, 100, 100) -- Add a border color
 
 -- Helper function to create instances
 local function Create(Class, Properties)
@@ -60,7 +61,8 @@ function NotificationModule:Notify(Text, Color, Time)
 
     -- Outer Frame for the notification
     local NotifyOuter = Create('Frame', {
-        BorderColor3 = Color3.new(0, 0, 0),
+        BorderColor3 = BorderColor, -- Set the border color here
+        BorderSizePixel = 2, -- Adjust border thickness
         Position = UDim2.new(0.5, -XSize / 2, 0, 10),
         Size = UDim2.new(0, 0, 0, YSize),
         ClipsDescendants = true,
@@ -117,8 +119,8 @@ function NotificationModule:Notify(Text, Color, Time)
     Create('Frame', {
         BackgroundColor3 = Color,
         BorderSizePixel = 0,
-        Position = UDim2.new(0, -2, 0, -1), -- Slightly adjusted position
-        Size = UDim2.new(0, 6, 1, 4), -- Increased size for better balance
+        Position = UDim2.new(0, -2, 0, -1),
+        Size = UDim2.new(0, 6, 1, 4),
         ZIndex = 104,
         Parent = NotifyOuter,
     })
