@@ -10,7 +10,6 @@ local AccentColor = Color3.fromRGB(75, 10, 120)
 local MainColor = Color3.fromRGB(28, 28, 28)
 local OutlineColor = Color3.fromRGB(50, 50, 50)
 
--- Helper function to create instances with properties
 local function Create(Class, Properties)
     local _Instance = Instance.new(Class)
     for Property, Value in pairs(Properties) do
@@ -19,13 +18,11 @@ local function Create(Class, Properties)
     return _Instance
 end
 
--- Get the bounds of text for sizing
 local function GetTextBounds(Text, Font, Size, Resolution)
     local Bounds = TextService:GetTextSize(Text, Size, Font, Resolution or Vector2.new(1920, 1080))
     return Bounds.X, Bounds.Y
 end
 
--- Notification Area UI Setup
 local NotificationArea = Create('ScreenGui', {
     Name = "NotificationArea",
     Parent = CoreGui,
@@ -47,13 +44,11 @@ Create('UIListLayout', {
     Parent = NotificationContainer,
 })
 
--- Main notification function
 function NotificationModule:Notify(Text, Color, Time)
     local TextSize = 17
     local XSize, YSize = GetTextBounds(Text, Enum.Font.Arial, TextSize)
     YSize = YSize + 7
 
-    -- Outer frame for notification
     local NotifyOuter = Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0),
         Position = UDim2.new(0.5, -XSize / 2, 0, 10),
@@ -64,7 +59,6 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotificationContainer,
     })
 
-    -- Inner frame for background
     local NotifyInner = Create('Frame', {
         BackgroundColor3 = MainColor,
         BorderColor3 = OutlineColor,
@@ -74,7 +68,6 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotifyOuter,
     })
 
-    -- Frame for the actual content
     local InnerFrame = Create('Frame', {
         BackgroundColor3 = Color3.new(1, 1, 1),
         BorderSizePixel = 0,
@@ -84,7 +77,6 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotifyInner,
     })
 
-    -- Gradient effect on the inner frame
     Create('UIGradient', {
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, MainColor:lerp(Color3.new(0, 0, 0), 0.3)),
@@ -94,7 +86,6 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = InnerFrame,
     })
 
-    -- Text label for notification message
     Create('TextLabel', {
         Position = UDim2.new(0, 4, 0, 0),
         Size = UDim2.new(1, -4, 1, 0),
@@ -108,9 +99,9 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = InnerFrame,
     })
 
-    -- Accent border on the left side
+    -- Use the provided Color argument instead of AccentColor
     Create('Frame', {
-        BackgroundColor3 = Color or AccentColor, -- Use provided color, fallback to AccentColor
+        BackgroundColor3 = Color or AccentColor, -- Default to AccentColor if none is provided
         BorderSizePixel = 0,
         Position = UDim2.new(0, -1, 0, -1),
         Size = UDim2.new(0, 3, 1, 2),
@@ -118,10 +109,8 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotifyOuter,
     })
 
-    -- Smooth animation for expanding the notification
     NotifyOuter:TweenSize(UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true)
 
-    -- Auto-hide the notification after a set time
     task.spawn(function()
         wait(Time or 5)
         NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true)
@@ -129,5 +118,6 @@ function NotificationModule:Notify(Text, Color, Time)
         NotifyOuter:Destroy()
     end)
 end
+
 
 return NotificationModule
