@@ -1,0 +1,148 @@
+if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then 
+    game:GetService("CoreGui"):FindFirstChild("NotificationArea"):Destroy()
+end
+
+local NotificationModule = {}
+local TextService = game:GetService('TextService')
+local CoreGui = game:GetService('CoreGui')
+
+local AccentColor = Color3.fromRGB(75, 10, 120)  -- Keep this for accent color
+local MainColor = Color3.fromRGB(28, 28, 28)  -- Main dark color
+local OutlineColor = Color3.fromRGB(50, 50, 50)  -- Outline color
+
+local function Create(Class, Properties)
+    local _Instance = Instance.new(Class)
+    for Property, Value in pairs(Properties) do
+        _Instance[Property] = Value
+    end
+    return _Instance
+end
+
+local function GetTextBounds(Text, Font, Size, Resolution)
+    local Bounds = TextService:GetTextSize(Text, Size, Font, Resolution or Vector2.new(1920, 1080))
+    return Bounds.X, Bounds.Y
+end
+
+local NotificationArea = Create('ScreenGui', {
+    Name = "NotificationArea",
+    Parent = CoreGui,
+    IgnoreGuiInset = true
+})
+
+local NotificationContainer = Create('Frame', {
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 0, 0, 370),
+    Size = UDim2.new(1, 0, 1, -40),
+    ZIndex = 100,
+    Parent = NotificationArea
+})
+
+Create('UIListLayout', {
+    Padding = UDim.new(0, 4),
+    FillDirection = Enum.FillDirection.Vertical,
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Parent = NotificationContainer,
+})
+
+local ActiveNotifications = {}
+
+function NotificationModule:Notify(Text, Color, Time)
+    -- Check if notification with same text exists
+    for _, notify in pairs(NotificationContainer:GetChildren()) do
+        if notify:IsA("Frame") then
+            local textLabel = notify:FindFirstChildWhichIsA("TextLabel")
+            if textLabel and textLabel.Text == Text then
+                -- Flash effect (Purple)
+                task.spawn(function()
+                    local originalColor = notify.BackgroundColor3
+                    for i = 1, 3 do
+                        notify.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Purple
+                        task.wait(0.2)
+                        notify.BackgroundColor3 = originalColor
+                        task.wait(0.2)
+                    end
+                end)
+                return -- Don't create a new notification
+            end
+        end
+    end
+
+    -- Normal notification creation
+    local TextSize = 17
+    local XSize, YSize = GetTextBounds(Text, Enum.Font.GothamBold, TextSize)
+    YSize = YSize + 10
+
+    local NotifyOuter = Create('Frame', {
+        BorderColor3 = Color3.new(0, 0, 0),
+        Position = UDim2.new(0.5, -XSize / 2, 0, 10),
+        Size = UDim2.new(0, 0, 0, YSize),
+        ClipsDescendants = true,
+        ZIndex = 100,
+        BackgroundTransparency = 1,
+        Parent = NotificationContainer,
+    })
+
+    local NotifyInner = Create('Frame', {
+        BackgroundColor3 = MainColor,
+        BorderColor3 = OutlineColor,
+        BorderMode = Enum.BorderMode.Inset,
+        Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = 101,
+        Parent = NotifyOuter,
+    })
+
+    local InnerFrame = Create('Frame', {
+        BackgroundColor3 = Color3.new(1, 1, 1),
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 1, 0, 1),
+        Size = UDim2.new(1, -2, 1, -2),
+        ZIndex = 102,
+        Parent = NotifyInner,
+    })
+
+    Create('UIGradient', {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, MainColor:lerp(Color3.new(0, 0, 0), 0.3)),
+            ColorSequenceKeypoint.new(1, MainColor),
+        }),
+        Rotation = -90,
+        Parent = InnerFrame,
+    })
+
+    local TextLabel = Create('TextLabel', {
+        Position = UDim2.new(0, 4, 0, 0),
+        Size = UDim2.new(1, -4, 1, 0),
+        Text = Text,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        Font = Enum.Font.GothamBold,
+        TextSize = TextSize,
+        BackgroundTransparency = 1,
+        TextColor3 = Color3.new(1, 1, 1),
+        ZIndex = 103,
+        Parent = InnerFrame,
+    })
+
+    Create('Frame', {
+        BackgroundColor3 = Color or AccentColor,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, -1, 0, -1),
+        Size = UDim2.new(0, 3, 1, 2),
+        ZIndex = 104,
+        Parent = NotifyOuter,
+    })
+
+    NotifyOuter:TweenSize(UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true)
+
+    -- Store active notification
+    ActiveNotifications[Text] = NotifyOuter
+
+    task.spawn(function()
+        wait(Time or 5)
+        NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true)
+        wait(0.4)
+        NotifyOuter:Destroy()
+        ActiveNotifications[Text] = nil
+    end)
+end
+
+return NotificationModule
