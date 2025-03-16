@@ -1,15 +1,19 @@
+-- Destroy previous notification area if it exists
 if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then
     game:GetService("CoreGui"):FindFirstChild("NotificationArea"):Destroy()
 end
 
+-- Module and services
 local NotificationModule = {}
 local TextService = game:GetService('TextService')
 local CoreGui = game:GetService('CoreGui')
 
+-- Colors
 local AccentColor = Color3.fromRGB(75, 10, 120)
-local MainColor = Color3.fromRGB(28, 28, 28)
+local MainColor = Color3.fromRGB(20, 20, 20)
 local OutlineColor = Color3.fromRGB(50, 50, 50)
 
+-- Helper function to create instances
 local function Create(Class, Properties)
     local _Instance = Instance.new(Class)
     for Property, Value in pairs(Properties) do
@@ -18,17 +22,20 @@ local function Create(Class, Properties)
     return _Instance
 end
 
+-- Function to get text size bounds
 local function GetTextBounds(Text, Font, Size, Resolution)
     local Bounds = TextService:GetTextSize(Text, Size, Font, Resolution or Vector2.new(1920, 1080))
     return Bounds.X, Bounds.Y
 end
 
+-- Create Notification Area
 local NotificationArea = Create('ScreenGui', {
     Name = "NotificationArea",
     Parent = CoreGui,
     IgnoreGuiInset = true
 })
 
+-- Create Notification Container
 local NotificationContainer = Create('Frame', {
     BackgroundTransparency = 1,
     Position = UDim2.new(0, 0, 0, 400),
@@ -37,6 +44,7 @@ local NotificationContainer = Create('Frame', {
     Parent = NotificationArea
 })
 
+-- Layout for notifications
 Create('UIListLayout', {
     Padding = UDim.new(0, 4),
     FillDirection = Enum.FillDirection.Vertical,
@@ -44,11 +52,13 @@ Create('UIListLayout', {
     Parent = NotificationContainer,
 })
 
+-- Notify function to create notifications
 function NotificationModule:Notify(Text, Color, Time)
     local TextSize = 17
     local XSize, YSize = GetTextBounds(Text, Enum.Font.Arial, TextSize)
-    YSize = YSize + 7
+    YSize = YSize + 7 -- Add padding for text
 
+    -- Outer Frame for the notification
     local NotifyOuter = Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0),
         Position = UDim2.new(0.5, -XSize / 2, 0, 10),
@@ -59,6 +69,7 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotificationContainer,
     })
 
+    -- Inner Frame for the notification
     local NotifyInner = Create('Frame', {
         BackgroundColor3 = MainColor,
         BorderColor3 = OutlineColor,
@@ -68,6 +79,7 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotifyOuter,
     })
 
+    -- White inner frame for gradient effect
     local InnerFrame = Create('Frame', {
         BackgroundColor3 = Color3.new(1, 1, 1),
         BorderSizePixel = 0,
@@ -77,6 +89,7 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotifyInner,
     })
 
+    -- Gradient effect
     Create('UIGradient', {
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, MainColor:lerp(Color3.new(0, 0, 0), 0.3)),
@@ -86,6 +99,7 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = InnerFrame,
     })
 
+    -- Text label inside the notification
     Create('TextLabel', {
         Position = UDim2.new(0, 4, 0, 0),
         Size = UDim2.new(1, -4, 1, 0),
@@ -99,6 +113,7 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = InnerFrame,
     })
 
+    -- Small accent line on the left
     Create('Frame', {
         BackgroundColor3 = Color,
         BorderSizePixel = 0,
@@ -108,8 +123,10 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotifyOuter,
     })
 
+    -- Tween notification size and animation
     NotifyOuter:TweenSize(UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true)
 
+    -- Auto-remove notification after a set time
     task.spawn(function()
         wait(Time or 5)
         NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true)
@@ -117,6 +134,5 @@ function NotificationModule:Notify(Text, Color, Time)
         NotifyOuter:Destroy()
     end)
 end
-
 
 return NotificationModule
