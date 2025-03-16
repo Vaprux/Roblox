@@ -1,4 +1,4 @@
-if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then 
+if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then
     game:GetService("CoreGui"):FindFirstChild("NotificationArea"):Destroy()
 end
 
@@ -52,7 +52,7 @@ function NotificationModule:Notify(Text, Color, Time)
     local NotifyOuter = Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0),
         Position = UDim2.new(0.5, -XSize / 2, 0, 10),
-        Size = UDim2.new(0, XSize + 20, 0, YSize),  -- Increase padding for a bigger frame
+        Size = UDim2.new(0, 0, 0, YSize),
         ClipsDescendants = true,
         ZIndex = 100,
         BackgroundTransparency = 1,
@@ -104,20 +104,20 @@ function NotificationModule:Notify(Text, Color, Time)
         BackgroundColor3 = Color or AccentColor, -- Default to AccentColor if none is provided
         BorderSizePixel = 0,
         Position = UDim2.new(0, -1, 0, -1),
-        Size = UDim2.new(0, 5, 1, 2),  -- Increase the size of the color frame
+        Size = UDim2.new(0, 3, 1, 2),
         ZIndex = 104,
         Parent = NotifyOuter,
     })
 
-    -- Smooth and slower animation for the notification
-    NotifyOuter:TweenSize(UDim2.new(0, XSize + 20, 0, YSize), 'Out', 'Quad', 0.6, true)  -- Increased tween duration
+    NotifyOuter:TweenSize(UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true)
 
     task.spawn(function()
         wait(Time or 5)
-        NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.6, true)  -- Increased tween duration
-        wait(0.6)  -- Match the duration of the tween
+        NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true)
+        wait(0.4)
         NotifyOuter:Destroy()
     end)
 end
+
 
 return NotificationModule
