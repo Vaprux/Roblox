@@ -59,9 +59,9 @@ function NotificationModule:Notify(Text, Color, Time)
         task.spawn(function()
             local originalColor = NotifyOuter.BackgroundColor3
             for i = 1, 3 do
-                NotifyOuter.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Purple
+                TextLabel.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Purple
                 task.wait(0.2)
-                NotifyOuter.BackgroundColor3 = originalColor
+                TextLabel.BackgroundColor3 = originalColor
                 task.wait(0.2)
             end
         end)
@@ -111,13 +111,14 @@ function NotificationModule:Notify(Text, Color, Time)
     })
 
     local TextLabel = Create("TextLabel", {
+        BackgroundColor3 = Color3.new(1, 1, 1),
         Position = UDim2.new(0, 4, 0, 0),
         Size = UDim2.new(1, -4, 1, 0),
         Text = Text,
         TextXAlignment = Enum.TextXAlignment.Left,
         Font = Enum.Font.GothamBold,
         TextSize = TextSize,
-        BackgroundTransparency = 1,
+        BackgroundTransparency = 0,
         TextColor3 = Color3.new(1, 1, 1),
         ZIndex = 103,
         Parent = InnerFrame,
