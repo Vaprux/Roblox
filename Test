@@ -125,6 +125,7 @@ function NotificationModule:Notify(Text, Color, Time)
 
     -- Notification border accent line
     Create('Frame', {
+        Name = "AccentBar",  -- Name the frame so it can be identified later
         BackgroundColor3 = Color or AccentColor,  -- Use the provided color
         BorderSizePixel = 0,
         Position = UDim2.new(0, -1, 0, -1),
