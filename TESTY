@@ -1,3 +1,52 @@
+if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then   
+    game:GetService("CoreGui"):FindFirstChild("NotificationArea"):Destroy()
+end
+
+local NotificationModule = {}
+local TextService = game:GetService("TextService")
+local CoreGui = game:GetService("CoreGui")
+
+local AccentColor = Color3.fromRGB(75, 10, 120)
+local MainColor = Color3.fromRGB(28, 28, 28)
+local OutlineColor = Color3.fromRGB(50, 50, 50)
+
+local ActiveNotifications = {}
+local NotificationTimers = {}
+
+local function Create(Class, Properties)
+    local InstanceObj = Instance.new(Class)
+    for Property, Value in pairs(Properties) do
+        InstanceObj[Property] = Value
+    end
+    return InstanceObj
+end
+
+local function GetTextSize(Text, Font, Size)
+    local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
+    return Bounds.X or 200, Bounds.Y or 50
+end
+
+local NotificationArea = Create("ScreenGui", {
+    Name = "NotificationArea",
+    Parent = CoreGui,
+    IgnoreGuiInset = true
+})
+
+local NotificationContainer = Create("Frame", {
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 0, 0, 370),
+    Size = UDim2.new(1, 0, 1, -40),
+    ZIndex = 100,
+    Parent = NotificationArea
+})
+
+Create("UIListLayout", {
+    Padding = UDim.new(0, 4),
+    FillDirection = Enum.FillDirection.Vertical,
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Parent = NotificationContainer,
+})
+
 local LastNotificationTime = 0 -- Tracks the last notification timestamp
 
 function NotificationModule:Notify(Text, Color, Time)
@@ -89,3 +138,5 @@ function NotificationModule:Notify(Text, Color, Time)
         NotificationTimers[Text] = nil
     end)
 end
+
+return NotificationModule
