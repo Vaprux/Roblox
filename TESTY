@@ -1,4 +1,4 @@
-if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then  
+if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then   
     game:GetService("CoreGui"):FindFirstChild("NotificationArea"):Destroy()
 end
 
@@ -6,7 +6,7 @@ local NotificationModule = {}
 local TextService = game:GetService('TextService')
 local CoreGui = game:GetService('CoreGui')
 
-local AccentColor = Color3.fromRGB(75, 10, 120)  -- Keep this for accent color
+local AccentColor = Color3.fromRGB(75, 10, 120)  -- Accent color
 local MainColor = Color3.fromRGB(28, 28, 28)  -- Main dark color
 local OutlineColor = Color3.fromRGB(50, 50, 50)  -- Outline color
 
@@ -47,32 +47,32 @@ Create('UIListLayout', {
 })
 
 function NotificationModule:Notify(Text, Color, Time)
-    -- If the notification already exists, flash it
+    -- Prevent duplicate notifications
     if ActiveNotifications[Text] then
         local NotifyOuter = ActiveNotifications[Text]
-        local AccentBar = NotifyOuter:FindFirstChild("AccentBar") -- Find the accent frame
-        local TextLabel = NotifyOuter.Frame.Frame:FindFirstChild("TextLabel") -- Find the text label
+        local AccentBar = NotifyOuter:FindFirstChild("AccentBar")
+        local TextLabel = NotifyOuter.Frame.Frame:FindFirstChild("TextLabel")
         
-        -- Flash effect (Purple)
+        -- Flash effect (purple)
         task.spawn(function()
             local originalColor = AccentBar.BackgroundColor3
             for i = 1, 3 do
-                AccentBar.BackgroundColor3 = Color3.fromRGB(128, 0, 128) -- Flash purple
-                TextLabel.TextColor3 = Color3.fromRGB(128, 0, 128) -- Flash purple
+                AccentBar.BackgroundColor3 = Color3.fromRGB(128, 0, 128)
+                TextLabel.TextColor3 = Color3.fromRGB(128, 0, 128)
                 task.wait(0.2)
                 AccentBar.BackgroundColor3 = originalColor
                 TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
                 task.wait(0.2)
             end
         end)
-        return -- Prevent duplicate notifications from being created
+        return
     end
 
-    -- Create new notification
     local TextSize = 17
-    local XSize, YSize = GetTextBounds(Text, Enum.Font.GothamBold, TextSize)  -- Changed font to match GTA 5 style
-    YSize = YSize + 10  -- Added some space for a more stylish appearance
+    local XSize, YSize = GetTextBounds(Text, Enum.Font.GothamBold, TextSize)
+    YSize = YSize + 10
 
+    -- Notification frame
     local NotifyOuter = Create('Frame', {
         BorderColor3 = Color3.new(0, 0, 0),
         Position = UDim2.new(0.5, -XSize / 2, 0, 10),
@@ -83,6 +83,7 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotificationContainer,
     })
 
+    -- Single frame for both the inner frame and text label
     local NotifyInner = Create('Frame', {
         BackgroundColor3 = MainColor,
         BorderColor3 = OutlineColor,
@@ -92,41 +93,33 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotifyOuter,
     })
 
-    local InnerFrame = Create('Frame', {
-        BackgroundColor3 = Color3.new(1, 1, 1),
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 1, 0, 1),
-        Size = UDim2.new(1, -2, 1, -2),
-        ZIndex = 102,
-        Parent = NotifyInner,
-    })
-
     Create('UIGradient', {
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, MainColor:lerp(Color3.new(0, 0, 0), 0.3)),
             ColorSequenceKeypoint.new(1, MainColor),
         }),
         Rotation = -90,
-        Parent = InnerFrame,
+        Parent = NotifyInner,
     })
 
+    -- Only one text label for notification content
     Create('TextLabel', {
         Position = UDim2.new(0, 4, 0, 0),
         Size = UDim2.new(1, -4, 1, 0),
         Text = Text,
         TextXAlignment = Enum.TextXAlignment.Left,
-        Font = Enum.Font.GothamBold,  -- Changed font to match GTA style
+        Font = Enum.Font.GothamBold,
         TextSize = TextSize,
         BackgroundTransparency = 1,
         TextColor3 = Color3.new(1, 1, 1),
         ZIndex = 103,
-        Parent = InnerFrame,
+        Parent = NotifyInner,
     })
 
-    -- Notification border accent line
+    -- Accent bar for the notification
     Create('Frame', {
-        Name = "AccentBar",  -- Name the frame so it can be identified later
-        BackgroundColor3 = Color or AccentColor,  -- Use the provided color
+        Name = "AccentBar",
+        BackgroundColor3 = Color or AccentColor,
         BorderSizePixel = 0,
         Position = UDim2.new(0, -1, 0, -1),
         Size = UDim2.new(0, 3, 1, 2),
@@ -134,13 +127,13 @@ function NotificationModule:Notify(Text, Color, Time)
         Parent = NotifyOuter,
     })
 
-    -- Smoothly animate the notification appearance
+    -- Smoothly animate appearance
     NotifyOuter:TweenSize(UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true)
 
-    -- Store the active notification
+    -- Store active notification
     ActiveNotifications[Text] = NotifyOuter
 
-    -- Destroy notification after time
+    -- Destroy after time
     task.spawn(function()
         wait(Time or 5)
         NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true)
