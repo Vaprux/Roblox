@@ -3,35 +3,35 @@ if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then
 end
 
 local NotificationModule = {}
-local TextService = game:GetService('TextService')
-local CoreGui = game:GetService('CoreGui')
+local TextService = game:GetService("TextService")
+local CoreGui = game:GetService("CoreGui")
 
-local AccentColor = Color3.fromRGB(75, 10, 120)  -- Accent color
-local MainColor = Color3.fromRGB(28, 28, 28)  -- Main dark color
-local OutlineColor = Color3.fromRGB(50, 50, 50)  -- Outline color
+local AccentColor = Color3.fromRGB(75, 10, 120)
+local MainColor = Color3.fromRGB(28, 28, 28)
+local OutlineColor = Color3.fromRGB(50, 50, 50)
 
-local ActiveNotifications = {} -- Stores active notifications
+local ActiveNotifications = {}
 
 local function Create(Class, Properties)
-    local _Instance = Instance.new(Class)
+    local InstanceObj = Instance.new(Class)
     for Property, Value in pairs(Properties) do
-        _Instance[Property] = Value
+        InstanceObj[Property] = Value
     end
-    return _Instance
+    return InstanceObj
 end
 
-local function GetTextBounds(Text, Font, Size, Resolution)
-    local Bounds = TextService:GetTextSize(Text, Size, Font, Resolution or Vector2.new(1920, 1080))
-    return Bounds.X, Bounds.Y
+local function GetTextSize(Text, Font, Size)
+    local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
+    return Bounds.X or 200, Bounds.Y or 50 -- Default to prevent nil errors
 end
 
-local NotificationArea = Create('ScreenGui', {
+local NotificationArea = Create("ScreenGui", {
     Name = "NotificationArea",
     Parent = CoreGui,
     IgnoreGuiInset = true
 })
 
-local NotificationContainer = Create('Frame', {
+local NotificationContainer = Create("Frame", {
     BackgroundTransparency = 1,
     Position = UDim2.new(0, 0, 0, 370),
     Size = UDim2.new(1, 0, 1, -40),
@@ -39,7 +39,7 @@ local NotificationContainer = Create('Frame', {
     Parent = NotificationArea
 })
 
-Create('UIListLayout', {
+Create("UIListLayout", {
     Padding = UDim.new(0, 4),
     FillDirection = Enum.FillDirection.Vertical,
     SortOrder = Enum.SortOrder.LayoutOrder,
@@ -47,88 +47,52 @@ Create('UIListLayout', {
 })
 
 function NotificationModule:Notify(Text, Color, Time)
-    -- Prevent duplicate notifications
-    if ActiveNotifications[Text] then
-        local NotifyOuter = ActiveNotifications[Text]
-        local TextLabel = NotifyOuter:FindFirstChild("TextLabel")
-        
-        -- Flash effect (purple)
-        task.spawn(function()
-            local originalColor = TextLabel.TextColor3
-            for i = 1, 3 do
-                TextLabel.TextColor3 = Color3.fromRGB(128, 0, 128)  -- Flash purple
-                task.wait(0.2)
-                TextLabel.TextColor3 = originalColor
-                task.wait(0.2)
-            end
-        end)
-        return
-    end
-
+    if ActiveNotifications[Text] then return end
+    
     local TextSize = 17
-    local XSize, YSize = GetTextBounds(Text, Enum.Font.GothamBold, TextSize)
+    local XSize, YSize = GetTextSize(Text or "", Enum.Font.GothamBold, TextSize)
     YSize = YSize + 10
 
-    -- Create a single frame for notification
-    local NotifyOuter = Create('Frame', {
-        BorderColor3 = Color3.new(0, 0, 0),
-        Position = UDim2.new(0.5, -XSize / 2, 0, 10),
-        Size = UDim2.new(0, 0, 0, YSize),
-        ClipsDescendants = true,
-        ZIndex = 100,
-        BackgroundTransparency = 1,
-        Parent = NotificationContainer,
-    })
-
-    -- Single frame for everything: background, text, and accent
-    local NotifyInner = Create('Frame', {
+    local NotifyFrame = Create("Frame", {
         BackgroundColor3 = MainColor,
         BorderColor3 = OutlineColor,
         BorderMode = Enum.BorderMode.Inset,
-        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0.5, -XSize / 2, 0, 10),
+        Size = UDim2.new(0, 0, 0, YSize),
+        ClipsDescendants = true,
         ZIndex = 101,
-        Parent = NotifyOuter,
+        Parent = NotificationContainer,
     })
-
-    -- Add an accent border using the left border of NotifyInner (simulates AccentBar)
-    NotifyInner.BorderSizePixel = 0
-    local AccentBarHeight = 3  -- This is the thickness of the accent bar
-    NotifyInner.BorderSizePixel = 0
-    local AccentFrame = Create('Frame', {
-        BackgroundColor3 = Color or AccentColor,
-        Size = UDim2.new(0, AccentBarHeight, 1, 0),  -- Accent on the left side
-        Position = UDim2.new(0, -AccentBarHeight, 0, 0),
-        ZIndex = 102,
-        Parent = NotifyInner,
-    })
-
-    -- Text label
-    Create('TextLabel', {
-        Name = "TextLabel",
-        Position = UDim2.new(0, 4, 0, 0),
-        Size = UDim2.new(1, -4, 1, 0),
+    
+    Create("TextLabel", {
+        Position = UDim2.new(0, 6, 0, 0),
+        Size = UDim2.new(1, -6, 1, 0),
         Text = Text,
-        TextXAlignment = Enum.TextXAlignment.Left,
         Font = Enum.Font.GothamBold,
         TextSize = TextSize,
         BackgroundTransparency = 1,
         TextColor3 = Color3.new(1, 1, 1),
-        ZIndex = 103,
-        Parent = NotifyInner,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 102,
+        Parent = NotifyFrame,
     })
 
-    -- Smoothly animate appearance
-    NotifyOuter:TweenSize(UDim2.new(0, XSize + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true)
+    Create("Frame", {
+        BackgroundColor3 = Color or AccentColor,
+        Size = UDim2.new(0, 3, 1, 0),
+        Position = UDim2.new(0, 0, 0, 0),
+        ZIndex = 103,
+        Parent = NotifyFrame,
+    })
 
-    -- Store active notification
-    ActiveNotifications[Text] = NotifyOuter
+    NotifyFrame:TweenSize(UDim2.new(0, XSize + 14, 0, YSize), "Out", "Quad", 0.4, true)
+    ActiveNotifications[Text] = NotifyFrame
 
-    -- Destroy after time
     task.spawn(function()
         wait(Time or 5)
-        NotifyOuter:TweenSize(UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true)
+        NotifyFrame:TweenSize(UDim2.new(0, 0, 0, YSize), "Out", "Quad", 0.4, true)
         wait(0.4)
-        NotifyOuter:Destroy()
+        NotifyFrame:Destroy()
         ActiveNotifications[Text] = nil
     end)
 end
