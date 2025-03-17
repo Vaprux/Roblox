@@ -55,14 +55,14 @@ function NotificationModule:Notify(Text, Color, Time)
 
     CooldownTimers[Text] = os.clock() -- Set the cooldown for this notification
 
+    local FlashEnabled = false
+
     if ActiveNotifications[Text] then
+        -- A notification with the same text already exists, enable flashing
+        FlashEnabled = true
         local NotifyFrame = ActiveNotifications[Text]
         local AccentBar = NotifyFrame:FindFirstChild("AccentBar")
         local TextLabel = NotifyFrame:FindFirstChildOfClass("TextLabel")
-
-        if NotificationTimers[Text] then
-            task.cancel(NotificationTimers[Text]) -- Cancel previous timer
-        end
 
         -- Sync flashes with timer
         NotificationTimers[Text] = task.spawn(function()
@@ -70,9 +70,12 @@ function NotificationModule:Notify(Text, Color, Time)
             local OriginalAccentColor = AccentBar.BackgroundColor3
             local OriginalTextColor = TextLabel.TextColor3
 
-            -- Perform flashes while the notification is active
+            -- Perform flashes only if there are two notifications with the same text
             local startTime = os.clock()
             while os.clock() - startTime < FlashDuration do
+                if not FlashEnabled then
+                    break
+                end
                 AccentBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
                 wait(0.2)
@@ -81,7 +84,7 @@ function NotificationModule:Notify(Text, Color, Time)
                 wait(0.2)
             end
 
-            -- Ensure the colors reset correctly
+            -- Reset the colors
             if NotifyFrame and NotifyFrame:IsDescendantOf(game) then
                 AccentBar.BackgroundColor3 = OriginalAccentColor
                 TextLabel.TextColor3 = OriginalTextColor
@@ -139,29 +142,9 @@ function NotificationModule:Notify(Text, Color, Time)
     NotifyFrame:TweenSize(UDim2.new(0, XSize + 14, 0, YSize), "Out", "Quad", 0.4, true)
     ActiveNotifications[Text] = NotifyFrame
 
-    -- Sync flashes with timer
+    -- Destroy new notification after the timer
     NotificationTimers[Text] = task.spawn(function()
-        local FlashDuration = Time or 5
-        local OriginalAccentColor = AccentBar.BackgroundColor3
-        local OriginalTextColor = TextLabel.TextColor3
-
-        local startTime = os.clock()
-        while os.clock() - startTime < FlashDuration do
-            AccentBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            wait(0.2)
-            AccentBar.BackgroundColor3 = OriginalAccentColor
-            TextLabel.TextColor3 = OriginalTextColor
-            wait(0.2)
-        end
-
-        -- Ensure the colors reset correctly
-        if NotifyFrame and NotifyFrame:IsDescendantOf(game) then
-            AccentBar.BackgroundColor3 = OriginalAccentColor
-            TextLabel.TextColor3 = OriginalTextColor
-        end
-
-        -- Destroy notification after the timer
+        wait(Time or 5)
         NotifyFrame:TweenSize(UDim2.new(0, 0, 0, YSize), "Out", "Quad", 0.4, true)
         wait(0.4)
         NotifyFrame:Destroy()
