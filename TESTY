@@ -1,64 +1,11 @@
-if game:GetService("CoreGui"):FindFirstChild("NotificationArea") then   
-    game:GetService("CoreGui"):FindFirstChild("NotificationArea"):Destroy()
-end
-
-local NotificationModule = {}
-local TextService = game:GetService("TextService")
-local CoreGui = game:GetService("CoreGui")
-
-local AccentColor = Color3.fromRGB(75, 10, 120)
-local MainColor = Color3.fromRGB(28, 28, 28)
-local OutlineColor = Color3.fromRGB(50, 50, 50)
-
-local ActiveNotifications = {}
-local NotificationTimers = {}
-
-local function Create(Class, Properties)
-    local InstanceObj = Instance.new(Class)
-    for Property, Value in pairs(Properties) do
-        InstanceObj[Property] = Value
-    end
-    return InstanceObj
-end
-
-local function GetTextSize(Text, Font, Size)
-    local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
-    return Bounds.X or 200, Bounds.Y or 50
-end
-
-local NotificationArea = Create("ScreenGui", {
-    Name = "NotificationArea",
-    Parent = CoreGui,
-    IgnoreGuiInset = true
-})
-
-local NotificationContainer = Create("Frame", {
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0, 0, 0, 370),
-    Size = UDim2.new(1, 0, 1, -40),
-    ZIndex = 100,
-    Parent = NotificationArea
-})
-
-Create("UIListLayout", {
-    Padding = UDim.new(0, 4),
-    FillDirection = Enum.FillDirection.Vertical,
-    SortOrder = Enum.SortOrder.LayoutOrder,
-    Parent = NotificationContainer,
-})
-
-local SpamDelay = 1 -- 0.5 seconds delay between notifications
-local LastNotificationTime = 0
+local LastNotificationTime = 0 -- Tracks the last notification timestamp
 
 function NotificationModule:Notify(Text, Color, Time)
-    local CurrentTime = tick() -- Get current time in seconds
-    
-    -- Check if enough time has passed since the last notification
-    if CurrentTime - LastNotificationTime < SpamDelay then
-        return -- If the delay hasn't passed, do not send the notification
+    local currentTime = os.clock()
+    if currentTime - LastNotificationTime < 1 then
+        return -- Prevent sending notification if cooldown hasn't passed
     end
-
-    LastNotificationTime = CurrentTime -- Update the last notification time
+    LastNotificationTime = currentTime -- Update the timestamp
 
     if ActiveNotifications[Text] then
         local NotifyFrame = ActiveNotifications[Text]
@@ -142,5 +89,3 @@ function NotificationModule:Notify(Text, Color, Time)
         NotificationTimers[Text] = nil
     end)
 end
-
-return NotificationModule
