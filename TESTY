@@ -69,7 +69,8 @@ function NotificationModule:Notify(Text, Color, Time)
             NotificationTimers[Text]:Cancel()
         end
         
-        NotificationTimers[Text] = task.delay(Time or 5, function()
+        NotificationTimers[Text] = task.spawn(function()
+            wait(Time or 5)
             NotifyFrame:TweenSize(UDim2.new(0, 0, 0, NotifyFrame.Size.Y.Offset), "Out", "Quad", 0.4, true)
             wait(0.4)
             NotifyFrame:Destroy()
@@ -120,7 +121,8 @@ function NotificationModule:Notify(Text, Color, Time)
     NotifyFrame:TweenSize(UDim2.new(0, XSize + 14, 0, YSize), "Out", "Quad", 0.4, true)
     ActiveNotifications[Text] = NotifyFrame
     
-    NotificationTimers[Text] = task.delay(Time or 5, function()
+    NotificationTimers[Text] = task.spawn(function()
+        wait(Time or 5)
         NotifyFrame:TweenSize(UDim2.new(0, 0, 0, YSize), "Out", "Quad", 0.4, true)
         wait(0.4)
         NotifyFrame:Destroy()
