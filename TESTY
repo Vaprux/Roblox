@@ -12,6 +12,7 @@ local OutlineColor = Color3.fromRGB(50, 50, 50)
 
 local ActiveNotifications = {}
 local NotificationTimers = {}
+local CooldownTimers = {}
 
 local function Create(Class, Properties)
     local InstanceObj = Instance.new(Class)
@@ -47,14 +48,12 @@ Create("UIListLayout", {
     Parent = NotificationContainer,
 })
 
-local LastNotificationTime = 0 -- Tracks the last notification timestamp
-
 function NotificationModule:Notify(Text, Color, Time)
-    local currentTime = os.clock()
-    if currentTime - LastNotificationTime < 1 then
-        return -- Prevent sending notification if cooldown hasn't passed
+    if CooldownTimers[Text] and os.clock() - CooldownTimers[Text] < 1 then
+        return -- Delay for this specific notification hasn't passed
     end
-    LastNotificationTime = currentTime -- Update the timestamp
+
+    CooldownTimers[Text] = os.clock() -- Set the cooldown for this notification
 
     if ActiveNotifications[Text] then
         local NotifyFrame = ActiveNotifications[Text]
