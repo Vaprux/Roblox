@@ -12,7 +12,6 @@ local OutlineColor = Color3.fromRGB(50, 50, 50)
 
 local ActiveNotifications = {}
 local NotificationTimers = {}
-local CooldownTimers = {}
 
 local function Create(Class, Properties)
     local InstanceObj = Instance.new(Class)
@@ -50,43 +49,38 @@ Create("UIListLayout", {
 
 function NotificationModule:Notify(Text, Color, Time)
     if ActiveNotifications[Text] then
-        -- If this notification already exists, trigger flash behavior
         local NotifyFrame = ActiveNotifications[Text]
         local AccentBar = NotifyFrame:FindFirstChild("AccentBar")
         local TextLabel = NotifyFrame:FindFirstChildOfClass("TextLabel")
-
+        
         task.spawn(function()
-            local OriginalAccentColor = AccentBar.BackgroundColor3
-            local OriginalTextColor = TextLabel.TextColor3
-            local FlashTime = os.clock() + (Time or 5) -- Flash duration in sync with timeout
-
-            while os.clock() < FlashTime do
+            local OriginalColor = AccentBar.BackgroundColor3
+            for i = 1, 3 do
                 AccentBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
                 wait(0.2)
-                AccentBar.BackgroundColor3 = OriginalAccentColor
-                TextLabel.TextColor3 = OriginalTextColor
+                AccentBar.BackgroundColor3 = OriginalColor
+                TextLabel.TextColor3 = Color3.new(1, 1, 1)
                 wait(0.2)
             end
         end)
-
+        
         if NotificationTimers[Text] then
-            task.cancel(NotificationTimers[Text]) -- Cancel the existing notification timer
+            task.cancel(NotificationTimers[Text])
         end
-
+        
         NotificationTimers[Text] = task.spawn(function()
-            wait(Time or 5) -- Wait for the timeout duration
+            wait(Time or 5)
             NotifyFrame:TweenSize(UDim2.new(0, 0, 0, NotifyFrame.Size.Y.Offset), "Out", "Quad", 0.4, true)
             wait(0.4)
             NotifyFrame:Destroy()
             ActiveNotifications[Text] = nil
             NotificationTimers[Text] = nil
         end)
-
+        
         return
     end
-
-    -- Create a new notification if not already active
+    
     local TextSize = 17
     local XSize, YSize = GetTextSize(Text or "", Enum.Font.GothamBold, TextSize)
     YSize = YSize + 10
@@ -101,7 +95,7 @@ function NotificationModule:Notify(Text, Color, Time)
         ZIndex = 101,
         Parent = NotificationContainer,
     })
-
+    
     local TextLabel = Create("TextLabel", {
         Position = UDim2.new(0, 6, 0, 0),
         Size = UDim2.new(1, -6, 1, 0),
@@ -126,9 +120,9 @@ function NotificationModule:Notify(Text, Color, Time)
 
     NotifyFrame:TweenSize(UDim2.new(0, XSize + 14, 0, YSize), "Out", "Quad", 0.4, true)
     ActiveNotifications[Text] = NotifyFrame
-
+    
     NotificationTimers[Text] = task.spawn(function()
-        wait(Time or 5) -- Wait for the timeout duration
+        wait(Time or 5)
         NotifyFrame:TweenSize(UDim2.new(0, 0, 0, YSize), "Out", "Quad", 0.4, true)
         wait(0.4)
         NotifyFrame:Destroy()
