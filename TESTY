@@ -47,7 +47,19 @@ Create("UIListLayout", {
     Parent = NotificationContainer,
 })
 
+local SpamDelay = 0.5 -- 0.5 seconds delay between notifications
+local LastNotificationTime = 0
+
 function NotificationModule:Notify(Text, Color, Time)
+    local CurrentTime = tick() -- Get current time in seconds
+    
+    -- Check if enough time has passed since the last notification
+    if CurrentTime - LastNotificationTime < SpamDelay then
+        return -- If the delay hasn't passed, do not send the notification
+    end
+
+    LastNotificationTime = CurrentTime -- Update the last notification time
+
     if ActiveNotifications[Text] then
         local NotifyFrame = ActiveNotifications[Text]
         local AccentBar = NotifyFrame:FindFirstChild("AccentBar")
@@ -55,9 +67,6 @@ function NotificationModule:Notify(Text, Color, Time)
         
         task.spawn(function()
             local OriginalColor = AccentBar.BackgroundColor3
-            -- Reset the flashing effect
-            AccentBar.BackgroundColor3 = OriginalColor
-            TextLabel.TextColor3 = Color3.new(1, 1, 1)  -- Reset to original color
             for i = 1, 3 do
                 AccentBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
