@@ -47,7 +47,7 @@ Create("UIListLayout", {
     Parent = NotificationContainer,
 })
 
-local SpamDelay = 0.5 -- 0.5 seconds delay between notifications
+local SpamDelay = 1 -- 0.5 seconds delay between notifications
 local LastNotificationTime = 0
 
 function NotificationModule:Notify(Text, Color, Time)
