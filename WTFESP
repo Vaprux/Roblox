@@ -24,7 +24,7 @@ end
 
 function ESP:UpdateESPState()
     -- wait a tiny bit for other toggles to update
-    task.delay(0.1, function()
+    task.delay(2, function()
         if not self:IsEnabled() then
             for _, v in pairs(self.Objects) do
                 for _, component in pairs(v.Components) do
