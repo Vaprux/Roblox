@@ -23,27 +23,15 @@ function ESP:IsEnabled()
 end
 
 function ESP:UpdateESPState()
-    -- wait a tiny bit for other toggles to update
-    task.delay(2, function()
-        if not self:IsEnabled() then
-            for _, v in pairs(self.Objects) do
-                for _, component in pairs(v.Components) do
-                    component.Visible = false
-                end
+    if not self:IsEnabled() then
+        -- Immediately disable visibility of all components
+        for _, v in pairs(self.Objects) do
+            for _, component in pairs(v.Components) do
+                component.Visible = false
             end
         end
-    end)
-end
-
--- Hook setters to trigger update state check
-setmetatable(ESP, {
-    __newindex = function(t, k, v)
-        rawset(t, k, v)
-        if k == "Boxes" or k == "Names" or k == "Tracers" then
-            t:UpdateESPState()
-        end
     end
-})
+end
 
 --Declarations--
 local cam = workspace.CurrentCamera
