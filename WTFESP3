@@ -15,7 +15,8 @@ local ESP = {
     Players = true,
 
     Objects = setmetatable({}, {__mode="kv"}),
-    Overrides = {}
+    Overrides = {},
+    _RenderConnection = nil
 }
 
 function ESP:IsEnabled()
@@ -29,6 +30,26 @@ function ESP:UpdateESPState()
                 for _, component in pairs(v.Components) do
                     component.Visible = false
                 end
+            end
+            if self._RenderConnection then
+                self._RenderConnection:Disconnect()
+                self._RenderConnection = nil
+            end
+        else
+            self:StartRenderLoop()
+        end
+    end)
+end
+
+function ESP:StartRenderLoop()
+    if self._RenderConnection then return end
+    self._RenderConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        if not self:IsEnabled() then return end
+        cam = workspace.CurrentCamera
+        for i,v in pairs(self.Objects) do
+            if v.Update then
+                local s,e = pcall(v.Update, v)
+                if not s then warn("[EU]", e, v.Object:GetFullName()) end
             end
         end
     end)
