@@ -108,6 +108,18 @@ function boxBase:Remove()
 end
 
 function boxBase:Update()
+    -- Check if components are enabled globally (based on toggles like Boxes, Names, Tracers)
+    if not ESP.Enabled then
+        -- Hide all components when ESP is disabled globally
+        for _, v in pairs(self.Components) do
+            if v then
+                v.Visible = false
+            end
+        end
+        return
+    end
+
+    -- Normal update flow (continue updating the visuals if enabled)
     if not self.PrimaryPart then return self:Remove() end
 
     local color = self.Color or (self.ColorDynamic and self:ColorDynamic()) or ESP:GetColor(self.Object) or ESP.Color
@@ -126,6 +138,7 @@ function boxBase:Update()
         return
     end
 
+    -- Continue with updating position and size as normal...
     local cf = self.PrimaryPart.CFrame
     if ESP.FaceCamera then cf = CFrame.new(cf.p, Camera.CFrame.p) end
     local size = self.Size
