@@ -151,18 +151,20 @@ function BoxBase:Update()
     end
 
     -- Tracer
-    if ESP.Tracers and comp.Tracer then
-        local pos, ok = Camera:WorldToViewportPoint(root)
-        comp.Tracer.Visible = ok
-        if ok then
-            comp.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / ESP.AttachShift)
-            comp.Tracer.To = Vector2.new(pos.X, pos.Y)
-            comp.Tracer.Color = color
+    local tracer = self.Components.Tracer
+    if tracer then
+        if ESP.Tracers then
+            local pos, visible = Camera:WorldToViewportPoint(locs.Torso.p)
+            tracer.Visible = visible
+            if visible then
+                tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / ESP.AttachShift)
+                tracer.To = Vector2.new(pos.X, pos.Y)
+                tracer.Color = color
+            end
+        else
+            tracer.Visible = false
         end
-    elseif comp.Tracer then
-        comp.Tracer.Visible = false
     end
-end
 
 --// Add ESP Box
 function ESP:Add(object, props)
