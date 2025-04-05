@@ -23,15 +23,16 @@ function ESP:IsEnabled()
 end
 
 function ESP:UpdateESPState()
-    if not self:IsEnabled() then
-        task.delay(0.1, function()
+    -- wait a tiny bit for other toggles to update
+    task.delay(0.1, function()
+        if not self:IsEnabled() then
             for _, v in pairs(self.Objects) do
                 for _, component in pairs(v.Components) do
                     component.Visible = false
                 end
             end
-        end)
-    end
+        end
+    end)
 end
 
 -- Hook setters to trigger update state check
