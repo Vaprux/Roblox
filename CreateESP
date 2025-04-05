@@ -51,54 +51,33 @@ function ESP:GetPlrFromChar(char)
     return self.Overrides.GetPlrFromChar and self.Overrides.GetPlrFromChar(char) or Players:GetPlayerFromCharacter(char)
 end
 
--- Cleanup function to hide all visuals
-function ESP:ClearVisuals()
-    for _, box in pairs(self.Objects) do
-        if box.Components then
-            -- Hide box components if not enabled
-            if not ESP.Boxes and box.Components.Quad then
-                box.Components.Quad.Visible = false
-            end
-            -- Hide name and distance if not enabled
-            if not ESP.Names then
-                if box.Components.Name then box.Components.Name.Visible = false end
-                if box.Components.Distance then box.Components.Distance.Visible = false end
-            end
-            -- Hide tracers if not enabled
-            if not ESP.Tracers and box.Components.Tracer then
-                box.Components.Tracer.Visible = false
-            end
-        end
-    end
-end
-
--- Toggle function
 function ESP:Toggle(bool)
-    self.Enabled = self.Boxes or self.Names or self.Tracers
-    self:ClearVisuals()  -- Clear visuals when toggled off
-
-    -- Reset visibility for each specific feature
-    if not self.Boxes then
-        for _, box in pairs(self.Objects) do
-            if box.Components.Quad then
-                box.Components.Quad.Visible = false
+    self.Enabled = bool and (self.Boxes or self.Names or self.Tracers)
+    if not self.Enabled then
+        -- Hide all visuals if the ESP is disabled
+        for _, v in pairs(self.Objects) do
+            if v.Type == "Box" then
+                -- Ensure that the components are hidden for each object
+                for _, comp in pairs(v.Components) do
+                    if comp then comp.Visible = false end
+                end
             end
         end
-    end
-    if not self.Names then
-        for _, box in pairs(self.Objects) do
-            if box.Components.Name then
-                box.Components.Name.Visible = false
-            end
-            if box.Components.Distance then
-                box.Components.Distance.Visible = false
-            end
-        end
-    end
-    if not self.Tracers then
-        for _, box in pairs(self.Objects) do
-            if box.Components.Tracer then
-                box.Components.Tracer.Visible = false
+    else
+        -- Re-enable visuals based on the toggles
+        for _, v in pairs(self.Objects) do
+            if v.Type == "Box" then
+                -- Restore visibility depending on each setting
+                if self.Boxes then
+                    v.Components.Quad.Visible = true
+                end
+                if self.Names then
+                    v.Components.Name.Visible = true
+                    v.Components.Distance.Visible = true
+                end
+                if self.Tracers then
+                    v.Components.Tracer.Visible = true
+                end
             end
         end
     end
