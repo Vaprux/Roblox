@@ -53,40 +53,22 @@ end
 
 function ESP:Toggle(bool)
     self.Enabled = bool and (self.Boxes or self.Names or self.Tracers)
-    
+
     if not self.Enabled then
+        -- Clear all objects when disabling
         for _, v in pairs(self.Objects) do
-            -- Hide and remove visuals for each object (Boxes, Names, Tracers)
             if v.Components then
-                if v.Components.Quad then
-                    v.Components.Quad.Visible = false
-                end
-                if v.Components.Name then
-                    v.Components.Name.Visible = false
-                end
-                if v.Components.Distance then
-                    v.Components.Distance.Visible = false
-                end
-                if v.Components.Tracer then
-                    v.Components.Tracer.Visible = false
-                end
+                v:Remove()
             end
         end
+        self.Objects = {}  -- Clear the ESP objects table
     else
-        -- Ensure components are visible when toggling on, and update them
-        for _, v in pairs(self.Objects) do
-            if v.Components then
-                if v.Components.Quad then
-                    v.Components.Quad.Visible = true
-                end
-                if v.Components.Name then
-                    v.Components.Name.Visible = true
-                end
-                if v.Components.Distance then
-                    v.Components.Distance.Visible = true
-                end
-                if v.Components.Tracer then
-                    v.Components.Tracer.Visible = true
+        -- Re-add objects when enabling ESP again
+        for _, obj in pairs(workspace:GetChildren()) do
+            if obj:IsA("Model") then
+                local hrp = obj:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    ESP:Add(obj, { PrimaryPart = hrp })
                 end
             end
         end
@@ -296,10 +278,12 @@ end
 
 -- Main render loop
 RunService.RenderStepped:Connect(function()
-    ESP.Enabled = ESP.Boxes or ESP.Names or ESP.Tracers
+    -- Skip rendering if no visual component is enabled
     if not ESP.Enabled then return end
+
+    -- Update visuals for enabled features
     for _, box in pairs(ESP.Objects) do
-        if box.Update then
+        if box.Update and (ESP.Boxes or ESP.Names or ESP.Tracers) then
             local ok, err = pcall(box.Update, box)
             if not ok then warn("ESP update failed:", err) end
         end
