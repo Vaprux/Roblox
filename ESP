@@ -121,10 +121,10 @@ function BoxBase:Update()
         local A, B, C, D = Camera:WorldToViewportPoint(p1), Camera:WorldToViewportPoint(p2), Camera:WorldToViewportPoint(p3), Camera:WorldToViewportPoint(p4)
         comp.Quad.Visible = A.Z > 0 or B.Z > 0 or C.Z > 0 or D.Z > 0
         if comp.Quad.Visible then
-            comp.Quad.PointA = Vector2.new(A.X, A.Y)
-            comp.Quad.PointB = Vector2.new(B.X, B.Y)
-            comp.Quad.PointC = Vector2.new(C.X, C.Y)
-            comp.Quad.PointD = Vector2.new(D.X, D.Y)
+        comp.Quad.PointA = Vector2.new(B.X, B.Y)
+        comp.Quad.PointB = Vector2.new(A.X, A.Y)
+        comp.Quad.PointC = Vector2.new(C.X, C.Y)
+        comp.Quad.PointD = Vector2.new(D.X, D.Y)
             comp.Quad.Color = color
         end
     elseif comp.Quad then
