@@ -1,5 +1,3 @@
---// ESP MODULE WITH CLEAN DISCONNECT //--
-
 local ESP = {
     Boxes = false,
     BoxShift = CFrame.new(0,-1.5,0),
@@ -15,7 +13,8 @@ local ESP = {
     Players = true,
 
     Objects = setmetatable({}, {__mode="kv"}),
-    Overrides = {}
+    Overrides = {},
+    _RenderConnection = nil
 }
 
 function ESP:IsEnabled()
@@ -23,15 +22,35 @@ function ESP:IsEnabled()
 end
 
 function ESP:UpdateESPState()
-    if not self:IsEnabled() then
-        task.delay(0.1, function()
+    task.delay(0.1, function()
+        if not self:IsEnabled() then
             for _, v in pairs(self.Objects) do
                 for _, component in pairs(v.Components) do
                     component.Visible = false
                 end
             end
-        end)
-    end
+            if self._RenderConnection then
+                self._RenderConnection:Disconnect()
+                self._RenderConnection = nil
+            end
+        else
+            self:StartRenderLoop()
+        end
+    end)
+end
+
+function ESP:StartRenderLoop()
+    if self._RenderConnection then return end
+    self._RenderConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        if not self:IsEnabled() then return end
+        cam = workspace.CurrentCamera
+        for i,v in pairs(self.Objects) do
+            if v.Update then
+                local s,e = pcall(v.Update, v)
+                if not s then warn("[EU]", e, v.Object:GetFullName()) end
+            end
+        end
+    end)
 end
 
 -- Hook setters to trigger update state check
@@ -65,26 +84,34 @@ end
 
 function ESP:GetTeam(p)
     local ov = self.Overrides.GetTeam
-    if ov then return ov(p) end
+    if ov then
+        return ov(p)
+    end
     return p and p.Team
 end
 
 function ESP:IsTeamMate(p)
     local ov = self.Overrides.IsTeamMate
-    if ov then return ov(p) end
+    if ov then
+        return ov(p)
+    end
     return self:GetTeam(p) == self:GetTeam(plr)
 end
 
 function ESP:GetColor(obj)
     local ov = self.Overrides.GetColor
-    if ov then return ov(obj) end
+    if ov then
+        return ov(obj)
+    end
     local p = self:GetPlrFromChar(obj)
     return p and self.TeamColor and p.Team and p.Team.TeamColor.Color or self.Color
 end
 
 function ESP:GetPlrFromChar(char)
     local ov = self.Overrides.GetPlrFromChar
-    if ov then return ov(char) end
+    if ov then
+        return ov(char)
+    end
     return plrs:GetPlayerFromCharacter(char)
 end
 
@@ -344,16 +371,26 @@ for i,v in pairs(plrs:GetPlayers()) do
     end
 end
 
+-- MODIFIED RENDERSTEPPED LOOP
+local lastESPEnabled = false
 game:GetService("RunService").RenderStepped:Connect(function()
     cam = workspace.CurrentCamera
-    if ESP:IsEnabled() then
+    local isEnabled = ESP:IsEnabled()
+    if isEnabled then
         for i,v in pairs(ESP.Objects) do
             if v.Update then
                 local s,e = pcall(v.Update, v)
                 if not s then warn("[EU]", e, v.Object:GetFullName()) end
             end
         end
+    elseif lastESPEnabled ~= isEnabled then
+        for _, v in pairs(ESP.Objects) do
+            for _, component in pairs(v.Components) do
+                component.Visible = false
+            end
+        end
     end
+    lastESPEnabled = isEnabled
 end)
 
 return ESP
