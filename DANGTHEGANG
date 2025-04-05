@@ -53,19 +53,22 @@ end
 
 function ESP:Toggle(bool)
     self.Enabled = bool and (self.Boxes or self.Names or self.Tracers)
+    
+    -- Ensure visuals are removed when toggled off
     if not self.Enabled then
-        -- Clear visuals when toggled off
         for _, v in pairs(self.Objects) do
             if v.Type == "Box" then
+                -- Loop through all components and hide them
                 for _, comp in pairs(v.Components) do
                     if comp then
                         comp.Visible = false
-                        comp:Remove()
+                        comp:Remove() -- Remove the drawing element from the screen
                     end
                 end
             end
         end
-        self.Objects = setmetatable({}, { __mode = "kv" })  -- Reset the objects
+        -- Clear the objects table after disabling
+        self.Objects = setmetatable({}, { __mode = "kv" })
     end
 end
 
@@ -96,6 +99,7 @@ function boxBase:Update()
     if not workspace:IsAncestorOf(self.PrimaryPart) and not self.RenderInNil then allow = false end
 
     if not allow then
+        -- Hide all components if they are not allowed to render
         for _, v in pairs(self.Components) do
             if v then v.Visible = false end
         end
