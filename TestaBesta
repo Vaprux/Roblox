@@ -54,22 +54,27 @@ end
 function ESP:Toggle(bool)
     self.Enabled = bool and (self.Boxes or self.Names or self.Tracers)
 
-    if not self.Enabled then
-        -- Clear all objects when disabling
-        for _, v in pairs(self.Objects) do
-            if v.Components then
-                v:Remove()
+    -- Explicitly disable all objects that are not active
+    for _, v in pairs(self.Objects) do
+        if v.Components then
+            if self.Boxes then
+                v.Components.Quad.Visible = true
+            else
+                v.Components.Quad.Visible = false
             end
-        end
-        self.Objects = {}  -- Clear the ESP objects table
-    else
-        -- Re-add objects when enabling ESP again
-        for _, obj in pairs(workspace:GetChildren()) do
-            if obj:IsA("Model") then
-                local hrp = obj:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    ESP:Add(obj, { PrimaryPart = hrp })
-                end
+
+            if self.Names then
+                v.Components.Name.Visible = true
+                v.Components.Distance.Visible = true
+            else
+                v.Components.Name.Visible = false
+                v.Components.Distance.Visible = false
+            end
+
+            if self.Tracers then
+                v.Components.Tracer.Visible = true
+            else
+                v.Components.Tracer.Visible = false
             end
         end
     end
@@ -90,18 +95,10 @@ function boxBase:Remove()
 end
 
 function boxBase:Update()
-    -- Check if components are enabled globally (based on toggles like Boxes, Names, Tracers)
-    if not ESP.Enabled then
-        -- Hide all components when ESP is disabled globally
-        for _, v in pairs(self.Components) do
-            if v then
-                v.Visible = false
-            end
-        end
-        return
-    end
+    -- Check if the object itself should be updated based on its enabled state
+    if not self.IsEnabled then return end
 
-    -- Normal update flow (continue updating the visuals if enabled)
+    -- Proceed with the usual update logic for the visuals
     if not self.PrimaryPart then return self:Remove() end
 
     local color = self.Color or (self.ColorDynamic and self:ColorDynamic()) or ESP:GetColor(self.Object) or ESP.Color
@@ -283,7 +280,8 @@ RunService.RenderStepped:Connect(function()
 
     -- Update visuals for enabled features
     for _, box in pairs(ESP.Objects) do
-        if box.Update and (ESP.Boxes or ESP.Names or ESP.Tracers) then
+        -- Skip update if the specific object is not enabled
+        if box.IsEnabled and (ESP.Boxes or ESP.Names or ESP.Tracers) then
             local ok, err = pcall(box.Update, box)
             if not ok then warn("ESP update failed:", err) end
         end
