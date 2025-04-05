@@ -1,266 +1,248 @@
--- Settings
-local ESP = {
-    Boxes = false,
-    Names = false,
-    Tracers = false,
-    Enabled = false,
-    BoxShift = CFrame.new(0, -1.5, 0),
-    BoxSize = Vector3.new(4, 6, 0),
-    Color = Color3.fromRGB(255, 170, 0),
-    FaceCamera = false,
-    TeamColor = true,
-    Thickness = 2,
-    AttachShift = 1,
-    TeamMates = false,
-    Players = false,
-    Objects = setmetatable({}, { __mode = "kv" }),
-    Overrides = {}
-}
-
--- Services
+--// Services & References
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local Player = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
 
--- Drawing helper
-local function Draw(obj, props)
-    local new = Drawing.new(obj)
-    for i, v in pairs(props or {}) do
-        new[i] = v
+--// ESP Configuration
+local ESP = {
+    Enabled     = false,
+    Boxes       = false,
+    Names       = false,
+    Tracers     = false,
+    Players     = false,
+    TeamMates   = false,
+
+    BoxShift    = CFrame.new(0, -1.5, 0),
+    BoxSize     = Vector3.new(4, 6, 0),
+    AttachShift = 1,
+    Thickness   = 2,
+
+    Color       = Color3.fromRGB(255, 170, 0),
+    TeamColor   = true,
+    FaceCamera  = false,
+
+    Objects     = setmetatable({}, { __mode = "kv" }),
+    Overrides   = {}
+}
+
+--// Utility: Drawing Constructor
+local function NewDrawing(class, props)
+    local obj = Drawing.new(class)
+    for prop, val in pairs(props) do
+        obj[prop] = val
     end
-    return new
+    return obj
 end
 
--- ESP helpers
-function ESP:GetTeam(p)
-    return self.Overrides.GetTeam and self.Overrides.GetTeam(p) or p and p.Team
+--// Helper Functions
+function ESP:GetTeam(player)
+    return self.Overrides.GetTeam and self.Overrides.GetTeam(player) or player and player.Team
 end
 
-function ESP:IsTeamMate(p)
-    return self.Overrides.IsTeamMate and self.Overrides.IsTeamMate(p) or self:GetTeam(p) == self:GetTeam(Player)
+function ESP:IsTeamMate(player)
+    return self.Overrides.IsTeamMate and self.Overrides.IsTeamMate(player)
+        or self:GetTeam(player) == self:GetTeam(LocalPlayer)
 end
 
 function ESP:GetColor(obj)
-    if self.Overrides.GetColor then return self.Overrides.GetColor(obj) end
-    local p = self:GetPlrFromChar(obj)
-    return p and self.TeamColor and p.Team and p.Team.TeamColor.Color or self.Color
+    local player = self:GetPlrFromChar(obj)
+    return (self.Overrides.GetColor and self.Overrides.GetColor(obj))
+        or (player and self.TeamColor and player.Team and player.Team.TeamColor.Color)
+        or self.Color
 end
 
 function ESP:GetPlrFromChar(char)
-    return self.Overrides.GetPlrFromChar and self.Overrides.GetPlrFromChar(char) or Players:GetPlayerFromCharacter(char)
+    return self.Overrides.GetPlrFromChar and self.Overrides.GetPlrFromChar(char)
+        or Players:GetPlayerFromCharacter(char)
 end
 
 function ESP:Toggle(bool)
     self.Enabled = bool and (self.Boxes or self.Names or self.Tracers)
+
     if not self.Enabled then
-        for _, v in pairs(self.Objects) do
-            if v.Type == "Box" then
-                for _, comp in pairs(v.Components) do
-                    if comp then comp.Visible = false end
-                end
+        for _, esp in pairs(self.Objects) do
+            for _, v in pairs(esp.Components) do
+                if v then v.Visible = false end
             end
         end
     end
 end
 
-local boxBase = {}
-boxBase.__index = boxBase
+--// ESP Box Class
+local BoxBase = {}
+BoxBase.__index = BoxBase
 
-function boxBase:Remove()
+function BoxBase:Remove()
     ESP.Objects[self.Object] = nil
-    for i, v in pairs(self.Components) do
-        if v then
-            v.Visible = false
-            v:Remove()
-            self.Components[i] = nil
-        end
+    for _, v in pairs(self.Components) do
+        if v then v.Visible = false v:Remove() end
     end
 end
 
-function boxBase:Update()
+function BoxBase:Update()
     if not self.PrimaryPart then return self:Remove() end
 
-    local color = self.Color or (self.ColorDynamic and self:ColorDynamic()) or ESP:GetColor(self.Object) or ESP.Color
-    local allow = true
+    local player = self.Player
+    local visible = true
 
-    if ESP.Overrides.UpdateAllow and not ESP.Overrides.UpdateAllow(self) then allow = false end
-    if self.Player and not ESP.TeamMates and ESP:IsTeamMate(self.Player) then allow = false end
-    if self.Player and not ESP.Players then allow = false end
-    if self.IsEnabled and (type(self.IsEnabled) == "string" and not ESP[self.IsEnabled] or type(self.IsEnabled) == "function" and not self:IsEnabled()) then allow = false end
-    if not workspace:IsAncestorOf(self.PrimaryPart) and not self.RenderInNil then allow = false end
+    -- Visibility Conditions
+    if ESP.Overrides.UpdateAllow and not ESP.Overrides.UpdateAllow(self) then visible = false end
+    if player and (not ESP.Players or (not ESP.TeamMates and ESP:IsTeamMate(player))) then visible = false end
+    if not workspace:IsAncestorOf(self.PrimaryPart) and not self.RenderInNil then visible = false end
+    if self.IsEnabled then
+        visible = type(self.IsEnabled) == "function" and self.IsEnabled(self) or ESP[self.IsEnabled]
+    end
 
-    if not allow then
-        for _, v in pairs(self.Components) do
-            if v then v.Visible = false end
-        end
+    -- Hide if not visible
+    if not visible then
+        for _, v in pairs(self.Components) do if v then v.Visible = false end end
         return
     end
 
-    local cf = self.PrimaryPart.CFrame
-    if ESP.FaceCamera then cf = CFrame.new(cf.p, Camera.CFrame.p) end
-    local size = self.Size
-    local locs = {
-        TopLeft = cf * ESP.BoxShift * CFrame.new(size.X / 2, size.Y / 2, 0),
-        TopRight = cf * ESP.BoxShift * CFrame.new(-size.X / 2, size.Y / 2, 0),
-        BottomLeft = cf * ESP.BoxShift * CFrame.new(size.X / 2, -size.Y / 2, 0),
-        BottomRight = cf * ESP.BoxShift * CFrame.new(-size.X / 2, -size.Y / 2, 0),
-        TagPos = cf * ESP.BoxShift * CFrame.new(0, size.Y / 2, 0),
-        Torso = cf * ESP.BoxShift
-    }
+    -- Compute Data
+    local color = self.Color or (self.ColorDynamic and self:ColorDynamic()) or ESP:GetColor(self.Object)
+    local cf = ESP.FaceCamera and CFrame.new(self.PrimaryPart.Position, Camera.CFrame.Position) or self.PrimaryPart.CFrame
+    local size, shift = self.Size, ESP.BoxShift
 
-    -- Boxes
-    if ESP.Boxes and self.Components.Quad then
-        local A, V1 = Camera:WorldToViewportPoint(locs.TopRight.p)
-        local B, V2 = Camera:WorldToViewportPoint(locs.TopLeft.p)
-        local C, V3 = Camera:WorldToViewportPoint(locs.BottomLeft.p)
-        local D, V4 = Camera:WorldToViewportPoint(locs.BottomRight.p)
-        self.Components.Quad.Visible = V1 or V2 or V3 or V4
-        if self.Components.Quad.Visible then
-            self.Components.Quad.PointA = Vector2.new(A.X, A.Y)
-            self.Components.Quad.PointB = Vector2.new(B.X, B.Y)
-            self.Components.Quad.PointC = Vector2.new(C.X, C.Y)
-            self.Components.Quad.PointD = Vector2.new(D.X, D.Y)
-            self.Components.Quad.Color = color
+    -- Box corners
+    local p1 = (cf * shift * CFrame.new( size.X/2,  size.Y/2, 0)).Position
+    local p2 = (cf * shift * CFrame.new(-size.X/2,  size.Y/2, 0)).Position
+    local p3 = (cf * shift * CFrame.new( size.X/2, -size.Y/2, 0)).Position
+    local p4 = (cf * shift * CFrame.new(-size.X/2, -size.Y/2, 0)).Position
+    local top = (cf * shift * CFrame.new(0, size.Y/2, 0)).Position
+    local root = (cf * shift).Position
+
+    -- Draw Components
+    local comp = self.Components
+
+    -- Box
+    if ESP.Boxes and comp.Quad then
+        local A, B, C, D = Camera:WorldToViewportPoint(p1), Camera:WorldToViewportPoint(p2), Camera:WorldToViewportPoint(p3), Camera:WorldToViewportPoint(p4)
+        comp.Quad.Visible = A.Z > 0 or B.Z > 0 or C.Z > 0 or D.Z > 0
+        if comp.Quad.Visible then
+            comp.Quad.PointA = Vector2.new(A.X, A.Y)
+            comp.Quad.PointB = Vector2.new(B.X, B.Y)
+            comp.Quad.PointC = Vector2.new(C.X, C.Y)
+            comp.Quad.PointD = Vector2.new(D.X, D.Y)
+            comp.Quad.Color = color
         end
-    elseif self.Components.Quad then
-        self.Components.Quad.Visible = false
+    elseif comp.Quad then
+        comp.Quad.Visible = false
     end
 
-    -- Names & Distance
-    if ESP.Names and self.Components.Name and self.Components.Distance then
-        local pos, vis = Camera:WorldToViewportPoint(locs.TagPos.p)
-        self.Components.Name.Visible = vis
-        self.Components.Distance.Visible = vis
-        if vis then
-            self.Components.Name.Position = Vector2.new(pos.X, pos.Y)
-            self.Components.Name.Text = self.Name
-            self.Components.Name.Color = color
+    -- Name & Distance
+    local topScreen, onScreen = Camera:WorldToViewportPoint(top)
+    if ESP.Names and comp.Name and comp.Distance then
+        comp.Name.Visible = onScreen
+        comp.Distance.Visible = onScreen
+        if onScreen then
+            comp.Name.Position = Vector2.new(topScreen.X, topScreen.Y)
+            comp.Name.Text = self.Name
+            comp.Name.Color = color
 
-            self.Components.Distance.Position = Vector2.new(pos.X, pos.Y + 14)
-            self.Components.Distance.Text = math.floor((Camera.CFrame.p - cf.p).Magnitude) .. "m away"
-            self.Components.Distance.Color = color
+            comp.Distance.Position = comp.Name.Position + Vector2.new(0, 14)
+            comp.Distance.Text = math.floor((Camera.CFrame.Position - cf.Position).Magnitude) .. "m"
+            comp.Distance.Color = color
         end
     else
-        if self.Components.Name then self.Components.Name.Visible = false end
-        if self.Components.Distance then self.Components.Distance.Visible = false end
+        if comp.Name then comp.Name.Visible = false end
+        if comp.Distance then comp.Distance.Visible = false end
     end
 
-    -- Tracers
-    if ESP.Tracers and self.Components.Tracer then
-        local torsoPos, vis = Camera:WorldToViewportPoint(locs.Torso.p)
-        self.Components.Tracer.Visible = vis
-        if vis then
-            self.Components.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / ESP.AttachShift)
-            self.Components.Tracer.To = Vector2.new(torsoPos.X, torsoPos.Y)
-            self.Components.Tracer.Color = color
+    -- Tracer
+    if ESP.Tracers and comp.Tracer then
+        local pos, ok = Camera:WorldToViewportPoint(root)
+        comp.Tracer.Visible = ok
+        if ok then
+            comp.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / ESP.AttachShift)
+            comp.Tracer.To = Vector2.new(pos.X, pos.Y)
+            comp.Tracer.Color = color
         end
-    elseif self.Components.Tracer then
-        self.Components.Tracer.Visible = false
+    elseif comp.Tracer then
+        comp.Tracer.Visible = false
     end
 end
 
-function ESP:Add(obj, options)
-    if not obj.Parent and not options.RenderInNil then return end
-    if self:GetBox(obj) then self:GetBox(obj):Remove() end
+--// Add ESP Box
+function ESP:Add(object, props)
+    if not object.Parent and not props.RenderInNil then return end
+    if self:GetBox(object) then self:GetBox(object):Remove() end
 
-    local box = setmetatable({
-        Name = options.Name or obj.Name,
-        Type = "Box",
-        Color = options.Color,
-        Size = options.Size or self.BoxSize,
-        Object = obj,
-        Player = options.Player or Players:GetPlayerFromCharacter(obj),
-        PrimaryPart = options.PrimaryPart or obj:FindFirstChild("HumanoidRootPart"),
-        Components = {},
-        IsEnabled = options.IsEnabled,
-        Temporary = options.Temporary,
-        ColorDynamic = options.ColorDynamic,
-        RenderInNil = options.RenderInNil
-    }, boxBase)
+    local esp = setmetatable({
+        Object        = object,
+        Name          = props.Name or object.Name,
+        Color         = props.Color,
+        Size          = props.Size or self.BoxSize,
+        Player        = props.Player or Players:GetPlayerFromCharacter(object),
+        PrimaryPart   = props.PrimaryPart or object:FindFirstChild("HumanoidRootPart"),
+        IsEnabled     = props.IsEnabled,
+        ColorDynamic  = props.ColorDynamic,
+        RenderInNil   = props.RenderInNil,
+        Components    = {}
+    }, BoxBase)
 
-    box.Components.Quad = Draw("Quad", {
-        Thickness = self.Thickness,
-        Color = box.Color,
-        Transparency = 1,
-        Filled = false,
-        Visible = false
-    })
+    esp.Components.Quad     = NewDrawing("Quad",  { Thickness = self.Thickness, Transparency = 1, Filled = false, Visible = false })
+    esp.Components.Name     = NewDrawing("Text",  { Center = true, Outline = true, Size = 19, Visible = false })
+    esp.Components.Distance = NewDrawing("Text",  { Center = true, Outline = true, Size = 19, Visible = false })
+    esp.Components.Tracer   = NewDrawing("Line",  { Thickness = self.Thickness, Transparency = 1, Visible = false })
 
-    box.Components.Name = Draw("Text", {
-        Text = box.Name,
-        Color = box.Color,
-        Center = true,
-        Outline = true,
-        Size = 19,
-        Visible = false
-    })
+    self.Objects[object] = esp
 
-    box.Components.Distance = Draw("Text", {
-        Color = box.Color,
-        Center = true,
-        Outline = true,
-        Size = 19,
-        Visible = false
-    })
-
-    box.Components.Tracer = Draw("Line", {
-        Thickness = self.Thickness,
-        Color = box.Color,
-        Transparency = 1,
-        Visible = false
-    })
-
-    self.Objects[obj] = box
-
-    obj.AncestryChanged:Connect(function(_, parent)
-        if parent == nil then box:Remove() end
-    end)
-    obj:GetPropertyChangedSignal("Parent"):Connect(function()
-        if obj.Parent == nil then box:Remove() end
+    object.AncestryChanged:Connect(function(_, parent)
+        if not parent then esp:Remove() end
     end)
 
-    local hum = obj:FindFirstChildOfClass("Humanoid")
-    if hum then hum.Died:Connect(function() box:Remove() end) end
+    local humanoid = object:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.Died:Connect(function()
+            esp:Remove()
+        end)
+    end
 
-    return box
+    return esp
 end
 
 function ESP:GetBox(obj)
     return self.Objects[obj]
 end
 
--- Player listeners
-local function CharAdded(char)
-    local p = Players:GetPlayerFromCharacter(char)
-    local function AddWhenReady()
-        local hrp = char:FindFirstChild("HumanoidRootPart") or char:WaitForChild("HumanoidRootPart", 5)
-        if hrp then
-            ESP:Add(char, { Name = p.Name, Player = p, PrimaryPart = hrp })
+--// Player Handling
+local function OnCharacterAdded(character)
+    local player = Players:GetPlayerFromCharacter(character)
+    coroutine.wrap(function()
+        local root = character:WaitForChild("HumanoidRootPart", 5)
+        if root then
+            ESP:Add(character, {
+                Name        = player.Name,
+                Player      = player,
+                PrimaryPart = root
+            })
         end
+    end)()
+end
+
+local function OnPlayerAdded(player)
+    player.CharacterAdded:Connect(OnCharacterAdded)
+    if player.Character then
+        OnCharacterAdded(player.Character)
     end
-    coroutine.wrap(AddWhenReady)()
 end
 
-local function PlayerAdded(p)
-    p.CharacterAdded:Connect(CharAdded)
-    if p.Character then CharAdded(p.Character) end
+--// Initialization
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then OnPlayerAdded(player) end
 end
 
-Players.PlayerAdded:Connect(PlayerAdded)
-for _, p in ipairs(Players:GetPlayers()) do
-    if p ~= Player then PlayerAdded(p) end
-end
+Players.PlayerAdded:Connect(OnPlayerAdded)
 
--- Main render loop
+--// Main Loop
 RunService.RenderStepped:Connect(function()
     ESP.Enabled = ESP.Boxes or ESP.Names or ESP.Tracers
     if not ESP.Enabled then return end
-    for _, box in pairs(ESP.Objects) do
-        if box.Update then
-            local ok, err = pcall(box.Update, box)
-            if not ok then warn("ESP update failed:", err) end
-        end
+
+    for _, esp in pairs(ESP.Objects) do
+        pcall(function() esp:Update() end)
     end
 end)
 
