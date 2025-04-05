@@ -51,13 +51,15 @@ function ESP:GetPlrFromChar(char)
     return self.Overrides.GetPlrFromChar and self.Overrides.GetPlrFromChar(char) or Players:GetPlayerFromCharacter(char)
 end
 
-function ESP:Toggle(bool)
-    self.Enabled = bool and (self.Boxes or self.Names or self.Tracers)
+function ESP:Toggle(_)
+    self.Enabled = self.Boxes or self.Names or self.Tracers
     if not self.Enabled then
         for _, v in pairs(self.Objects) do
             if v.Type == "Box" then
                 for _, comp in pairs(v.Components) do
-                    if comp then comp.Visible = false end
+                    if comp then
+                        comp.Visible = false
+                    end
                 end
             end
         end
