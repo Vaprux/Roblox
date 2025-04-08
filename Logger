@@ -1,9 +1,15 @@
-local Player = game:GetService("Players").LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
+local CoreGui = game:GetService("CoreGui")
 
+-- Destroy old instance if it exists
+if CoreGui:FindFirstChild("LoggerGUI") then
+    CoreGui.LoggerGUI:Destroy()
+end
+
+-- Create GUI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "LoggerGUI"
-ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
 
 local Frame = Instance.new("Frame")
 Frame.Size = UDim2.new(0, 300, 0, 200)
@@ -26,7 +32,10 @@ local UIListLayout = Instance.new("UIListLayout")
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Parent = ScrollingFrame
 
-local function logMessage(text, color)
+-- Logger table with functions
+local Logger = {}
+
+function Logger.Log(text, color)
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(1, -10, 0, 20)
 	label.BackgroundTransparency = 1
@@ -36,7 +45,20 @@ local function logMessage(text, color)
 	label.TextSize = 16
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = ScrollingFrame
+	
+	-- Update scroll size and scroll to bottom
+	task.wait() -- Ensure layout updates
 	ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+	ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
 end
 
-return logMessage
+function Logger.Clear()
+	for _, child in pairs(ScrollingFrame:GetChildren()) do
+		if child:IsA("TextLabel") then
+			child:Destroy()
+		end
+	end
+	ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+end
+
+return Logger
