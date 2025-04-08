@@ -1,6 +1,6 @@
 local CoreGui = game:GetService("CoreGui")
 
--- Destroy old logger if it exists
+-- Clean up previous logger
 if CoreGui:FindFirstChild("LoggerGUI") then
     CoreGui.LoggerGUI:Destroy()
 end
@@ -31,55 +31,9 @@ Header.TextSize = 16
 Header.TextColor3 = Color3.new(1, 1, 1)
 Header.Parent = Frame
 
-local Controls = Instance.new("Frame")
-Controls.Size = UDim2.new(1, 0, 0, 24)
-Controls.Position = UDim2.new(0, 0, 0, 24)
-Controls.BackgroundTransparency = 1
-Controls.Name = "Controls"
-Controls.Parent = Frame
-
-local function createFilterButton(text)
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 60, 1, 0)
-	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-	btn.Text = text
-	btn.Font = Enum.Font.SourceSansBold
-	btn.TextSize = 14
-	btn.TextColor3 = Color3.new(1, 1, 1)
-	btn.Parent = Controls
-	return btn
-end
-
-local showTypes = {
-	INFO = true,
-	WARN = true,
-	ERROR = true,
-}
-
-local btnInfo = createFilterButton("INFO")
-btnInfo.Position = UDim2.new(0, 5, 0, 0)
-btnInfo.MouseButton1Click:Connect(function()
-	showTypes.INFO = not showTypes.INFO
-	btnInfo.BackgroundColor3 = showTypes.INFO and Color3.fromRGB(50, 50, 50) or Color3.fromRGB(30, 30, 30)
-end)
-
-local btnWarn = createFilterButton("WARN")
-btnWarn.Position = UDim2.new(0, 70, 0, 0)
-btnWarn.MouseButton1Click:Connect(function()
-	showTypes.WARN = not showTypes.WARN
-	btnWarn.BackgroundColor3 = showTypes.WARN and Color3.fromRGB(50, 50, 50) or Color3.fromRGB(30, 30, 30)
-end)
-
-local btnError = createFilterButton("ERROR")
-btnError.Position = UDim2.new(0, 135, 0, 0)
-btnError.MouseButton1Click:Connect(function()
-	showTypes.ERROR = not showTypes.ERROR
-	btnError.BackgroundColor3 = showTypes.ERROR and Color3.fromRGB(50, 50, 50) or Color3.fromRGB(30, 30, 30)
-end)
-
 local ScrollingFrame = Instance.new("ScrollingFrame")
-ScrollingFrame.Size = UDim2.new(1, 0, 1, -48)
-ScrollingFrame.Position = UDim2.new(0, 0, 0, 48)
+ScrollingFrame.Size = UDim2.new(1, 0, 1, -24)
+ScrollingFrame.Position = UDim2.new(0, 0, 0, 24)
 ScrollingFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
 ScrollingFrame.ScrollBarThickness = 6
 ScrollingFrame.BackgroundTransparency = 1
@@ -89,24 +43,20 @@ ScrollingFrame.Parent = Frame
 local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Store all entries for filtering
 local logEntries = {}
 
-function Logger.Log(text, color, logType)
-	logType = logType or "INFO"
-	if not showTypes[logType] then return end
-
+function Logger.Log(text, color)
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(1, -10, 0, 20)
 	label.BackgroundTransparency = 1
-	label.Text = "[" .. logType .. "] " .. text
+	label.Text = text
 	label.TextColor3 = color or Color3.new(1, 1, 1)
 	label.Font = Enum.Font.SourceSans
 	label.TextSize = 16
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = ScrollingFrame
 
-	logEntries[#logEntries+1] = {Label = label, Type = logType}
+	logEntries[#logEntries+1] = label
 
 	task.wait()
 	ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
@@ -114,23 +64,23 @@ function Logger.Log(text, color, logType)
 end
 
 function Logger.Clear()
-	for _, data in ipairs(logEntries) do
-		data.Label:Destroy()
+	for _, label in ipairs(logEntries) do
+		label:Destroy()
 	end
 	logEntries = {}
 	ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 end
 
--- Minimize toggle
+function Logger.Show(bool)
+	ScreenGui.Enabled = bool
+end
+
+-- Header minimize toggle
 local isMinimized = false
 Header.MouseButton1Click:Connect(function()
 	isMinimized = not isMinimized
 	Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
-	for _, child in ipairs(Frame:GetChildren()) do
-		if child ~= Header then
-			child.Visible = not isMinimized
-		end
-	end
+	ScrollingFrame.Visible = not isMinimized
 end)
 
 return Logger
