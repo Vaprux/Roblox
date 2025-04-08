@@ -1,0 +1,303 @@
+local Logger = {}
+local NotificationModule = {}
+
+-- === Logger GUI Setup ===
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+
+if CoreGui:FindFirstChild("LoggerGUI") then
+    CoreGui.LoggerGUI:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LoggerGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = CoreGui
+ScreenGui.Enabled = true
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 300, 0, 200)
+Frame.Position = UDim2.new(1, -310, 1, -210)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Frame.BorderSizePixel = 0
+Frame.BackgroundTransparency = 0.2
+Frame.Name = "LoggerFrame"
+Frame.Parent = ScreenGui
+
+local Header = Instance.new("TextButton")
+Header.Size = UDim2.new(1, 0, 0, 24)
+Header.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Header.Text = "▼ Logger (Click to Minimize)"
+Header.Font = Enum.Font.SourceSansBold
+Header.TextSize = 16
+Header.TextColor3 = Color3.new(1, 1, 1)
+Header.BorderSizePixel = 0
+Header.AutoButtonColor = false
+Header.Parent = Frame
+
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Size = UDim2.new(1, -6, 1, -30)
+ScrollingFrame.Position = UDim2.new(0, 0, 0, 24)
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
+ScrollingFrame.ScrollBarThickness = 6
+ScrollingFrame.BackgroundTransparency = 1
+ScrollingFrame.Name = "LogScroll"
+ScrollingFrame.Parent = Frame
+
+local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local ResizeHandle = Instance.new("TextButton")
+ResizeHandle.Size = UDim2.new(0, 16, 0, 16)
+ResizeHandle.Position = UDim2.new(1, -16, 1, -16)
+ResizeHandle.BackgroundTransparency = 1
+ResizeHandle.Text = "◢"
+ResizeHandle.TextColor3 = Color3.fromRGB(150, 150, 150)
+ResizeHandle.Font = Enum.Font.SourceSansBold
+ResizeHandle.TextSize = 14
+ResizeHandle.ZIndex = 10
+ResizeHandle.Name = "ResizeHandle"
+ResizeHandle.Parent = Frame
+
+-- Resize logic
+local resizing = false
+local dragStart, startSize
+
+ResizeHandle.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		resizing = true
+		dragStart = input.Position
+		startSize = Frame.Size
+	end
+end)
+
+ResizeHandle.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		resizing = false
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		local newWidth = math.max(200, startSize.X.Offset + delta.X)
+		local newHeight = math.max(100, startSize.Y.Offset + delta.Y)
+		Frame.Size = UDim2.new(0, newWidth, 0, newHeight)
+	end
+end)
+
+-- Drag logic
+local dragging = false
+local dragOffset
+local clicked = false
+local clickTime = 0
+
+Header.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		clicked = true
+		clickTime = tick()
+		dragOffset = Vector2.new(input.Position.X - Frame.AbsolutePosition.X, input.Position.Y - Frame.AbsolutePosition.Y)
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		clicked = false
+		local newPos = UDim2.new(0, input.Position.X - dragOffset.X, 0, input.Position.Y - dragOffset.Y)
+		Frame.Position = newPos
+	end
+end)
+
+-- Logger methods
+local logEntries = {}
+
+function Logger.Log(text, color)
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -10, 0, 20)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = color or Color3.new(1, 1, 1)
+	label.Font = Enum.Font.SourceSans
+	label.TextSize = 16
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = ScrollingFrame
+
+	table.insert(logEntries, label)
+	task.wait()
+	ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+	ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
+end
+
+function Logger.Clear()
+	for _, label in ipairs(logEntries) do
+		label:Destroy()
+	end
+	logEntries = {}
+	ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+end
+
+function Logger.Show(bool)
+	ScreenGui.Enabled = bool
+end
+
+-- Minimize toggle
+local isMinimized = false
+Header.MouseButton1Up:Connect(function()
+	if clicked and (tick() - clickTime < 0.2) then
+		isMinimized = not isMinimized
+		Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
+		ScrollingFrame.Visible = not isMinimized
+	end
+	clicked = false
+end)
+
+-- === Notification System ===
+local TextService = game:GetService("TextService")
+
+if CoreGui:FindFirstChild("NotificationArea") then   
+    CoreGui:FindFirstChild("NotificationArea"):Destroy()
+end
+
+local AccentColor = Color3.fromRGB(75, 10, 120)
+local MainColor = Color3.fromRGB(25, 25, 25)
+local OutlineColor = Color3.fromRGB(50, 50, 50)
+
+local ActiveNotifications = {}
+local NotificationTimers = {}
+
+local function Create(Class, Props)
+	local inst = Instance.new(Class)
+	for prop, val in pairs(Props) do
+		inst[prop] = val
+	end
+	return inst
+end
+
+local function GetTextSize(Text, Font, Size)
+	local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
+	return Bounds.X or 200, Bounds.Y or 50
+end
+
+local NotificationArea = Create("ScreenGui", {
+	Name = "NotificationArea",
+	Parent = CoreGui,
+	IgnoreGuiInset = true
+})
+
+local NotificationContainer = Create("Frame", {
+	BackgroundTransparency = 1,
+	Position = UDim2.new(0, 0, 0, 370),
+	Size = UDim2.new(1, 0, 1, -40),
+	ZIndex = 100,
+	Parent = NotificationArea
+})
+
+Create("UIListLayout", {
+	Padding = UDim.new(0, 4),
+	FillDirection = Enum.FillDirection.Vertical,
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Parent = NotificationContainer,
+})
+
+function Logger.Notify(Text, Color, Time)
+	-- Log it as well!
+	Logger.Log(Text, Color)
+
+	if ActiveNotifications[Text] then
+		local NotifyFrame = ActiveNotifications[Text]
+		local AccentBar = NotifyFrame:FindFirstChild("AccentBar")
+		local TextLabel = NotifyFrame:FindFirstChildOfClass("TextLabel")
+
+		if not AccentBar:FindFirstChild("Flashing") then
+			local Flashing = Instance.new("BoolValue")
+			Flashing.Name = "Flashing"
+			Flashing.Parent = AccentBar
+
+			task.spawn(function()
+				local OriginalColor = AccentBar.BackgroundColor3
+				for _ = 1, 3 do
+					AccentBar.BackgroundColor3 = Color3.new(1, 1, 1)
+					TextLabel.TextColor3 = Color3.new(1, 1, 1)
+					task.wait(0.2)
+					AccentBar.BackgroundColor3 = OriginalColor
+					TextLabel.TextColor3 = Color3.new(1, 1, 1)
+					task.wait(0.2)
+				end
+				Flashing:Destroy()
+			end)
+		end
+
+		if NotificationTimers[Text] then
+			task.cancel(NotificationTimers[Text])
+		end
+
+		NotificationTimers[Text] = task.spawn(function()
+			task.wait(Time or 5)
+			NotifyFrame:TweenSize(UDim2.new(0, 0, 0, NotifyFrame.Size.Y.Offset), "Out", "Quad", 0.4, true)
+			task.wait(0.4)
+			NotifyFrame:Destroy()
+			ActiveNotifications[Text] = nil
+			NotificationTimers[Text] = nil
+		end)
+
+		return
+	end
+
+	local TextSize = 17
+	local XSize, YSize = GetTextSize(Text or "", Enum.Font.GothamBold, TextSize)
+	YSize += 10
+
+	local NotifyFrame = Create("Frame", {
+		BackgroundColor3 = MainColor,
+		BorderColor3 = OutlineColor,
+		BorderMode = Enum.BorderMode.Inset,
+		Position = UDim2.new(0.5, -XSize / 2, 0, 10),
+		Size = UDim2.new(0, 0, 0, YSize),
+		ClipsDescendants = true,
+		ZIndex = 101,
+		Parent = NotificationContainer,
+	})
+
+	Create("TextLabel", {
+		Position = UDim2.new(0, 6, 0, 0),
+		Size = UDim2.new(1, -6, 1, 0),
+		Text = Text,
+		Font = Enum.Font.GothamBold,
+		TextSize = TextSize,
+		BackgroundTransparency = 1,
+		TextColor3 = Color3.new(1, 1, 1),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 102,
+		Parent = NotifyFrame,
+	})
+
+	Create("Frame", {
+		Name = "AccentBar",
+		BackgroundColor3 = Color or AccentColor,
+		Size = UDim2.new(0, 3, 1, 0),
+		Position = UDim2.new(0, 0, 0, 0),
+		ZIndex = 103,
+		Parent = NotifyFrame,
+	})
+
+	NotifyFrame:TweenSize(UDim2.new(0, XSize + 14, 0, YSize), "Out", "Quad", 0.4, true)
+	ActiveNotifications[Text] = NotifyFrame
+
+	NotificationTimers[Text] = task.spawn(function()
+		task.wait(Time or 5)
+		NotifyFrame:TweenSize(UDim2.new(0, 0, 0, YSize), "Out", "Quad", 0.4, true)
+		task.wait(0.4)
+		NotifyFrame:Destroy()
+		ActiveNotifications[Text] = nil
+		NotificationTimers[Text] = nil
+	end)
+end
+
+return Logger
