@@ -1,19 +1,21 @@
-local Logger = {}
-local NotificationModule = {}
-
--- === Logger GUI Setup ===
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
+local TextService = game:GetService("TextService")
 
-if CoreGui:FindFirstChild("LoggerGUI") then
-    CoreGui.LoggerGUI:Destroy()
-end
+-- Clean up old GUIs
+if CoreGui:FindFirstChild("LoggerGUI") then CoreGui.LoggerGUI:Destroy() end
+if CoreGui:FindFirstChild("NotificationArea") then CoreGui.NotificationArea:Destroy() end
 
+local Logger = {}
+
+-----------------------------------
+-- Logger GUI Setup
+-----------------------------------
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "LoggerGUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
-ScreenGui.Enabled = true
+ScreenGui.Enabled = false
 
 local Frame = Instance.new("Frame")
 Frame.Size = UDim2.new(0, 300, 0, 200)
@@ -59,7 +61,6 @@ ResizeHandle.ZIndex = 10
 ResizeHandle.Name = "ResizeHandle"
 ResizeHandle.Parent = Frame
 
--- Resize logic
 local resizing = false
 local dragStart, startSize
 
@@ -86,7 +87,6 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
--- Drag logic
 local dragging = false
 local dragOffset
 local clicked = false
@@ -115,7 +115,7 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
--- Logger methods
+-- Logger Functions
 local logEntries = {}
 
 function Logger.Log(text, color)
@@ -158,13 +158,9 @@ Header.MouseButton1Up:Connect(function()
 	clicked = false
 end)
 
--- === Notification System ===
-local TextService = game:GetService("TextService")
-
-if CoreGui:FindFirstChild("NotificationArea") then   
-    CoreGui:FindFirstChild("NotificationArea"):Destroy()
-end
-
+-----------------------------------
+-- Notification GUI Setup
+-----------------------------------
 local AccentColor = Color3.fromRGB(75, 10, 120)
 local MainColor = Color3.fromRGB(25, 25, 25)
 local OutlineColor = Color3.fromRGB(50, 50, 50)
@@ -172,17 +168,17 @@ local OutlineColor = Color3.fromRGB(50, 50, 50)
 local ActiveNotifications = {}
 local NotificationTimers = {}
 
-local function Create(Class, Props)
-	local inst = Instance.new(Class)
-	for prop, val in pairs(Props) do
-		inst[prop] = val
+local function Create(Class, Properties)
+	local obj = Instance.new(Class)
+	for prop, val in pairs(Properties) do
+		obj[prop] = val
 	end
-	return inst
+	return obj
 end
 
 local function GetTextSize(Text, Font, Size)
-	local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
-	return Bounds.X or 200, Bounds.Y or 50
+	local bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
+	return bounds.X or 200, bounds.Y or 50
 end
 
 local NotificationArea = Create("ScreenGui", {
@@ -203,11 +199,10 @@ Create("UIListLayout", {
 	Padding = UDim.new(0, 4),
 	FillDirection = Enum.FillDirection.Vertical,
 	SortOrder = Enum.SortOrder.LayoutOrder,
-	Parent = NotificationContainer,
+	Parent = NotificationContainer
 })
 
 function Logger.Notify(Text, Color, Time)
-	-- Log it as well!
 	Logger.Log(Text, Color)
 
 	if ActiveNotifications[Text] then
@@ -216,21 +211,21 @@ function Logger.Notify(Text, Color, Time)
 		local TextLabel = NotifyFrame:FindFirstChildOfClass("TextLabel")
 
 		if not AccentBar:FindFirstChild("Flashing") then
-			local Flashing = Instance.new("BoolValue")
-			Flashing.Name = "Flashing"
-			Flashing.Parent = AccentBar
+			local FlashingIndicator = Instance.new("BoolValue")
+			FlashingIndicator.Name = "Flashing"
+			FlashingIndicator.Parent = AccentBar
 
 			task.spawn(function()
 				local OriginalColor = AccentBar.BackgroundColor3
 				for _ = 1, 3 do
 					AccentBar.BackgroundColor3 = Color3.new(1, 1, 1)
 					TextLabel.TextColor3 = Color3.new(1, 1, 1)
-					task.wait(0.2)
+					wait(0.2)
 					AccentBar.BackgroundColor3 = OriginalColor
 					TextLabel.TextColor3 = Color3.new(1, 1, 1)
-					task.wait(0.2)
+					wait(0.2)
 				end
-				Flashing:Destroy()
+				FlashingIndicator:Destroy()
 			end)
 		end
 
@@ -239,9 +234,9 @@ function Logger.Notify(Text, Color, Time)
 		end
 
 		NotificationTimers[Text] = task.spawn(function()
-			task.wait(Time or 5)
+			wait(Time or 5)
 			NotifyFrame:TweenSize(UDim2.new(0, 0, 0, NotifyFrame.Size.Y.Offset), "Out", "Quad", 0.4, true)
-			task.wait(0.4)
+			wait(0.4)
 			NotifyFrame:Destroy()
 			ActiveNotifications[Text] = nil
 			NotificationTimers[Text] = nil
@@ -262,10 +257,10 @@ function Logger.Notify(Text, Color, Time)
 		Size = UDim2.new(0, 0, 0, YSize),
 		ClipsDescendants = true,
 		ZIndex = 101,
-		Parent = NotificationContainer,
+		Parent = NotificationContainer
 	})
 
-	Create("TextLabel", {
+	local TextLabel = Create("TextLabel", {
 		Position = UDim2.new(0, 6, 0, 0),
 		Size = UDim2.new(1, -6, 1, 0),
 		Text = Text,
@@ -275,25 +270,25 @@ function Logger.Notify(Text, Color, Time)
 		TextColor3 = Color3.new(1, 1, 1),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 102,
-		Parent = NotifyFrame,
+		Parent = NotifyFrame
 	})
 
-	Create("Frame", {
+	local AccentBar = Create("Frame", {
 		Name = "AccentBar",
 		BackgroundColor3 = Color or AccentColor,
 		Size = UDim2.new(0, 3, 1, 0),
 		Position = UDim2.new(0, 0, 0, 0),
 		ZIndex = 103,
-		Parent = NotifyFrame,
+		Parent = NotifyFrame
 	})
 
 	NotifyFrame:TweenSize(UDim2.new(0, XSize + 14, 0, YSize), "Out", "Quad", 0.4, true)
 	ActiveNotifications[Text] = NotifyFrame
 
 	NotificationTimers[Text] = task.spawn(function()
-		task.wait(Time or 5)
+		wait(Time or 5)
 		NotifyFrame:TweenSize(UDim2.new(0, 0, 0, YSize), "Out", "Quad", 0.4, true)
-		task.wait(0.4)
+		wait(0.4)
 		NotifyFrame:Destroy()
 		ActiveNotifications[Text] = nil
 		NotificationTimers[Text] = nil
