@@ -1,6 +1,6 @@
 local CoreGui = game:GetService("CoreGui")
 
--- Clean up previous logger
+-- Clean up existing GUI
 if CoreGui:FindFirstChild("LoggerGUI") then
     CoreGui.LoggerGUI:Destroy()
 end
@@ -43,6 +43,43 @@ ScrollingFrame.Parent = Frame
 local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+local ResizeHandle = Instance.new("Frame")
+ResizeHandle.Size = UDim2.new(0, 16, 0, 16)
+ResizeHandle.Position = UDim2.new(1, -16, 1, -16)
+ResizeHandle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ResizeHandle.BorderSizePixel = 0
+ResizeHandle.Name = "ResizeHandle"
+ResizeHandle.Parent = Frame
+ResizeHandle.Active = true
+ResizeHandle.Draggable = false -- Custom drag handling below
+ResizeHandle.ZIndex = 10
+
+local dragging = false
+local dragStart
+local startSize
+
+ResizeHandle.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startSize = Frame.Size
+	end
+end)
+
+ResizeHandle.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		Frame.Size = UDim2.new(0, math.max(200, startSize.X.Offset + delta.X), 0, math.max(100, startSize.Y.Offset + delta.Y))
+	end
+end)
+
+-- Logger functions
 local logEntries = {}
 
 function Logger.Log(text, color)
@@ -56,7 +93,7 @@ function Logger.Log(text, color)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = ScrollingFrame
 
-	logEntries[#logEntries+1] = label
+	logEntries[#logEntries + 1] = label
 
 	task.wait()
 	ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
@@ -75,7 +112,7 @@ function Logger.Show(bool)
 	ScreenGui.Enabled = bool
 end
 
--- Header minimize toggle
+-- Header toggle
 local isMinimized = false
 Header.MouseButton1Click:Connect(function()
 	isMinimized = not isMinimized
