@@ -36,7 +36,7 @@ Header.AutoButtonColor = false
 Header.Parent = Frame
 
 local ScrollingFrame = Instance.new("ScrollingFrame")
-ScrollingFrame.Size = UDim2.new(1, -6, 1, -30) -- Avoid overlap with scroll bar and resize handle
+ScrollingFrame.Size = UDim2.new(1, -6, 1, -30) -- Leaves space for scrollbar and resize handle
 ScrollingFrame.Position = UDim2.new(0, 0, 0, 24)
 ScrollingFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
 ScrollingFrame.ScrollBarThickness = 6
@@ -47,15 +47,18 @@ ScrollingFrame.Parent = Frame
 local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Resize Handle
-local ResizeHandle = Instance.new("Frame")
+-- Resize Handle (Bottom-right corner using "◢")
+local ResizeHandle = Instance.new("TextButton")
 ResizeHandle.Size = UDim2.new(0, 16, 0, 16)
 ResizeHandle.Position = UDim2.new(1, -16, 1, -16)
-ResizeHandle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-ResizeHandle.BorderSizePixel = 0
+ResizeHandle.BackgroundTransparency = 1
+ResizeHandle.Text = "◢"
+ResizeHandle.TextColor3 = Color3.fromRGB(150, 150, 150)
+ResizeHandle.Font = Enum.Font.SourceSansBold
+ResizeHandle.TextSize = 14
+ResizeHandle.ZIndex = 10
 ResizeHandle.Name = "ResizeHandle"
 ResizeHandle.Parent = Frame
-ResizeHandle.ZIndex = 10
 
 -- Resize logic
 local resizing = false
@@ -78,7 +81,9 @@ end)
 UserInputService.InputChanged:Connect(function(input)
 	if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
 		local delta = input.Position - dragStart
-		Frame.Size = UDim2.new(0, math.max(200, startSize.X.Offset + delta.X), 0, math.max(100, startSize.Y.Offset + delta.Y))
+		local newWidth = math.max(200, startSize.X.Offset + delta.X)
+		local newHeight = math.max(100, startSize.Y.Offset + delta.Y)
+		Frame.Size = UDim2.new(0, newWidth, 0, newHeight)
 	end
 end)
 
@@ -91,9 +96,9 @@ local clickTime = 0
 Header.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		dragging = true
-		dragOffset = Vector2.new(input.Position.X - Frame.AbsolutePosition.X, input.Position.Y - Frame.AbsolutePosition.Y)
 		clicked = true
 		clickTime = tick()
+		dragOffset = Vector2.new(input.Position.X - Frame.AbsolutePosition.X, input.Position.Y - Frame.AbsolutePosition.Y)
 	end
 end)
 
@@ -105,7 +110,7 @@ end)
 
 UserInputService.InputChanged:Connect(function(input)
 	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		clicked = false -- moved too far, don't count as click
+		clicked = false
 		local newPos = UDim2.new(0, input.Position.X - dragOffset.X, 0, input.Position.Y - dragOffset.Y)
 		Frame.Position = newPos
 	end
@@ -143,9 +148,8 @@ function Logger.Show(bool)
 	ScreenGui.Enabled = bool
 end
 
--- Minimize toggle (safe from dragging)
+-- Minimize toggle
 local isMinimized = false
-
 Header.MouseButton1Up:Connect(function()
 	if clicked and (tick() - clickTime < 0.2) then
 		isMinimized = not isMinimized
