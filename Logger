@@ -13,7 +13,6 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "LoggerGUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
-
 ScreenGui.Enabled = false
 
 local Frame = Instance.new("Frame")
@@ -37,7 +36,7 @@ Header.AutoButtonColor = false
 Header.Parent = Frame
 
 local ScrollingFrame = Instance.new("ScrollingFrame")
-ScrollingFrame.Size = UDim2.new(1, 0, 1, -24)
+ScrollingFrame.Size = UDim2.new(1, -6, 1, -30) -- Avoid overlap with scroll bar and resize handle
 ScrollingFrame.Position = UDim2.new(0, 0, 0, 24)
 ScrollingFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
 ScrollingFrame.ScrollBarThickness = 6
@@ -86,11 +85,15 @@ end)
 -- Drag logic
 local dragging = false
 local dragOffset
+local clicked = false
+local clickTime = 0
 
 Header.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		dragging = true
 		dragOffset = Vector2.new(input.Position.X - Frame.AbsolutePosition.X, input.Position.Y - Frame.AbsolutePosition.Y)
+		clicked = true
+		clickTime = tick()
 	end
 end)
 
@@ -102,6 +105,7 @@ end)
 
 UserInputService.InputChanged:Connect(function(input)
 	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		clicked = false -- moved too far, don't count as click
 		local newPos = UDim2.new(0, input.Position.X - dragOffset.X, 0, input.Position.Y - dragOffset.Y)
 		Frame.Position = newPos
 	end
@@ -139,12 +143,16 @@ function Logger.Show(bool)
 	ScreenGui.Enabled = bool
 end
 
--- Minimize toggle
+-- Minimize toggle (safe from dragging)
 local isMinimized = false
-Header.MouseButton1Click:Connect(function()
-	isMinimized = not isMinimized
-	Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
-	ScrollingFrame.Visible = not isMinimized
+
+Header.MouseButton1Up:Connect(function()
+	if clicked and (tick() - clickTime < 0.2) then
+		isMinimized = not isMinimized
+		Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
+		ScrollingFrame.Visible = not isMinimized
+	end
+	clicked = false
 end)
 
 return Logger
