@@ -1,6 +1,7 @@
 local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
 
--- Clean up existing GUI
+-- Clean up if already exists
 if CoreGui:FindFirstChild("LoggerGUI") then
     CoreGui.LoggerGUI:Destroy()
 end
@@ -29,6 +30,8 @@ Header.Text = "▼ Logger (Click to Minimize)"
 Header.Font = Enum.Font.SourceSansBold
 Header.TextSize = 16
 Header.TextColor3 = Color3.new(1, 1, 1)
+Header.BorderSizePixel = 0
+Header.AutoButtonColor = false
 Header.Parent = Frame
 
 local ScrollingFrame = Instance.new("ScrollingFrame")
@@ -43,6 +46,7 @@ ScrollingFrame.Parent = Frame
 local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+-- Resize Handle
 local ResizeHandle = Instance.new("Frame")
 ResizeHandle.Size = UDim2.new(0, 16, 0, 16)
 ResizeHandle.Position = UDim2.new(1, -16, 1, -16)
@@ -50,17 +54,15 @@ ResizeHandle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 ResizeHandle.BorderSizePixel = 0
 ResizeHandle.Name = "ResizeHandle"
 ResizeHandle.Parent = Frame
-ResizeHandle.Active = true
-ResizeHandle.Draggable = false -- Custom drag handling below
 ResizeHandle.ZIndex = 10
 
-local dragging = false
-local dragStart
-local startSize
+-- Resize logic
+local resizing = false
+local dragStart, startSize
 
 ResizeHandle.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true
+		resizing = true
 		dragStart = input.Position
 		startSize = Frame.Size
 	end
@@ -68,14 +70,38 @@ end)
 
 ResizeHandle.InputEnded:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		resizing = false
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = input.Position - dragStart
+		Frame.Size = UDim2.new(0, math.max(200, startSize.X.Offset + delta.X), 0, math.max(100, startSize.Y.Offset + delta.Y))
+	end
+end)
+
+-- Drag logic
+local dragging = false
+local dragOffset
+
+Header.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragOffset = Vector2.new(input.Position.X - Frame.AbsolutePosition.X, input.Position.Y - Frame.AbsolutePosition.Y)
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		dragging = false
 	end
 end)
 
-game:GetService("UserInputService").InputChanged:Connect(function(input)
+UserInputService.InputChanged:Connect(function(input)
 	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
-		Frame.Size = UDim2.new(0, math.max(200, startSize.X.Offset + delta.X), 0, math.max(100, startSize.Y.Offset + delta.Y))
+		local newPos = UDim2.new(0, input.Position.X - dragOffset.X, 0, input.Position.Y - dragOffset.Y)
+		Frame.Position = newPos
 	end
 end)
 
@@ -93,8 +119,7 @@ function Logger.Log(text, color)
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = ScrollingFrame
 
-	logEntries[#logEntries + 1] = label
-
+	table.insert(logEntries, label)
 	task.wait()
 	ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
 	ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
@@ -112,7 +137,7 @@ function Logger.Show(bool)
 	ScreenGui.Enabled = bool
 end
 
--- Header toggle
+-- Minimize toggle
 local isMinimized = false
 Header.MouseButton1Click:Connect(function()
 	isMinimized = not isMinimized
