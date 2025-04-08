@@ -14,6 +14,8 @@ ScreenGui.Name = "LoggerGUI"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = CoreGui
 
+ScreenGui.Enabled = false
+
 local Frame = Instance.new("Frame")
 Frame.Size = UDim2.new(0, 300, 0, 200)
 Frame.Position = UDim2.new(1, -310, 1, -210)
