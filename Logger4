@@ -13,7 +13,46 @@ end
 
 local Logger = {}
 
--- GUI setup
+-- Minecraft color codes
+local MinecraftColors = {
+	["0"] = "#000000", ["1"] = "#0000AA", ["2"] = "#00AA00", ["3"] = "#00AAAA",
+	["4"] = "#AA0000", ["5"] = "#AA00AA", ["6"] = "#FFAA00", ["7"] = "#AAAAAA",
+	["8"] = "#555555", ["9"] = "#5555FF", ["a"] = "#55FF55", ["b"] = "#55FFFF",
+	["c"] = "#FF5555", ["d"] = "#FF55FF", ["e"] = "#FFFF55", ["f"] = "#FFFFFF",
+}
+
+local function ConvertMinecraftColors(text)
+	local output = ""
+	local i = 1
+	local currentColor = nil
+
+	while i <= #text do
+		local char = text:sub(i, i)
+		if char == "§" and i < #text then
+			local code = text:sub(i + 1, i + 1):lower()
+			local colorHex = MinecraftColors[code]
+			if colorHex then
+				if currentColor then
+					output = output .. "</font>"
+				end
+				output = output .. string.format('<font color="%s">', colorHex)
+				currentColor = colorHex
+			end
+			i = i + 2
+		else
+			output = output .. char
+			i = i + 1
+		end
+	end
+
+	if currentColor then
+		output = output .. "</font>"
+	end
+
+	return output
+end
+
+-- GUI Setup
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "LoggerGUI"
 ScreenGui.ResetOnSpawn = false
@@ -64,7 +103,7 @@ ResizeHandle.ZIndex = 10
 ResizeHandle.Name = "ResizeHandle"
 ResizeHandle.Parent = Frame
 
--- Resize logic
+-- Resize Logic
 local resizing = false
 local dragStart, startSize
 
@@ -94,7 +133,7 @@ end)
 ResizeHandle.InputBegan:Connect(beginResize)
 ResizeHandle.InputEnded:Connect(endResize)
 
--- Drag logic
+-- Drag Logic
 local dragging = false
 local dragOffset
 local clicked = false
@@ -126,16 +165,16 @@ end)
 -- Logger functionality
 local logEntries = {}
 
-function Logger.Log(text, color)
+function Logger.Log(text)
 	local label = Instance.new("TextLabel")
 	label.Size = UDim2.new(1, -10, 0, 20)
 	label.BackgroundTransparency = 1
-	label.Text = text
-	label.TextColor3 = color or Color3.new(1, 1, 1)
+	label.Text = ConvertMinecraftColors(text)
+	label.RichText = true
+	label.TextColor3 = Color3.new(1, 1, 1)
 	label.Font = Enum.Font.SourceSans
 	label.TextSize = 16
 	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.RichText = true -- 💡 Enable RichText!
 	label.Parent = ScrollingFrame
 
 	table.insert(logEntries, label)
