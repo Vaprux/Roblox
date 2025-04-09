@@ -22,27 +22,15 @@ local OutlineColor = Color3.fromRGB(50, 50, 50)
 local ActiveNotifications = {}
 local NotificationTimers = {}
 
--- Minecraft-style color codes to hex colors
+-- Minecraft-style color codes to hex
 local ColorCodes = {
-	["0"] = "#000000", -- Black
-	["1"] = "#0000AA", -- Dark Blue
-	["2"] = "#00AA00", -- Dark Green
-	["3"] = "#00AAAA", -- Dark Aqua
-	["4"] = "#AA0000", -- Dark Red
-	["5"] = "#AA00AA", -- Dark Purple
-	["6"] = "#FFAA00", -- Gold
-	["7"] = "#AAAAAA", -- Gray
-	["8"] = "#555555", -- Dark Gray
-	["9"] = "#5555FF", -- Blue
-	["a"] = "#55FF55", -- Green
-	["b"] = "#55FFFF", -- Aqua
-	["c"] = "#FF5555", -- Red
-	["d"] = "#FF55FF", -- Light Purple
-	["e"] = "#FFFF55", -- Yellow
-	["f"] = "#FFFFFF", -- White
+	["0"] = "#000000", ["1"] = "#0000AA", ["2"] = "#00AA00", ["3"] = "#00AAAA",
+	["4"] = "#AA0000", ["5"] = "#AA00AA", ["6"] = "#FFAA00", ["7"] = "#AAAAAA",
+	["8"] = "#555555", ["9"] = "#5555FF", ["a"] = "#55FF55", ["b"] = "#55FFFF",
+	["c"] = "#FF5555", ["d"] = "#FF55FF", ["e"] = "#FFFF55", ["f"] = "#FFFFFF",
 }
 
--- Parse § codes into RichText
+-- Parses § codes into RichText <font> tags
 local function ParseRichText(input)
 	local output = ""
 	local i = 1
@@ -74,7 +62,12 @@ local function ParseRichText(input)
 	return output
 end
 
--- Utility function to create instances with properties
+-- Removes § codes (for measuring size)
+local function StripColorCodes(input)
+	return input:gsub("§.", "")
+end
+
+-- Utility: Create instances easily
 local function Create(Class, Properties)
 	local InstanceObj = Instance.new(Class)
 	for Property, Value in pairs(Properties) do
@@ -83,7 +76,7 @@ local function Create(Class, Properties)
 	return InstanceObj
 end
 
--- Calculates text size for dynamic sizing
+-- Get visual size of text
 local function GetTextSize(Text, Font, Size)
 	local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
 	return Bounds.X or 200, Bounds.Y or 50
@@ -111,14 +104,14 @@ Create("UIListLayout", {
 	Parent = NotificationContainer,
 })
 
--- Notification logic
+-- Main function
 function NotificationModule:Notify(Text, Color, Time)
 	if ActiveNotifications[Text] then
 		local NotifyFrame = ActiveNotifications[Text]
 		local AccentBar = NotifyFrame:FindFirstChild("AccentBar")
 		local TextLabel = NotifyFrame:FindFirstChildOfClass("TextLabel")
 
-		-- Flashing effect (avoid duplication)
+		-- Flash on repeat
 		if not AccentBar:FindFirstChild("Flashing") then
 			local FlashingIndicator = Instance.new("BoolValue")
 			FlashingIndicator.Name = "Flashing"
@@ -138,7 +131,6 @@ function NotificationModule:Notify(Text, Color, Time)
 			end)
 		end
 
-		-- Restart timer
 		if NotificationTimers[Text] then
 			task.cancel(NotificationTimers[Text])
 		end
@@ -155,9 +147,10 @@ function NotificationModule:Notify(Text, Color, Time)
 		return
 	end
 
-	local ParsedText = ParseRichText(Text or "")
 	local TextSize = 17
-	local XSize, YSize = GetTextSize(Text or "", Enum.Font.GothamBold, TextSize)
+	local CleanText = StripColorCodes(Text or "")
+	local ParsedText = ParseRichText(Text or "")
+	local XSize, YSize = GetTextSize(CleanText, Enum.Font.GothamBold, TextSize)
 	YSize = YSize + 10
 
 	local NotifyFrame = Create("Frame", {
