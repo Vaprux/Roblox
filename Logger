@@ -1,14 +1,21 @@
+-- Logger GUI Module (Protected)
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 
--- Clean up if already exists
+-- Prevent multiple initializations
+if _G.__LOGGER_GUI_LOADED then
+	return _G.__LOGGER_INSTANCE
+end
+_G.__LOGGER_GUI_LOADED = true
+
+-- Cleanup previous GUI if it exists
 if CoreGui:FindFirstChild("LoggerGUI") then
-    CoreGui.LoggerGUI:Destroy()
+	CoreGui.LoggerGUI:Destroy()
 end
 
 local Logger = {}
 
--- Create GUI
+-- GUI setup
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "LoggerGUI"
 ScreenGui.ResetOnSpawn = false
@@ -36,7 +43,7 @@ Header.AutoButtonColor = false
 Header.Parent = Frame
 
 local ScrollingFrame = Instance.new("ScrollingFrame")
-ScrollingFrame.Size = UDim2.new(1, -6, 1, -30) -- Leaves space for scrollbar and resize handle
+ScrollingFrame.Size = UDim2.new(1, -6, 1, -30)
 ScrollingFrame.Position = UDim2.new(0, 0, 0, 24)
 ScrollingFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
 ScrollingFrame.ScrollBarThickness = 6
@@ -47,7 +54,6 @@ ScrollingFrame.Parent = Frame
 local UIListLayout = Instance.new("UIListLayout", ScrollingFrame)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Resize Handle (Bottom-right corner using "◢")
 local ResizeHandle = Instance.new("TextButton")
 ResizeHandle.Size = UDim2.new(0, 16, 0, 16)
 ResizeHandle.Position = UDim2.new(1, -16, 1, -16)
@@ -64,21 +70,21 @@ ResizeHandle.Parent = Frame
 local resizing = false
 local dragStart, startSize
 
-ResizeHandle.InputBegan:Connect(function(input)
+local function beginResize(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		resizing = true
 		dragStart = input.Position
 		startSize = Frame.Size
 	end
-end)
+end
 
-ResizeHandle.InputEnded:Connect(function(input)
+local function endResize(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		resizing = false
 	end
-end)
+end
 
-UserInputService.InputChanged:Connect(function(input)
+local resizeInputChangedConn = UserInputService.InputChanged:Connect(function(input)
 	if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
 		local delta = input.Position - dragStart
 		local newWidth = math.max(200, startSize.X.Offset + delta.X)
@@ -86,6 +92,9 @@ UserInputService.InputChanged:Connect(function(input)
 		Frame.Size = UDim2.new(0, newWidth, 0, newHeight)
 	end
 end)
+
+ResizeHandle.InputBegan:Connect(beginResize)
+ResizeHandle.InputEnded:Connect(endResize)
 
 -- Drag logic
 local dragging = false
@@ -116,7 +125,7 @@ UserInputService.InputChanged:Connect(function(input)
 	end
 end)
 
--- Logger functions
+-- Logger functionality
 local logEntries = {}
 
 function Logger.Log(text, color)
@@ -159,4 +168,5 @@ Header.MouseButton1Up:Connect(function()
 	clicked = false
 end)
 
+_G.__LOGGER_INSTANCE = Logger
 return Logger
