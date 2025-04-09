@@ -1,4 +1,4 @@
--- Notification Module (RichText + Protected)
+-- Notification Module (Protected)
 local CoreGui = game:GetService("CoreGui")
 local TextService = game:GetService("TextService")
 
@@ -31,53 +31,15 @@ local function Create(Class, Properties)
 	return InstanceObj
 end
 
--- Parse Minecraft-style color codes (e.g., §4 -> red)
-local colorMap = {
-	["0"] = "#000000", ["1"] = "#0000AA", ["2"] = "#00AA00", ["3"] = "#00AAAA",
-	["4"] = "#AA0000", ["5"] = "#AA00AA", ["6"] = "#FFAA00", ["7"] = "#AAAAAA",
-	["8"] = "#555555", ["9"] = "#5555FF", ["a"] = "#55FF55", ["b"] = "#55FFFF",
-	["c"] = "#FF5555", ["d"] = "#FF55FF", ["e"] = "#FFFF55", ["f"] = "#FFFFFF"
-}
-
-local function ParseRichText(str)
-	local result = ""
-	local i = 1
-	local openTag = nil
-	while i <= #str do
-		local char = str:sub(i,i)
-		if char == "§" and i + 1 <= #str then
-			local code = str:sub(i+1,i+1):lower()
-			local color = colorMap[code]
-			if color then
-				if openTag then
-					result = result .. "</font>"
-				end
-				result = result .. string.format("<font color=\"%s\">", color)
-				openTag = true
-				i = i + 2
-			else
-				result = result .. char
-				i = i + 1
-			end
-		else
-			result = result .. char
-			i = i + 1
-		end
-	end
-	if openTag then
-		result = result .. "</font>"
-	end
-	return result
+-- Strips <font>, <b>, etc., tags from RichText strings for accurate sizing
+local function StripRichTextTags(text)
+	return text:gsub("<.->", "")
 end
 
--- Strip § color codes for measuring
-local function StripColorCodes(str)
-	return str:gsub("%u00a7.", "")
-end
-
--- Calculates text size for dynamic sizing
+-- Calculates text size for dynamic sizing (ignores richtext tags)
 local function GetTextSize(Text, Font, Size)
-	local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
+	local CleanText = StripRichTextTags(Text)
+	local Bounds = TextService:GetTextSize(CleanText, Size, Font, Vector2.new(1920, 1080))
 	return Bounds.X or 200, Bounds.Y or 50
 end
 
@@ -105,9 +67,6 @@ Create("UIListLayout", {
 
 -- Notification logic
 function NotificationModule:Notify(Text, Color, Time)
-	local ParsedText = ParseRichText(Text or "")
-	local CleanText = StripColorCodes(Text or "")
-
 	if ActiveNotifications[Text] then
 		local NotifyFrame = ActiveNotifications[Text]
 		local AccentBar = NotifyFrame:FindFirstChild("AccentBar")
@@ -149,7 +108,7 @@ function NotificationModule:Notify(Text, Color, Time)
 	end
 
 	local TextSize = 17
-	local XSize, YSize = GetTextSize(CleanText, Enum.Font.GothamBold, TextSize)
+	local XSize, YSize = GetTextSize(Text or "", Enum.Font.GothamBold, TextSize)
 	YSize = YSize + 10
 
 	local NotifyFrame = Create("Frame", {
@@ -166,14 +125,14 @@ function NotificationModule:Notify(Text, Color, Time)
 	local TextLabel = Create("TextLabel", {
 		Position = UDim2.new(0, 6, 0, 0),
 		Size = UDim2.new(1, -6, 1, 0),
-		Text = ParsedText,
+		Text = Text,
 		Font = Enum.Font.GothamBold,
 		TextSize = TextSize,
 		BackgroundTransparency = 1,
 		TextColor3 = Color3.new(1, 1, 1),
 		TextXAlignment = Enum.TextXAlignment.Left,
 		ZIndex = 102,
-		RichText = true,
+		RichText = true, -- ✅ Enable RichText!
 		Parent = NotifyFrame,
 	})
 
