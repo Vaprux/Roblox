@@ -9,7 +9,7 @@ end
 _G.__NOTIFY_GUI_LOADED = true
 
 -- Destroy previous GUI if not already loaded
-if CoreGui:FindFirstChild("NotificationArea") then   
+if CoreGui:FindFirstChild("NotificationArea") then
 	CoreGui:FindFirstChild("NotificationArea"):Destroy()
 end
 
@@ -21,6 +21,58 @@ local OutlineColor = Color3.fromRGB(50, 50, 50)
 
 local ActiveNotifications = {}
 local NotificationTimers = {}
+
+-- Minecraft-style color codes to hex colors
+local ColorCodes = {
+	["0"] = "#000000", -- Black
+	["1"] = "#0000AA", -- Dark Blue
+	["2"] = "#00AA00", -- Dark Green
+	["3"] = "#00AAAA", -- Dark Aqua
+	["4"] = "#AA0000", -- Dark Red
+	["5"] = "#AA00AA", -- Dark Purple
+	["6"] = "#FFAA00", -- Gold
+	["7"] = "#AAAAAA", -- Gray
+	["8"] = "#555555", -- Dark Gray
+	["9"] = "#5555FF", -- Blue
+	["a"] = "#55FF55", -- Green
+	["b"] = "#55FFFF", -- Aqua
+	["c"] = "#FF5555", -- Red
+	["d"] = "#FF55FF", -- Light Purple
+	["e"] = "#FFFF55", -- Yellow
+	["f"] = "#FFFFFF", -- White
+}
+
+-- Parse § codes into RichText
+local function ParseRichText(input)
+	local output = ""
+	local i = 1
+	local currentColor = nil
+	while i <= #input do
+		local char = input:sub(i, i)
+		if char == "§" and i < #input then
+			local code = input:sub(i + 1, i + 1):lower()
+			local color = ColorCodes[code]
+			if color then
+				if currentColor then
+					output ..= "</font>"
+				end
+				output ..= '<font color="' .. color .. '">'
+				currentColor = color
+				i += 2
+			else
+				output ..= char
+				i += 1
+			end
+		else
+			output ..= char
+			i += 1
+		end
+	end
+	if currentColor then
+		output ..= "</font>"
+	end
+	return output
+end
 
 -- Utility function to create instances with properties
 local function Create(Class, Properties)
@@ -103,6 +155,7 @@ function NotificationModule:Notify(Text, Color, Time)
 		return
 	end
 
+	local ParsedText = ParseRichText(Text or "")
 	local TextSize = 17
 	local XSize, YSize = GetTextSize(Text or "", Enum.Font.GothamBold, TextSize)
 	YSize = YSize + 10
@@ -121,12 +174,13 @@ function NotificationModule:Notify(Text, Color, Time)
 	local TextLabel = Create("TextLabel", {
 		Position = UDim2.new(0, 6, 0, 0),
 		Size = UDim2.new(1, -6, 1, 0),
-		Text = Text,
+		Text = ParsedText,
 		Font = Enum.Font.GothamBold,
 		TextSize = TextSize,
 		BackgroundTransparency = 1,
 		TextColor3 = Color3.new(1, 1, 1),
 		TextXAlignment = Enum.TextXAlignment.Left,
+		RichText = true,
 		ZIndex = 102,
 		Parent = NotifyFrame,
 	})
