@@ -2,13 +2,11 @@
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 
--- Prevent multiple initializations
 if _G.__LOGGER_GUI_LOADED then
 	return _G.__LOGGER_INSTANCE
 end
 _G.__LOGGER_GUI_LOADED = true
 
--- Cleanup previous GUI if it exists
 if CoreGui:FindFirstChild("LoggerGUI") then
 	CoreGui.LoggerGUI:Destroy()
 end
@@ -137,6 +135,7 @@ function Logger.Log(text, color)
 	label.Font = Enum.Font.SourceSans
 	label.TextSize = 16
 	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.RichText = true -- 💡 Enable RichText!
 	label.Parent = ScrollingFrame
 
 	table.insert(logEntries, label)
