@@ -1,0 +1,164 @@
+-- Notification Module (Protected)
+local CoreGui = game:GetService("CoreGui")
+local TextService = game:GetService("TextService")
+
+-- Avoid multiple executions
+if _G.__NOTIFY_GUI_LOADED then
+	return _G.__NOTIFY_INSTANCE
+end
+_G.__NOTIFY_GUI_LOADED = true
+
+-- Destroy previous GUI if not already loaded
+if CoreGui:FindFirstChild("NotificationArea") then   
+	CoreGui:FindFirstChild("NotificationArea"):Destroy()
+end
+
+local NotificationModule = {}
+
+local AccentColor = Color3.fromRGB(75, 10, 120)
+local MainColor = Color3.fromRGB(25, 25, 25)
+local OutlineColor = Color3.fromRGB(50, 50, 50)
+
+local ActiveNotifications = {}
+local NotificationTimers = {}
+
+-- Utility function to create instances with properties
+local function Create(Class, Properties)
+	local InstanceObj = Instance.new(Class)
+	for Property, Value in pairs(Properties) do
+		InstanceObj[Property] = Value
+	end
+	return InstanceObj
+end
+
+-- Removes RichText HTML-like tags for size calculation
+local function StripRichTextTags(str)
+	return string.gsub(str, "<[^>]->", "")
+end
+
+-- Calculates text size for dynamic sizing
+local function GetTextSize(Text, Font, Size)
+	local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
+	return Bounds.X or 200, Bounds.Y or 50
+end
+
+-- GUI Setup
+local NotificationArea = Create("ScreenGui", {
+	Name = "NotificationArea",
+	Parent = CoreGui,
+	IgnoreGuiInset = true
+})
+
+local NotificationContainer = Create("Frame", {
+	BackgroundTransparency = 1,
+	Position = UDim2.new(0, 0, 0, 370),
+	Size = UDim2.new(1, 0, 1, -40),
+	ZIndex = 100,
+	Parent = NotificationArea
+})
+
+Create("UIListLayout", {
+	Padding = UDim.new(0, 4),
+	FillDirection = Enum.FillDirection.Vertical,
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Parent = NotificationContainer,
+})
+
+-- Notification logic
+function NotificationModule:Notify(Text, Color, Time)
+	if ActiveNotifications[Text] then
+		local NotifyFrame = ActiveNotifications[Text]
+		local AccentBar = NotifyFrame:FindFirstChild("AccentBar")
+		local TextLabel = NotifyFrame:FindFirstChildOfClass("TextLabel")
+
+		-- Flashing effect (avoid duplication)
+		if not AccentBar:FindFirstChild("Flashing") then
+			local FlashingIndicator = Instance.new("BoolValue")
+			FlashingIndicator.Name = "Flashing"
+			FlashingIndicator.Parent = AccentBar
+
+			task.spawn(function()
+				local OriginalColor = AccentBar.BackgroundColor3
+				for i = 1, 3 do
+					AccentBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+					TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+					wait(0.2)
+					AccentBar.BackgroundColor3 = OriginalColor
+					TextLabel.TextColor3 = Color3.new(1, 1, 1)
+					wait(0.2)
+				end
+				FlashingIndicator:Destroy()
+			end)
+		end
+
+		-- Restart timer
+		if NotificationTimers[Text] then
+			task.cancel(NotificationTimers[Text])
+		end
+
+		NotificationTimers[Text] = task.spawn(function()
+			wait(Time or 5)
+			NotifyFrame:TweenSize(UDim2.new(0, 0, 0, NotifyFrame.Size.Y.Offset), "Out", "Quad", 0.4, true)
+			wait(0.4)
+			NotifyFrame:Destroy()
+			ActiveNotifications[Text] = nil
+			NotificationTimers[Text] = nil
+		end)
+
+		return
+	end
+
+	local TextSize = 17
+	local CleanText = StripRichTextTags(Text or "")
+	local XSize, YSize = GetTextSize(CleanText, Enum.Font.GothamBold, TextSize)
+	YSize = YSize + 10
+
+	local NotifyFrame = Create("Frame", {
+		BackgroundColor3 = MainColor,
+		BorderColor3 = OutlineColor,
+		BorderMode = Enum.BorderMode.Inset,
+		Position = UDim2.new(0.5, -XSize / 2, 0, 10),
+		Size = UDim2.new(0, 0, 0, YSize),
+		ClipsDescendants = true,
+		ZIndex = 101,
+		Parent = NotificationContainer,
+	})
+
+	local TextLabel = Create("TextLabel", {
+		Position = UDim2.new(0, 6, 0, 0),
+		Size = UDim2.new(1, -6, 1, 0),
+		Text = Text,
+		Font = Enum.Font.GothamBold,
+		TextSize = TextSize,
+		BackgroundTransparency = 1,
+		TextColor3 = Color3.new(1, 1, 1),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 102,
+		RichText = true,
+		Parent = NotifyFrame,
+	})
+
+	local AccentBar = Create("Frame", {
+		Name = "AccentBar",
+		BackgroundColor3 = Color or AccentColor,
+		Size = UDim2.new(0, 3, 1, 0),
+		Position = UDim2.new(0, 0, 0, 0),
+		ZIndex = 103,
+		Parent = NotifyFrame,
+	})
+
+	NotifyFrame:TweenSize(UDim2.new(0, XSize + 14, 0, YSize), "Out", "Quad", 0.4, true)
+	ActiveNotifications[Text] = NotifyFrame
+
+	NotificationTimers[Text] = task.spawn(function()
+		wait(Time or 5)
+		NotifyFrame:TweenSize(UDim2.new(0, 0, 0, YSize), "Out", "Quad", 0.4, true)
+		wait(0.4)
+		NotifyFrame:Destroy()
+		ActiveNotifications[Text] = nil
+		NotificationTimers[Text] = nil
+	end)
+end
+
+_G.__NOTIFY_INSTANCE = NotificationModule
+return NotificationModule
