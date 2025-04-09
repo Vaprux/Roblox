@@ -2,23 +2,29 @@
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 
+-- Prevent multiple initializations
 if _G.__LOGGER_GUI_LOADED then
 	return _G.__LOGGER_INSTANCE
 end
 _G.__LOGGER_GUI_LOADED = true
 
+-- Cleanup previous GUI if it exists
 if CoreGui:FindFirstChild("LoggerGUI") then
 	CoreGui.LoggerGUI:Destroy()
 end
 
 local Logger = {}
 
--- Minecraft color codes
+-- Color code conversion (Minecraft § syntax)
 local MinecraftColors = {
-	["0"] = "#000000", ["1"] = "#0000AA", ["2"] = "#00AA00", ["3"] = "#00AAAA",
-	["4"] = "#AA0000", ["5"] = "#AA00AA", ["6"] = "#FFAA00", ["7"] = "#AAAAAA",
-	["8"] = "#555555", ["9"] = "#5555FF", ["a"] = "#55FF55", ["b"] = "#55FFFF",
-	["c"] = "#FF5555", ["d"] = "#FF55FF", ["e"] = "#FFFF55", ["f"] = "#FFFFFF",
+	["0"] = "rgb(0,0,0)",       ["1"] = "rgb(0,0,170)",
+	["2"] = "rgb(0,170,0)",     ["3"] = "rgb(0,170,170)",
+	["4"] = "rgb(170,0,0)",     ["5"] = "rgb(170,0,170)",
+	["6"] = "rgb(255,170,0)",   ["7"] = "rgb(170,170,170)",
+	["8"] = "rgb(85,85,85)",    ["9"] = "rgb(85,85,255)",
+	["a"] = "rgb(85,255,85)",   ["b"] = "rgb(85,255,255)",
+	["c"] = "rgb(255,85,85)",   ["d"] = "rgb(255,85,255)",
+	["e"] = "rgb(255,255,85)",  ["f"] = "rgb(255,255,255)",
 }
 
 local function ConvertMinecraftColors(text)
@@ -30,13 +36,13 @@ local function ConvertMinecraftColors(text)
 		local char = text:sub(i, i)
 		if char == "§" and i < #text then
 			local code = text:sub(i + 1, i + 1):lower()
-			local colorHex = MinecraftColors[code]
-			if colorHex then
+			local color = MinecraftColors[code]
+			if color then
 				if currentColor then
 					output = output .. "</font>"
 				end
-				output = output .. string.format('<font color="%s">', colorHex)
-				currentColor = colorHex
+				output = output .. string.format('<font color="%s">', color)
+				currentColor = color
 			end
 			i = i + 2
 		else
@@ -52,7 +58,7 @@ local function ConvertMinecraftColors(text)
 	return output
 end
 
--- GUI Setup
+-- GUI setup
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "LoggerGUI"
 ScreenGui.ResetOnSpawn = false
@@ -103,7 +109,7 @@ ResizeHandle.ZIndex = 10
 ResizeHandle.Name = "ResizeHandle"
 ResizeHandle.Parent = Frame
 
--- Resize Logic
+-- Resize logic
 local resizing = false
 local dragStart, startSize
 
@@ -121,7 +127,7 @@ local function endResize(input)
 	end
 end
 
-local resizeInputChangedConn = UserInputService.InputChanged:Connect(function(input)
+UserInputService.InputChanged:Connect(function(input)
 	if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
 		local delta = input.Position - dragStart
 		local newWidth = math.max(200, startSize.X.Offset + delta.X)
@@ -133,7 +139,7 @@ end)
 ResizeHandle.InputBegan:Connect(beginResize)
 ResizeHandle.InputEnded:Connect(endResize)
 
--- Drag Logic
+-- Drag logic
 local dragging = false
 local dragOffset
 local clicked = false
