@@ -120,50 +120,6 @@ local ResizeHandle = Create("TextButton", {
     Parent = LoggerFrame
 })
 
--- Right-Click Context Menu
-local ContextMenu = Create("Frame", {
-    BackgroundColor3 = Color3.fromRGB(35, 35, 35),
-    Size = UDim2.new(0, 120, 0, 0),
-    Visible = false,
-    Parent = LoggerFrame
-})
-
-local CopyButton = Create("TextButton", {
-    Text = "Copy",
-    Size = UDim2.new(1, 0, 0, 24),
-    BackgroundTransparency = 1,
-    TextColor3 = Color3.new(1, 1, 1),
-    Font = Enum.Font.SourceSans,
-    TextSize = 14,
-    Parent = ContextMenu
-})
-
-local DeleteButton = Create("TextButton", {
-    Text = "Delete",
-    Size = UDim2.new(1, 0, 0, 24),
-    BackgroundTransparency = 1,
-    TextColor3 = Color3.new(1, 1, 1),
-    Font = Enum.Font.SourceSans,
-    TextSize = 14,
-    Parent = ContextMenu
-})
-
-local contextTarget = nil
-
--- Context Menu Button Functions
-CopyButton.MouseButton1Click:Connect(function()
-    if setclipboard then
-        setclipboard(contextTarget.Text)
-        print("Text copied to clipboard.") -- Debug line
-    end
-    ContextMenu.Visible = false
-end)
-
-DeleteButton.MouseButton1Click:Connect(function()
-    contextTarget:Destroy()
-    ContextMenu.Visible = false
-end)
-
 -- Resize logic
 local resizing, dragStart, startSize = false, nil, nil
 ResizeHandle.InputBegan:Connect(function(input)
@@ -234,19 +190,77 @@ function NotifyLogger.Log(text)
         Parent = ScrollingFrame
     })
 
-    -- Right-click detection on log entry
+    -- Right-Click Context Menu
+    local ContextMenu = Create("Frame", {
+        BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+        Size = UDim2.new(0, 120, 0, 0), -- Will adjust based on buttons
+        Visible = false,
+        Parent = LoggerFrame
+    })
+
+    -- Add a UIListLayout to arrange buttons vertically
+    local ContextMenuLayout = Create("UIListLayout", {
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Parent = ContextMenu,
+        Padding = UDim.new(0, 4)  -- Add padding between buttons
+    })
+
+    local CopyButton = Create("TextButton", {
+        Text = "Copy",
+        Size = UDim2.new(1, 0, 0, 24),
+        BackgroundTransparency = 1,
+        TextColor3 = Color3.new(1, 1, 1),
+        Font = Enum.Font.SourceSans,
+        TextSize = 14,
+        Parent = ContextMenu
+    })
+
+    local DeleteButton = Create("TextButton", {
+        Text = "Delete",
+        Size = UDim2.new(1, 0, 0, 24),
+        BackgroundTransparency = 1,
+        TextColor3 = Color3.new(1, 1, 1),
+        Font = Enum.Font.SourceSans,
+        TextSize = 14,
+        Parent = ContextMenu
+    })
+
+    -- Function to update the size of the ContextMenu
+    local function updateContextMenuSize()
+        local buttonHeight = 24  -- Height of each button
+        local buttonCount = #ContextMenu:GetChildren()  -- Count buttons
+        local totalHeight = buttonCount * buttonHeight + 4 * (buttonCount - 1)  -- Account for padding
+        ContextMenu.Size = UDim2.new(0, 120, 0, totalHeight)
+    end
+
+    updateContextMenuSize()  -- Call it after adding buttons
+
+    -- Context Menu Button Functions
+    CopyButton.MouseButton1Click:Connect(function()
+        if setclipboard then
+            setclipboard(StripTags(rawText))
+            print("Text copied to clipboard.") -- Debug line
+        end
+        ContextMenu.Visible = false
+    end)
+
+    DeleteButton.MouseButton1Click:Connect(function()
+        label:Destroy()
+        ContextMenu.Visible = false
+    end)
+
+    -- Show context menu on right-click
     label.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton2 then
-            print("Right-click detected on label") -- Debug line
-            contextTarget = label
-            ContextMenu.Position = UDim2.new(0, input.Position.X, 0, input.Position.Y)
-            ContextMenu.Size = UDim2.new(0, 120, 0, 0)
-            for _, child in ipairs(ContextMenu:GetChildren()) do
-                if child:IsA("TextButton") then
-                    ContextMenu.Size = UDim2.new(0, 120, 0, ContextMenu.Size.Y.Offset + 24)
-                end
-            end
+            ContextMenu.Position = UDim2.new(0, input.Position.X + 10, 0, input.Position.Y + 10)
             ContextMenu.Visible = true
+        end
+    end)
+
+    -- Hide context menu if clicked elsewhere
+    UserInputService.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and ContextMenu.Visible then
+            ContextMenu.Visible = false
         end
     end)
 
