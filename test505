@@ -52,6 +52,7 @@ local NotificationContainer = Create("Frame", {
     Position = UDim2.new(0, 0, 0, 370),
     Size = UDim2.new(1, 0, 1, -40),
     ZIndex = 100,
+    Active = true,
     Parent = NotificationArea
 })
 
@@ -77,6 +78,7 @@ local LoggerFrame = Create("Frame", {
     BorderSizePixel = 0,
     BackgroundTransparency = 0.2,
     Name = "LoggerFrame",
+    Active = true,
     Parent = LoggerGUI
 })
 
@@ -89,16 +91,18 @@ local Header = Create("TextButton", {
     TextColor3 = Color3.new(1, 1, 1),
     BorderSizePixel = 0,
     AutoButtonColor = false,
+    Active = true,
     Parent = LoggerFrame
 })
 
 local ScrollingFrame = Create("ScrollingFrame", {
-    Size = UDim2.new(1, -6, 1, -46),
+    Size = UDim2.new(1, -6, 1, -30),
     Position = UDim2.new(0, 0, 0, 24),
     CanvasSize = UDim2.new(0, 0, 10, 0),
     ScrollBarThickness = 6,
     BackgroundTransparency = 1,
     Name = "LogScroll",
+    Active = true,
     Parent = LoggerFrame
 })
 
@@ -117,15 +121,19 @@ local ResizeHandle = Create("TextButton", {
     TextSize = 14,
     ZIndex = 10,
     Name = "ResizeHandle",
+    AutoButtonColor = false,
+    Active = true,
     Parent = LoggerFrame
 })
 
--- Right-click Context Menu
+-- Context Menu
 local ContextMenu = Create("Frame", {
     BackgroundColor3 = Color3.fromRGB(35, 35, 35),
     Size = UDim2.new(0, 120, 0, 0),
     Visible = false,
-    Parent = LoggerFrame
+    ZIndex = 999,
+    Active = true,
+    Parent = LoggerGUI
 })
 
 local CopyButton = Create("TextButton", {
@@ -135,43 +143,92 @@ local CopyButton = Create("TextButton", {
     TextColor3 = Color3.new(1, 1, 1),
     Font = Enum.Font.SourceSans,
     TextSize = 14,
+    ZIndex = 1000,
+    AutoButtonColor = false,
     Parent = ContextMenu
 })
 
 local DeleteButton = Create("TextButton", {
     Text = "Delete",
     Size = UDim2.new(1, 0, 0, 24),
-    Position = UDim2.new(0, 0, 0, 24),
     BackgroundTransparency = 1,
     TextColor3 = Color3.new(1, 1, 1),
     Font = Enum.Font.SourceSans,
     TextSize = 14,
+    ZIndex = 1000,
+    AutoButtonColor = false,
     Parent = ContextMenu
 })
 
 local contextTarget = nil
+
 CopyButton.MouseButton1Click:Connect(function()
     if setclipboard and contextTarget then
         setclipboard(contextTarget.Text)
     end
     ContextMenu.Visible = false
 end)
+
 DeleteButton.MouseButton1Click:Connect(function()
     if contextTarget then
         contextTarget:Destroy()
+        ContextMenu.Visible = false
     end
-    ContextMenu.Visible = false
 end)
 
--- Resize and drag logic skipped here due to space
+-- Resize logic
+local resizing, dragStart, startSize = false, nil, nil
+ResizeHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        resizing = true
+        dragStart = input.Position
+        startSize = LoggerFrame.Size
+    end
+end)
+ResizeHandle.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        resizing = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        LoggerFrame.Size = UDim2.new(0, math.max(200, startSize.X.Offset + delta.X), 0, math.max(100, startSize.Y.Offset + delta.Y))
+    end
+end)
 
--- Minimize toggle
+-- Dragging logic
+local dragging, dragOffset, clicked, clickTime = false, nil, false, 0
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        clicked = true
+        clickTime = tick()
+        dragOffset = Vector2.new(input.Position.X - LoggerFrame.AbsolutePosition.X, input.Position.Y - LoggerFrame.AbsolutePosition.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        clicked = false
+        LoggerFrame.Position = UDim2.new(0, input.Position.X - dragOffset.X, 0, input.Position.Y - dragOffset.Y)
+    end
+end)
+
+-- Logger Functions
 local logEntries = {}
 local isMinimized = false
 Header.MouseButton1Up:Connect(function()
-    isMinimized = not isMinimized
-    Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
-    ScrollingFrame.Visible = not isMinimized
+    if clicked and (tick() - clickTime < 0.2) then
+        isMinimized = not isMinimized
+        Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
+        ScrollingFrame.Visible = not isMinimized
+    end
+    clicked = false
 end)
 
 function NotifyLogger.Log(text)
@@ -186,6 +243,8 @@ function NotifyLogger.Log(text)
         TextXAlignment = Enum.TextXAlignment.Left,
         RichText = true,
         AutoButtonColor = false,
+        ZIndex = 999,
+        Active = true,
         Parent = ScrollingFrame
     })
 
@@ -193,6 +252,7 @@ function NotifyLogger.Log(text)
         if input.UserInputType == Enum.UserInputType.MouseButton2 then
             contextTarget = label
             ContextMenu.Position = UDim2.new(0, input.Position.X, 0, input.Position.Y)
+            ContextMenu.Size = UDim2.new(0, 120, 0, 48)
             ContextMenu.Visible = true
         end
     end)
@@ -220,13 +280,15 @@ function NotifyLogger.Notify(Text, Color, Time)
         local NotifyFrame = ActiveNotifications[Text]
         local AccentBar = NotifyFrame:FindFirstChild("AccentBar")
         local TextLabel = NotifyFrame:FindFirstChildOfClass("TextLabel")
+
         if not AccentBar:FindFirstChild("Flashing") then
             local FlashingIndicator = Instance.new("BoolValue")
             FlashingIndicator.Name = "Flashing"
             FlashingIndicator.Parent = AccentBar
+
             task.spawn(function()
                 local OriginalColor = AccentBar.BackgroundColor3
-                for _ = 1, 3 do
+                for i = 1, 3 do
                     AccentBar.BackgroundColor3 = Color3.new(1, 1, 1)
                     TextLabel.TextColor3 = Color3.new(1, 1, 1)
                     wait(0.2)
@@ -237,9 +299,11 @@ function NotifyLogger.Notify(Text, Color, Time)
                 FlashingIndicator:Destroy()
             end)
         end
+
         if NotificationTimers[Text] then
             task.cancel(NotificationTimers[Text])
         end
+
         NotificationTimers[Text] = task.spawn(function()
             wait(Time or 5)
             NotifyFrame:TweenSize(UDim2.new(0, 0, 0, NotifyFrame.Size.Y.Offset), "Out", "Quad", 0.4, true)
@@ -255,6 +319,7 @@ function NotifyLogger.Notify(Text, Color, Time)
     local TextSize = 17
     local XSize, YSize = GetTextSize(CleanText, Enum.Font.GothamBold, TextSize)
     YSize = YSize + 10
+
     local NotifyFrame = Create("Frame", {
         BackgroundColor3 = MainColor,
         BorderColor3 = OutlineColor,
@@ -263,8 +328,10 @@ function NotifyLogger.Notify(Text, Color, Time)
         Size = UDim2.new(0, 0, 0, YSize),
         ClipsDescendants = true,
         ZIndex = 101,
+        Active = true,
         Parent = NotificationContainer,
     })
+
     Create("TextLabel", {
         Position = UDim2.new(0, 6, 0, 0),
         Size = UDim2.new(1, -6, 1, 0),
@@ -278,6 +345,7 @@ function NotifyLogger.Notify(Text, Color, Time)
         RichText = true,
         Parent = NotifyFrame,
     })
+
     Create("Frame", {
         Name = "AccentBar",
         BackgroundColor3 = Color or AccentColor,
@@ -286,8 +354,10 @@ function NotifyLogger.Notify(Text, Color, Time)
         ZIndex = 103,
         Parent = NotifyFrame,
     })
+
     NotifyFrame:TweenSize(UDim2.new(0, XSize + 14, 0, YSize), "Out", "Quad", 0.4, true)
     ActiveNotifications[Text] = NotifyFrame
+
     NotificationTimers[Text] = task.spawn(function()
         wait(Time or 5)
         NotifyFrame:TweenSize(UDim2.new(0, 0, 0, YSize), "Out", "Quad", 0.4, true)
@@ -296,6 +366,7 @@ function NotifyLogger.Notify(Text, Color, Time)
         ActiveNotifications[Text] = nil
         NotificationTimers[Text] = nil
     end)
+
     NotifyLogger.Log(Text)
 end
 
