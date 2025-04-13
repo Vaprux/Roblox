@@ -176,13 +176,24 @@ DeleteButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Resize logic
-local resizing, dragStart, startSize = false, nil, nil
+-- Drag & Resize logic
+local resizing, resizingStart, resizingSize = false, nil, nil
+local dragging, draggingOffset = false, nil
+
+UserInputService.InputChanged:Connect(function(input)
+    if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - resizingStart
+        LoggerFrame.Size = UDim2.new(0, math.max(200, resizingSize.X.Offset + delta.X), 0, math.max(100, resizingSize.Y.Offset + delta.Y))
+    elseif dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        LoggerFrame.Position = UDim2.new(0, input.Position.X - draggingOffset.X, 0, input.Position.Y - draggingOffset.Y)
+    end
+end)
+
 ResizeHandle.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         resizing = true
-        dragStart = input.Position
-        startSize = LoggerFrame.Size
+        resizingStart = input.Position
+        resizingSize = LoggerFrame.Size
     end
 end)
 ResizeHandle.InputEnded:Connect(function(input)
@@ -190,45 +201,26 @@ ResizeHandle.InputEnded:Connect(function(input)
         resizing = false
     end
 end)
-UserInputService.InputChanged:Connect(function(input)
-    if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
-        LoggerFrame.Size = UDim2.new(0, math.max(200, startSize.X.Offset + delta.X), 0, math.max(100, startSize.Y.Offset + delta.Y))
-    end
-end)
 
--- Dragging logic
-local dragging, dragOffset, clicked, clickTime = false, nil, false, 0
 Header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
-        clicked = true
-        clickTime = tick()
-        dragOffset = Vector2.new(input.Position.X - LoggerFrame.AbsolutePosition.X, input.Position.Y - LoggerFrame.AbsolutePosition.Y)
+        draggingOffset = Vector2.new(input.Position.X - LoggerFrame.AbsolutePosition.X, input.Position.Y - LoggerFrame.AbsolutePosition.Y)
     end
 end)
-UserInputService.InputEnded:Connect(function(input)
+Header.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = false
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        clicked = false
-        LoggerFrame.Position = UDim2.new(0, input.Position.X - dragOffset.X, 0, input.Position.Y - dragOffset.Y)
     end
 end)
 
 -- Logger Functions
 local logEntries = {}
 local isMinimized = false
-Header.MouseButton1Up:Connect(function()
-    if clicked and (tick() - clickTime < 0.2) then
-        isMinimized = not isMinimized
-        Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
-        ScrollingFrame.Visible = not isMinimized
-    end
-    clicked = false
+Header.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
+    ScrollingFrame.Visible = not isMinimized
 end)
 
 function NotifyLogger.Log(text)
