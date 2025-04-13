@@ -1,4 +1,4 @@
--- NotifyLogger Module (Combined Notification + Logger with Right-Click Context Menu)
+-- NotifyLogger Module (Combined Notification + Logger)
 local CoreGui = game:GetService("CoreGui")
 local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
@@ -83,7 +83,7 @@ local LoggerFrame = Create("Frame", {
 local Header = Create("TextButton", {
     Size = UDim2.new(1, 0, 0, 24),
     BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-    Text = "\226\150\190 Logger (Click to Minimize)",
+    Text = "▼ Logger (Click to Minimize)",
     Font = Enum.Font.SourceSansBold,
     TextSize = 16,
     TextColor3 = Color3.new(1, 1, 1),
@@ -111,7 +111,7 @@ local ResizeHandle = Create("TextButton", {
     Size = UDim2.new(0, 16, 0, 16),
     Position = UDim2.new(1, -16, 1, -16),
     BackgroundTransparency = 1,
-    Text = "\226\151\162",
+    Text = "◢",
     TextColor3 = Color3.fromRGB(150, 150, 150),
     Font = Enum.Font.SourceSansBold,
     TextSize = 14,
@@ -120,7 +120,6 @@ local ResizeHandle = Create("TextButton", {
     Parent = LoggerFrame
 })
 
--- Resize logic
 local resizing, dragStart, startSize = false, nil, nil
 
 ResizeHandle.InputBegan:Connect(function(input)
@@ -146,7 +145,6 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Dragging logic
 local dragging, dragOffset, clicked, clickTime = false, nil, false, 0
 
 Header.InputBegan:Connect(function(input)
@@ -172,14 +170,13 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Logger Functions
 local logEntries = {}
 local isMinimized = false
 
 Header.MouseButton1Up:Connect(function()
     if clicked and (tick() - clickTime < 0.2) then
         isMinimized = not isMinimized
-        Header.Text = isMinimized and "\226\150\176 Logger (Click to Expand)" or "\226\150\190 Logger (Click to Minimize)"
+        Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
         ScrollingFrame.Visible = not isMinimized
     end
     clicked = false
@@ -206,15 +203,15 @@ function NotifyLogger.Log(text)
         Parent = LogButton
     })
 
-    -- Right-click menu setup
     LogButton.MouseButton2Click:Connect(function()
-        local contextMenu = Instance.new("Frame")
-        contextMenu.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        contextMenu.BorderColor3 = Color3.new(0, 0, 0)
-        contextMenu.BorderSizePixel = 1
-        contextMenu.Size = UDim2.new(0, 100, 0, 50)
-        contextMenu.Position = UDim2.new(0, UserInputService:GetMouseLocation().X, 0, UserInputService:GetMouseLocation().Y)
-        contextMenu.Parent = LoggerGUI
+        local contextMenu = Create("Frame", {
+            BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+            BorderColor3 = Color3.new(0, 0, 0),
+            BorderSizePixel = 1,
+            Size = UDim2.new(0, 100, 0, 50),
+            Position = UDim2.new(0, UserInputService:GetMouseLocation().X, 0, UserInputService:GetMouseLocation().Y),
+            Parent = LoggerGUI
+        })
 
         local copyBtn = Create("TextButton", {
             Size = UDim2.new(1, 0, 0.5, 0),
@@ -238,7 +235,7 @@ function NotifyLogger.Log(text)
         })
 
         copyBtn.MouseButton1Click:Connect(function()
-            setclipboard(StripTags(text)) -- removes RichText if needed
+            setclipboard(StripTags(text))
             contextMenu:Destroy()
         end)
 
@@ -247,7 +244,6 @@ function NotifyLogger.Log(text)
             contextMenu:Destroy()
         end)
 
-        -- Auto-close if clicked elsewhere
         local conn
         conn = UserInputService.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
@@ -275,7 +271,6 @@ function NotifyLogger.Show(state)
     LoggerGUI.Enabled = state
 end
 
--- Notify function with auto-log
 function NotifyLogger.Notify(Text, Color, Time)
     if ActiveNotifications[Text] then
         local NotifyFrame = ActiveNotifications[Text]
