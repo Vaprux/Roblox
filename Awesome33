@@ -1,4 +1,4 @@
--- NotifyLogger Module (Combined Notification + Logger with Context Menu)
+-- NotifyLogger Module (Combined Notification + Logger)
 local CoreGui = game:GetService("CoreGui")
 local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
@@ -120,61 +120,7 @@ local ResizeHandle = Create("TextButton", {
     Parent = LoggerFrame
 })
 
--- === Context Menu ===
-local ContextMenu = Create("Frame", {
-    Name = "LogContextMenu",
-    Size = UDim2.new(0, 100, 0, 40),
-    BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-    BorderColor3 = OutlineColor,
-    Visible = false,
-    ZIndex = 999,
-    Parent = LoggerGUI
-})
-
-local function AddMenuButton(text, callback)
-    local btn = Create("TextButton", {
-        Size = UDim2.new(1, 0, 0, 20),
-        BackgroundTransparency = 1,
-        Text = text,
-        Font = Enum.Font.SourceSans,
-        TextSize = 14,
-        TextColor3 = Color3.new(1, 1, 1),
-        AutoButtonColor = true,
-        Parent = ContextMenu
-    })
-    btn.MouseButton1Click:Connect(function()
-        ContextMenu.Visible = false
-        callback()
-    end)
-end
-
-AddMenuButton("Copy", function()
-    if ContextMenu._target and setclipboard then
-        setclipboard(StripTags(ContextMenu._target.Text))
-        NotifyLogger.Notify("Copied to clipboard!", Color3.fromRGB(80, 200, 80), 2)
-    end
-end)
-
-AddMenuButton("Delete", function()
-    if ContextMenu._target then
-        for i, entry in ipairs(NotifyLogger.__logEntries) do
-            if entry == ContextMenu._target then
-                table.remove(NotifyLogger.__logEntries, i)
-                entry:Destroy()
-                break
-            end
-        end
-        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
-    end
-end)
-
-UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and ContextMenu.Visible then
-        ContextMenu.Visible = false
-    end
-end)
-
--- === Resize logic ===
+-- === Resize + Drag ===
 local resizing, dragStart, startSize = false, nil, nil
 ResizeHandle.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -195,7 +141,6 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- === Dragging logic ===
 local dragging, dragOffset, clicked, clickTime = false, nil, false, 0
 Header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -217,10 +162,70 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- === Right-click Context Menu ===
+local contextTarget = nil
+
+local ContextMenu = Create("Frame", {
+    Name = "LogContextMenu",
+    Parent = LoggerGUI,
+    BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+    BorderColor3 = Color3.fromRGB(70, 70, 70),
+    Size = UDim2.new(0, 120, 0, 0),
+    Visible = false,
+    ZIndex = 200
+})
+
+local function AddMenuButton(name, callback)
+    local btn = Create("TextButton", {
+        Size = UDim2.new(1, 0, 0, 24),
+        BackgroundTransparency = 0,
+        BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+        BorderSizePixel = 0,
+        Text = name,
+        Font = Enum.Font.SourceSans,
+        TextSize = 16,
+        TextColor3 = Color3.new(1, 1, 1),
+        Parent = ContextMenu,
+        ZIndex = 201
+    })
+    btn.MouseButton1Click:Connect(function()
+        ContextMenu.Visible = false
+        callback()
+    end)
+    ContextMenu.Size = UDim2.new(0, 120, 0, ContextMenu.Size.Y.Offset + 24)
+end
+
+AddMenuButton("Copy", function()
+    if contextTarget and setclipboard then
+        setclipboard(StripTags(contextTarget.Text))
+        NotifyLogger.Notify("Copied to clipboard!", Color3.fromRGB(80, 200, 80), 2)
+    end
+end)
+
+AddMenuButton("Delete", function()
+    if contextTarget then
+        for i, entry in ipairs(NotifyLogger.__logEntries) do
+            if entry == contextTarget then
+                table.remove(NotifyLogger.__logEntries, i)
+                entry:Destroy()
+                break
+            end
+        end
+        ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
+        if ContextMenu.Visible then
+            ContextMenu.Visible = false
+        end
+    end
+end)
+
 -- === Logger Functions ===
 NotifyLogger.__logEntries = {}
 local isMinimized = false
-
 Header.MouseButton1Up:Connect(function()
     if clicked and (tick() - clickTime < 0.2) then
         isMinimized = not isMinimized
@@ -245,21 +250,24 @@ function NotifyLogger.Log(text)
         Parent = ScrollingFrame
     })
 
-    -- Right-click context
-    label.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton2 then
-            ContextMenu._target = label
-            ContextMenu.Position = UDim2.new(0, input.Position.X, 0, input.Position.Y)
-            ContextMenu.Visible = true
-        end
-    end)
-
     label.MouseButton1Click:Connect(function()
         if setclipboard then
             setclipboard(StripTags(rawText))
             NotifyLogger.Notify("Copied to clipboard!", Color3.fromRGB(80, 200, 80), 2)
-        else
-            warn("Clipboard copy not supported on this executor.")
+        end
+    end)
+
+    label.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton2 then
+            contextTarget = label
+            ContextMenu.Position = UDim2.new(0, input.Position.X, 0, input.Position.Y)
+            ContextMenu.Size = UDim2.new(0, 120, 0, 0)
+            for _, child in ipairs(ContextMenu:GetChildren()) do
+                if child:IsA("TextButton") then
+                    ContextMenu.Size = UDim2.new(0, 120, 0, ContextMenu.Size.Y.Offset + 24)
+                end
+            end
+            ContextMenu.Visible = true
         end
     end)
 
@@ -281,7 +289,7 @@ function NotifyLogger.Show(state)
     LoggerGUI.Enabled = state
 end
 
--- === Notify function with auto-log ===
+-- === Notifications with Auto Log ===
 function NotifyLogger.Notify(Text, Color, Time)
     if ActiveNotifications[Text] then
         local NotifyFrame = ActiveNotifications[Text]
@@ -295,7 +303,7 @@ function NotifyLogger.Notify(Text, Color, Time)
 
             task.spawn(function()
                 local OriginalColor = AccentBar.BackgroundColor3
-                for _ = 1, 3 do
+                for i = 1, 3 do
                     AccentBar.BackgroundColor3 = Color3.new(1, 1, 1)
                     TextLabel.TextColor3 = Color3.new(1, 1, 1)
                     wait(0.2)
