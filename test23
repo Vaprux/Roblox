@@ -1,0 +1,260 @@
+-- NotifyLogger Module (Upgraded)
+local CoreGui = game:GetService("CoreGui")
+local TextService = game:GetService("TextService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+if _G.__NOTIFYLOGGER_LOADED then
+    return _G.__NOTIFYLOGGER_INSTANCE
+end
+_G.__NOTIFYLOGGER_LOADED = true
+
+if CoreGui:FindFirstChild("NotificationArea") then CoreGui.NotificationArea:Destroy() end
+if CoreGui:FindFirstChild("LoggerGUI") then CoreGui.LoggerGUI:Destroy() end
+
+local NotifyLogger = {}
+
+local AccentColor = Color3.fromRGB(75, 10, 120)
+local MainColor = Color3.fromRGB(25, 25, 25)
+local OutlineColor = Color3.fromRGB(50, 50, 50)
+
+local function Create(Class, Properties)
+    local Inst = Instance.new(Class)
+    for Prop, Val in pairs(Properties) do
+        Inst[Prop] = Val
+    end
+    return Inst
+end
+
+local function StripTags(str)
+    return string.gsub(str, "<[^>]->", "")
+end
+
+local function GetTextSize(Text, Font, Size)
+    local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
+    return Bounds.X or 200, Bounds.Y or 50
+end
+
+-- Notification GUI
+local NotificationArea = Create("ScreenGui", {
+    Name = "NotificationArea",
+    Parent = CoreGui,
+    IgnoreGuiInset = true
+})
+
+local NotificationContainer = Create("Frame", {
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 0, 0, 370),
+    Size = UDim2.new(1, 0, 1, -40),
+    ZIndex = 100,
+    Parent = NotificationArea
+})
+
+Create("UIListLayout", {
+    Padding = UDim.new(0, 4),
+    FillDirection = Enum.FillDirection.Vertical,
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Parent = NotificationContainer,
+})
+
+-- Logger GUI
+local LoggerGUI = Create("ScreenGui", {
+    Name = "LoggerGUI",
+    Parent = CoreGui,
+    ResetOnSpawn = false,
+    Enabled = true
+})
+
+local LoggerFrame = Create("Frame", {
+    Size = UDim2.new(0, 300, 0, 200),
+    Position = UDim2.new(1, -310, 1, -210),
+    BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+    BorderSizePixel = 0,
+    BackgroundTransparency = 0.2,
+    Name = "LoggerFrame",
+    Parent = LoggerGUI
+})
+
+local Header = Create("TextButton", {
+    Size = UDim2.new(1, 0, 0, 24),
+    BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+    Text = "▼ Logger (Click to Minimize)",
+    Font = Enum.Font.SourceSansBold,
+    TextSize = 16,
+    TextColor3 = Color3.new(1, 1, 1),
+    BorderSizePixel = 0,
+    AutoButtonColor = false,
+    Parent = LoggerFrame
+})
+
+local ScrollingFrame = Create("ScrollingFrame", {
+    Size = UDim2.new(1, -6, 1, -30),
+    Position = UDim2.new(0, 0, 0, 24),
+    CanvasSize = UDim2.new(0, 0, 10, 0),
+    ScrollBarThickness = 6,
+    BackgroundTransparency = 1,
+    Name = "LogScroll",
+    Parent = LoggerFrame
+})
+
+local UIListLayout = Create("UIListLayout", {
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Parent = ScrollingFrame
+})
+
+-- Right-click menu
+local ContextMenu = Create("Frame", {
+    Name = "ContextMenu",
+    BackgroundColor3 = Color3.fromRGB(45, 45, 45),
+    BorderSizePixel = 0,
+    Size = UDim2.new(0, 140, 0, 100),
+    Visible = false,
+    Parent = LoggerGUI,
+    ZIndex = 10
+})
+
+Create("UICorner", {Parent = ContextMenu})
+
+local function AddContextButton(name, callback)
+    local btn = Create("TextButton", {
+        Text = name,
+        Font = Enum.Font.SourceSans,
+        TextSize = 14,
+        TextColor3 = Color3.new(1, 1, 1),
+        BackgroundColor3 = Color3.fromRGB(60, 60, 60),
+        Size = UDim2.new(1, -8, 0, 24),
+        Parent = ContextMenu,
+        ZIndex = 11
+    })
+    Create("UICorner", {Parent = btn})
+    btn.MouseButton1Click:Connect(function()
+        callback()
+        ContextMenu.Visible = false
+    end)
+end
+
+local logEntries = {}
+local selectedLog = nil
+
+AddContextButton("Copy this log", function()
+    if selectedLog then setclipboard(StripTags(selectedLog.Text)) end
+end)
+
+AddContextButton("Delete this log", function()
+    if selectedLog then
+        for i, entry in ipairs(logEntries) do
+            if entry == selectedLog then
+                table.remove(logEntries, i)
+                break
+            end
+        end
+        selectedLog:Destroy()
+    end
+end)
+
+AddContextButton("Clear all logs", function()
+    for _, label in ipairs(logEntries) do label:Destroy() end
+    table.clear(logEntries)
+end)
+
+AddContextButton("Copy all logs", function()
+    local allText = ""
+    for _, label in ipairs(logEntries) do
+        allText = allText .. StripTags(label.Text) .. "\n"
+    end
+    setclipboard(allText)
+end)
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        ContextMenu.Visible = false
+    end
+end)
+
+local function ShowContextMenu(logLabel, pos)
+    selectedLog = logLabel
+    ContextMenu.Position = UDim2.new(0, pos.X, 0, pos.Y)
+    ContextMenu.Visible = true
+end
+
+function NotifyLogger.Log(text)
+    local label = Create("TextLabel", {
+        Size = UDim2.new(1, -10, 0, 20),
+        BackgroundTransparency = 1,
+        Text = text,
+        TextColor3 = Color3.new(1, 1, 1),
+        Font = Enum.Font.SourceSans,
+        TextSize = 16,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        RichText = true,
+        Parent = ScrollingFrame
+    })
+
+    label.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton2 then
+            ShowContextMenu(label, input.Position)
+        end
+    end)
+
+    table.insert(logEntries, label)
+    task.wait()
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+    ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
+end
+
+function NotifyLogger.Notify(Text, Color, Time)
+    local CleanText = StripTags(Text or "")
+    local TextSize = 17
+    local XSize, YSize = GetTextSize(CleanText, Enum.Font.GothamBold, TextSize)
+    YSize = YSize + 10
+
+    local NotifyFrame = Create("Frame", {
+        BackgroundColor3 = MainColor,
+        BorderColor3 = OutlineColor,
+        BorderMode = Enum.BorderMode.Inset,
+        Position = UDim2.new(0.5, -XSize / 2, 0, 10),
+        Size = UDim2.new(0, 0, 0, YSize),
+        ClipsDescendants = true,
+        ZIndex = 101,
+        Parent = NotificationContainer,
+        Transparency = 1
+    })
+
+    Create("TextLabel", {
+        Position = UDim2.new(0, 6, 0, 0),
+        Size = UDim2.new(1, -6, 1, 0),
+        Text = Text,
+        Font = Enum.Font.GothamBold,
+        TextSize = TextSize,
+        BackgroundTransparency = 1,
+        TextColor3 = Color3.new(1, 1, 1),
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 102,
+        RichText = true,
+        Parent = NotifyFrame,
+    })
+
+    Create("Frame", {
+        Name = "AccentBar",
+        BackgroundColor3 = Color or AccentColor,
+        Size = UDim2.new(0, 3, 1, 0),
+        Position = UDim2.new(0, 0, 0, 0),
+        ZIndex = 103,
+        Parent = NotifyFrame,
+    })
+
+    NotifyFrame.Size = UDim2.new(0, XSize + 14, 0, YSize)
+    NotifyFrame.Transparency = 1
+    TweenService:Create(NotifyFrame, TweenInfo.new(0.4), {Transparency = 0}):Play()
+
+    task.delay(Time or 5, function()
+        TweenService:Create(NotifyFrame, TweenInfo.new(0.4), {Transparency = 1}):Play()
+        task.wait(0.4)
+        NotifyFrame:Destroy()
+    end)
+
+    NotifyLogger.Log(Text)
+end
+
+_G.__NOTIFYLOGGER_INSTANCE = NotifyLogger
+return NotifyLogger
