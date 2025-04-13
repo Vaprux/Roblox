@@ -186,8 +186,16 @@ Header.MouseButton1Up:Connect(function()
 end)
 
 function NotifyLogger.Log(text)
-    local label = Create("TextLabel", {
+    local LogButton = Create("TextButton", {
         Size = UDim2.new(1, -10, 0, 20),
+        BackgroundTransparency = 1,
+        Text = "",
+        AutoButtonColor = false,
+        Parent = ScrollingFrame
+    })
+
+    local Label = Create("TextLabel", {
+        Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
         Text = text,
         TextColor3 = Color3.new(1, 1, 1),
@@ -195,71 +203,64 @@ function NotifyLogger.Log(text)
         TextSize = 16,
         TextXAlignment = Enum.TextXAlignment.Left,
         RichText = true,
-        Parent = ScrollingFrame
+        Parent = LogButton
     })
-    table.insert(logEntries, label)
-    task.wait()
-    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
-    ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
 
-    label.MouseButton2Click:Connect(function()
-        if LoggerGUI:FindFirstChild("LogContextMenu") then
-            LoggerGUI.LogContextMenu:Destroy()
-        end
+    -- Right-click menu setup
+    LogButton.MouseButton2Click:Connect(function()
+        local contextMenu = Instance.new("Frame")
+        contextMenu.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        contextMenu.BorderColor3 = Color3.new(0, 0, 0)
+        contextMenu.BorderSizePixel = 1
+        contextMenu.Size = UDim2.new(0, 100, 0, 50)
+        contextMenu.Position = UDim2.new(0, UserInputService:GetMouseLocation().X, 0, UserInputService:GetMouseLocation().Y)
+        contextMenu.Parent = LoggerGUI
 
-        local mousePos = UserInputService:GetMouseLocation()
-        local contextMenu = Create("Frame", {
-            Name = "LogContextMenu",
-            BackgroundColor3 = Color3.fromRGB(45, 45, 45),
-            BorderSizePixel = 0,
-            Size = UDim2.new(0, 120, 0, 44),
-            Position = UDim2.new(0, mousePos.X + 5, 0, mousePos.Y + 5),
-            ZIndex = 200,
-            Parent = LoggerGUI
+        local copyBtn = Create("TextButton", {
+            Size = UDim2.new(1, 0, 0.5, 0),
+            BackgroundTransparency = 1,
+            Text = "Copy",
+            TextColor3 = Color3.new(1, 1, 1),
+            Font = Enum.Font.SourceSans,
+            TextSize = 14,
+            Parent = contextMenu
         })
 
-        Create("UICorner", { CornerRadius = UDim.new(0, 4), Parent = contextMenu })
+        local deleteBtn = Create("TextButton", {
+            Position = UDim2.new(0, 0, 0.5, 0),
+            Size = UDim2.new(1, 0, 0.5, 0),
+            BackgroundTransparency = 1,
+            Text = "Delete",
+            TextColor3 = Color3.new(1, 1, 1),
+            Font = Enum.Font.SourceSans,
+            TextSize = 14,
+            Parent = contextMenu
+        })
 
-        local function addButton(text, callback, order)
-            local btn = Create("TextButton", {
-                Size = UDim2.new(1, 0, 0, 22),
-                Position = UDim2.new(0, 0, 0, (order - 1) * 22),
-                BackgroundColor3 = Color3.fromRGB(60, 60, 60),
-                BorderSizePixel = 0,
-                Text = text,
-                TextColor3 = Color3.new(1, 1, 1),
-                Font = Enum.Font.SourceSans,
-                TextSize = 14,
-                AutoButtonColor = true,
-                ZIndex = 201,
-                Parent = contextMenu
-            })
-            btn.MouseButton1Click:Connect(function()
-                callback()
-                contextMenu:Destroy()
-            end)
-        end
+        copyBtn.MouseButton1Click:Connect(function()
+            setclipboard(StripTags(text)) -- removes RichText if needed
+            contextMenu:Destroy()
+        end)
 
-        addButton("Copy", function()
-            pcall(function()
-                setclipboard(StripTags(label.Text))
-            end)
-        end, 1)
+        deleteBtn.MouseButton1Click:Connect(function()
+            LogButton:Destroy()
+            contextMenu:Destroy()
+        end)
 
-        addButton("Delete", function()
-            label:Destroy()
-        end, 2)
-
+        -- Auto-close if clicked elsewhere
         local conn
         conn = UserInputService.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                if contextMenu and contextMenu.Parent then
-                    contextMenu:Destroy()
-                end
-                conn:Disconnect()
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.MouseButton2 then
+                contextMenu:Destroy()
+                if conn then conn:Disconnect() end
             end
         end)
     end)
+
+    table.insert(logEntries, LogButton)
+    task.wait()
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+    ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
 end
 
 function NotifyLogger.Clear()
