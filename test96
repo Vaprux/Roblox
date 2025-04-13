@@ -1,8 +1,7 @@
--- NotifyLogger Module (Notification + Logger with Copy Support)
+-- NotifyLogger Module (Combined Notification + Logger)
 local CoreGui = game:GetService("CoreGui")
 local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
-local SetClipboard = setclipboard or toclipboard or (Clipboard and Clipboard.set)
 
 if _G.__NOTIFYLOGGER_LOADED then
     return _G.__NOTIFYLOGGER_INSTANCE
@@ -29,6 +28,15 @@ local function Create(Class, Properties)
     return Inst
 end
 
+local function StripTags(str)
+    return string.gsub(str, "<[^>]->", "")
+end
+
+local function GetTextSize(Text, Font, Size)
+    local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
+    return Bounds.X or 200, Bounds.Y or 50
+end
+
 -- === Notification System ===
 local ActiveNotifications = {}
 local NotificationTimers = {}
@@ -53,15 +61,6 @@ Create("UIListLayout", {
     SortOrder = Enum.SortOrder.LayoutOrder,
     Parent = NotificationContainer,
 })
-
-local function StripTags(str)
-    return string.gsub(str, "<[^>]->", "")
-end
-
-local function GetTextSize(Text, Font, Size)
-    local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
-    return Bounds.X or 200, Bounds.Y or 50
-end
 
 -- === Logger System ===
 local LoggerGUI = Create("ScreenGui", {
@@ -123,7 +122,6 @@ local ResizeHandle = Create("TextButton", {
 
 -- Resize logic
 local resizing, dragStart, startSize = false, nil, nil
-
 ResizeHandle.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         resizing = true
@@ -131,25 +129,20 @@ ResizeHandle.InputBegan:Connect(function(input)
         startSize = LoggerFrame.Size
     end
 end)
-
 ResizeHandle.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         resizing = false
     end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
-        local newWidth = math.max(200, startSize.X.Offset + delta.X)
-        local newHeight = math.max(100, startSize.Y.Offset + delta.Y)
-        LoggerFrame.Size = UDim2.new(0, newWidth, 0, newHeight)
+        LoggerFrame.Size = UDim2.new(0, math.max(200, startSize.X.Offset + delta.X), 0, math.max(100, startSize.Y.Offset + delta.Y))
     end
 end)
 
 -- Dragging logic
 local dragging, dragOffset, clicked, clickTime = false, nil, false, 0
-
 Header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
@@ -158,25 +151,21 @@ Header.InputBegan:Connect(function(input)
         dragOffset = Vector2.new(input.Position.X - LoggerFrame.AbsolutePosition.X, input.Position.Y - LoggerFrame.AbsolutePosition.Y)
     end
 end)
-
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = false
     end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         clicked = false
-        local newPos = UDim2.new(0, input.Position.X - dragOffset.X, 0, input.Position.Y - dragOffset.Y)
-        LoggerFrame.Position = newPos
+        LoggerFrame.Position = UDim2.new(0, input.Position.X - dragOffset.X, 0, input.Position.Y - dragOffset.Y)
     end
 end)
 
 -- Logger Functions
 local logEntries = {}
 local isMinimized = false
-
 Header.MouseButton1Up:Connect(function()
     if clicked and (tick() - clickTime < 0.2) then
         isMinimized = not isMinimized
@@ -188,12 +177,10 @@ end)
 
 function NotifyLogger.Log(text)
     local rawText = tostring(text)
-    local sanitizedText = rawText:gsub("\\", "\\\\"):gsub("\"", "\\\"")
-
     local label = Create("TextButton", {
         Size = UDim2.new(1, -10, 0, 20),
         BackgroundTransparency = 1,
-        Text = sanitizedText,
+        Text = rawText,
         TextColor3 = Color3.new(1, 1, 1),
         Font = Enum.Font.SourceSans,
         TextSize = 16,
@@ -202,16 +189,14 @@ function NotifyLogger.Log(text)
         AutoButtonColor = false,
         Parent = ScrollingFrame
     })
-
     label.MouseButton1Click:Connect(function()
-        if SetClipboard then
-            SetClipboard(rawText)
+        if setclipboard then
+            setclipboard(StripTags(rawText))
             NotifyLogger.Notify("Copied to clipboard!", Color3.fromRGB(80, 200, 80), 2)
         else
             warn("Clipboard copy not supported on this executor.")
         end
     end)
-
     table.insert(logEntries, label)
     task.wait()
     ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
@@ -230,7 +215,7 @@ function NotifyLogger.Show(state)
     LoggerGUI.Enabled = state
 end
 
--- === Notification ===
+-- Notify function with auto-log
 function NotifyLogger.Notify(Text, Color, Time)
     if ActiveNotifications[Text] then
         local NotifyFrame = ActiveNotifications[Text]
