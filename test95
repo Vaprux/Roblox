@@ -1,7 +1,8 @@
--- NotifyLogger Module (Combined Notification + Logger)
+-- NotifyLogger Module (Notification + Logger with Copy Support)
 local CoreGui = game:GetService("CoreGui")
 local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
+local SetClipboard = setclipboard or toclipboard or (Clipboard and Clipboard.set)
 
 if _G.__NOTIFYLOGGER_LOADED then
     return _G.__NOTIFYLOGGER_INSTANCE
@@ -83,7 +84,7 @@ local LoggerFrame = Create("Frame", {
 local Header = Create("TextButton", {
     Size = UDim2.new(1, 0, 0, 24),
     BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-    Text = "\226\143\275 Logger (Click to Minimize)",
+    Text = "▼ Logger (Click to Minimize)",
     Font = Enum.Font.SourceSansBold,
     TextSize = 16,
     TextColor3 = Color3.new(1, 1, 1),
@@ -111,7 +112,7 @@ local ResizeHandle = Create("TextButton", {
     Size = UDim2.new(0, 16, 0, 16),
     Position = UDim2.new(1, -16, 1, -16),
     BackgroundTransparency = 1,
-    Text = "\226\151\162",
+    Text = "◢",
     TextColor3 = Color3.fromRGB(150, 150, 150),
     Font = Enum.Font.SourceSansBold,
     TextSize = 14,
@@ -179,33 +180,35 @@ local isMinimized = false
 Header.MouseButton1Up:Connect(function()
     if clicked and (tick() - clickTime < 0.2) then
         isMinimized = not isMinimized
-        Header.Text = isMinimized and "\226\143\270 Logger (Click to Expand)" or "\226\143\275 Logger (Click to Minimize)"
+        Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
         ScrollingFrame.Visible = not isMinimized
     end
     clicked = false
 end)
 
 function NotifyLogger.Log(text)
+    local rawText = tostring(text)
+    local sanitizedText = rawText:gsub("\\", "\\\\"):gsub("\"", "\\\"")
+
     local label = Create("TextButton", {
         Size = UDim2.new(1, -10, 0, 20),
         BackgroundTransparency = 1,
-        Text = text,
+        Text = sanitizedText,
         TextColor3 = Color3.new(1, 1, 1),
         Font = Enum.Font.SourceSans,
         TextSize = 16,
         TextXAlignment = Enum.TextXAlignment.Left,
         RichText = true,
-        Parent = ScrollingFrame,
-        BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-        AutoButtonColor = false
+        AutoButtonColor = false,
+        Parent = ScrollingFrame
     })
 
     label.MouseButton1Click:Connect(function()
-        if setclipboard then
-            setclipboard(text)
-            NotifyLogger.Notify("Copied log to clipboard!", Color3.fromRGB(0, 255, 150), 2)
+        if SetClipboard then
+            SetClipboard(rawText)
+            NotifyLogger.Notify("Copied to clipboard!", Color3.fromRGB(80, 200, 80), 2)
         else
-            NotifyLogger.Notify("Clipboard copy not supported here.", Color3.fromRGB(255, 100, 100), 2)
+            warn("Clipboard copy not supported on this executor.")
         end
     end)
 
@@ -227,7 +230,7 @@ function NotifyLogger.Show(state)
     LoggerGUI.Enabled = state
 end
 
--- Notify function with auto-log
+-- === Notification ===
 function NotifyLogger.Notify(Text, Color, Time)
     if ActiveNotifications[Text] then
         local NotifyFrame = ActiveNotifications[Text]
