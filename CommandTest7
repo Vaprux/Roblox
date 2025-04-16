@@ -1,4 +1,4 @@
--- NotifyLogger with Command Bar and Autocomplete
+-- NotifyLogger with Command Bar, Autocomplete, and Keyboard Navigation
 local CoreGui = game:GetService("CoreGui")
 local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
@@ -8,7 +8,6 @@ if _G.__NOTIFYLOGGER_LOADED then
 end
 _G.__NOTIFYLOGGER_LOADED = true
 
--- Clean previous UIs
 for _, name in ipairs({"NotificationArea", "LoggerGUI"}) do
     local gui = CoreGui:FindFirstChild(name)
     if gui then gui:Destroy() end
@@ -36,7 +35,6 @@ local function GetTextSize(Text, Font, Size)
     return Bounds.X or 200, Bounds.Y or 50
 end
 
--- Notification System
 local ActiveNotifications = {}
 local NotificationTimers = {}
 
@@ -61,7 +59,6 @@ Create("UIListLayout", {
     Parent = NotificationContainer,
 })
 
--- Logger GUI
 local LoggerGUI = Create("ScreenGui", {
     Name = "LoggerGUI",
     Parent = CoreGui,
@@ -134,31 +131,9 @@ local UIListLayout = Create("UIListLayout", {
     Parent = ScrollingFrame
 })
 
--- Resize and Drag Logic
-local resizing, dragging = false, false
-local dragStart, startSize, dragOffset
-
-Header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragOffset = input.Position - LoggerFrame.AbsolutePosition
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-        resizing = false
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        LoggerFrame.Position = UDim2.new(0, input.Position.X - dragOffset.X, 0, input.Position.Y - dragOffset.Y)
-    end
-end)
-
--- Log Functions
-local logEntries = {}
+local logEntries, selectedIndex, suggestionLabels = {}, 0, {}
 local isMinimized = false
+
 Header.MouseButton1Up:Connect(function()
     isMinimized = not isMinimized
     Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
@@ -190,7 +165,7 @@ function NotifyLogger.Log(text)
     table.insert(logEntries, label)
     task.wait()
     ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
-    ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
+    ScrollingFrame.CanvasPosition = Vector2.new(0, UIListLayout.AbsoluteContentSize.Y)
 end
 
 function NotifyLogger.Clear()
@@ -207,6 +182,58 @@ function NotifyLogger.AddCommand(name, func)
     Commands[name:lower()] = func
 end
 
+CommandBar:GetPropertyChangedSignal("Text"):Connect(function()
+    local txt = CommandBar.Text:lower()
+    SuggestionBox.Visible = false
+    selectedIndex = 0
+    for _, label in ipairs(suggestionLabels) do label:Destroy() end
+    suggestionLabels = {}
+    if #txt > 0 then
+        for cmd in pairs(Commands) do
+            if cmd:sub(1, #txt) == txt then
+                local suggestion = Create("TextLabel", {
+                    Size = UDim2.new(1, 0, 0, 18),
+                    BackgroundTransparency = 1,
+                    Text = cmd,
+                    Font = Enum.Font.SourceSans,
+                    TextColor3 = Color3.new(1, 1, 1),
+                    TextSize = 14,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = SuggestionBox
+                })
+                table.insert(suggestionLabels, suggestion)
+            end
+        end
+        if #suggestionLabels > 0 then
+            SuggestionBox.Visible = true
+            suggestionLabels[1].TextColor3 = AccentColor
+        end
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if CommandBar:IsFocused() and SuggestionBox.Visible then
+        if input.KeyCode == Enum.KeyCode.Down then
+            if #suggestionLabels > 0 then
+                suggestionLabels[selectedIndex > 0 and selectedIndex or 1].TextColor3 = Color3.new(1, 1, 1)
+                selectedIndex = (selectedIndex % #suggestionLabels) + 1
+                suggestionLabels[selectedIndex].TextColor3 = AccentColor
+                CommandBar.Text = suggestionLabels[selectedIndex].Text
+                CommandBar.CursorPosition = #CommandBar.Text + 1
+            end
+        elseif input.KeyCode == Enum.KeyCode.Up then
+            if #suggestionLabels > 0 then
+                suggestionLabels[selectedIndex > 0 and selectedIndex or 1].TextColor3 = Color3.new(1, 1, 1)
+                selectedIndex = (selectedIndex - 2 + #suggestionLabels) % #suggestionLabels + 1
+                suggestionLabels[selectedIndex].TextColor3 = AccentColor
+                CommandBar.Text = suggestionLabels[selectedIndex].Text
+                CommandBar.CursorPosition = #CommandBar.Text + 1
+            end
+        end
+    end
+end)
+
 CommandBar.FocusLost:Connect(function(enter)
     if enter then
         local input = CommandBar.Text:lower()
@@ -220,48 +247,7 @@ CommandBar.FocusLost:Connect(function(enter)
     end
 end)
 
-CommandBar:GetPropertyChangedSignal("Text"):Connect(function()
-    local txt = CommandBar.Text:lower()
-    SuggestionBox.Visible = false
-    for _, child in ipairs(SuggestionBox:GetChildren()) do
-        if child:IsA("TextLabel") then child:Destroy() end
-    end
-    if #txt > 0 then
-        local found = false
-        for cmd in pairs(Commands) do
-            if cmd:sub(1, #txt) == txt then
-                found = true
-                local suggestion = Create("TextLabel", {
-                    Size = UDim2.new(1, 0, 0, 18),
-                    BackgroundTransparency = 1,
-                    Text = cmd,
-                    Font = Enum.Font.SourceSans,
-                    TextColor3 = Color3.new(1, 1, 1),
-                    TextSize = 14,
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    Parent = SuggestionBox
-                })
-            end
-        end
-        SuggestionBox.Visible = found
-    end
-end)
-
 function NotifyLogger.Notify(Text, Color, Time)
-    if ActiveNotifications[Text] then
-        local NotifyFrame = ActiveNotifications[Text]
-        if NotificationTimers[Text] then task.cancel(NotificationTimers[Text]) end
-        NotificationTimers[Text] = task.spawn(function()
-            wait(Time or 5)
-            NotifyFrame:TweenSize(UDim2.new(0, 0, 0, NotifyFrame.Size.Y.Offset), "Out", "Quad", 0.4, true)
-            wait(0.4)
-            NotifyFrame:Destroy()
-            ActiveNotifications[Text] = nil
-            NotificationTimers[Text] = nil
-        end)
-        return
-    end
-
     local CleanText = StripTags(Text or "")
     local TextSize = 17
     local XSize, YSize = GetTextSize(CleanText, Enum.Font.GothamBold, TextSize)
