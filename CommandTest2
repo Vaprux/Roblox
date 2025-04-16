@@ -204,11 +204,12 @@ do
 			dragOffset = input.Position - LoggerFrame.AbsolutePosition
 		end
 	end)
+
 	ResizeHandle.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			resizing = true
 			dragStart = input.Position
-			startSize = LoggerFrame.Size
+			startSize = LoggerFrame.AbsoluteSize
 		end
 	end)
 
