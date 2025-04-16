@@ -205,11 +205,10 @@ do
 		end
 	end)
 
-	ResizeHandle.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			resizing = true
-			dragStart = input.Position
-			startSize = LoggerFrame.AbsoluteSize
+	UserInputService.InputChanged:Connect(function(input)
+		if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = input.Position - dragStart
+			LoggerFrame.Size = UDim2.new(0, math.max(200, startSize.X + delta.X), 0, math.max(100, startSize.Y + delta.Y))
 		end
 	end)
 
