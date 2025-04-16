@@ -1,0 +1,320 @@
+-- NotifyLogger with Command Bar and Autocomplete
+local CoreGui = game:GetService("CoreGui")
+local TextService = game:GetService("TextService")
+local UserInputService = game:GetService("UserInputService")
+
+if _G.__NOTIFYLOGGER_LOADED then
+    return _G.__NOTIFYLOGGER_INSTANCE
+end
+_G.__NOTIFYLOGGER_LOADED = true
+
+-- Clean previous UIs
+for _, name in ipairs({"NotificationArea", "LoggerGUI"}) do
+    local gui = CoreGui:FindFirstChild(name)
+    if gui then gui:Destroy() end
+end
+
+local NotifyLogger = {}
+local Commands = {}
+
+local AccentColor = Color3.fromRGB(75, 10, 120)
+local MainColor = Color3.fromRGB(25, 25, 25)
+local OutlineColor = Color3.fromRGB(50, 50, 50)
+
+local function Create(Class, Props)
+    local Inst = Instance.new(Class)
+    for P, V in pairs(Props) do Inst[P] = V end
+    return Inst
+end
+
+local function StripTags(str)
+    return string.gsub(str, "<[^>]->", "")
+end
+
+local function GetTextSize(Text, Font, Size)
+    local Bounds = TextService:GetTextSize(Text, Size, Font, Vector2.new(1920, 1080))
+    return Bounds.X or 200, Bounds.Y or 50
+end
+
+-- Notification System
+local ActiveNotifications = {}
+local NotificationTimers = {}
+
+local NotificationArea = Create("ScreenGui", {
+    Name = "NotificationArea",
+    Parent = CoreGui,
+    IgnoreGuiInset = true
+})
+
+local NotificationContainer = Create("Frame", {
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 0, 0, 370),
+    Size = UDim2.new(1, 0, 1, -40),
+    ZIndex = 100,
+    Parent = NotificationArea
+})
+
+Create("UIListLayout", {
+    Padding = UDim.new(0, 4),
+    FillDirection = Enum.FillDirection.Vertical,
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Parent = NotificationContainer,
+})
+
+-- Logger GUI
+local LoggerGUI = Create("ScreenGui", {
+    Name = "LoggerGUI",
+    Parent = CoreGui,
+    ResetOnSpawn = false,
+    Enabled = true
+})
+
+local LoggerFrame = Create("Frame", {
+    Size = UDim2.new(0, 300, 0, 250),
+    Position = UDim2.new(1, -310, 1, -260),
+    BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+    BorderSizePixel = 0,
+    BackgroundTransparency = 0.2,
+    Name = "LoggerFrame",
+    Parent = LoggerGUI
+})
+
+local Header = Create("TextButton", {
+    Size = UDim2.new(1, 0, 0, 24),
+    BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+    Text = "▼ Logger (Click to Minimize)",
+    Font = Enum.Font.SourceSansBold,
+    TextSize = 16,
+    TextColor3 = Color3.new(1, 1, 1),
+    BorderSizePixel = 0,
+    AutoButtonColor = false,
+    Parent = LoggerFrame
+})
+
+local CommandBar = Create("TextBox", {
+    PlaceholderText = "Type command...",
+    Size = UDim2.new(1, -6, 0, 24),
+    Position = UDim2.new(0, 3, 1, -27),
+    BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+    TextColor3 = Color3.new(1, 1, 1),
+    Font = Enum.Font.SourceSans,
+    TextSize = 16,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Parent = LoggerFrame
+})
+
+local SuggestionBox = Create("Frame", {
+    BackgroundTransparency = 0.3,
+    BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+    Size = UDim2.new(1, -6, 0, 60),
+    Position = UDim2.new(0, 3, 1, -90),
+    Visible = false,
+    ClipsDescendants = true,
+    Parent = LoggerFrame
+})
+
+local SuggestionLayout = Create("UIListLayout", {
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Padding = UDim.new(0, 2),
+    Parent = SuggestionBox
+})
+
+local ScrollingFrame = Create("ScrollingFrame", {
+    Size = UDim2.new(1, -6, 1, -60),
+    Position = UDim2.new(0, 3, 0, 27),
+    CanvasSize = UDim2.new(0, 0, 10, 0),
+    ScrollBarThickness = 6,
+    BackgroundTransparency = 1,
+    Name = "LogScroll",
+    Parent = LoggerFrame
+})
+
+local UIListLayout = Create("UIListLayout", {
+    SortOrder = Enum.SortOrder.LayoutOrder,
+    Parent = ScrollingFrame
+})
+
+-- Resize and Drag Logic
+local resizing, dragging = false, false
+local dragStart, startSize, dragOffset
+
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragOffset = input.Position - LoggerFrame.AbsolutePosition
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+        resizing = false
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        LoggerFrame.Position = UDim2.new(0, input.Position.X - dragOffset.X, 0, input.Position.Y - dragOffset.Y)
+    end
+end)
+
+-- Log Functions
+local logEntries = {}
+local isMinimized = false
+Header.MouseButton1Up:Connect(function()
+    isMinimized = not isMinimized
+    Header.Text = isMinimized and "▶ Logger (Click to Expand)" or "▼ Logger (Click to Minimize)"
+    ScrollingFrame.Visible = not isMinimized
+    CommandBar.Visible = not isMinimized
+    SuggestionBox.Visible = false
+end)
+
+function NotifyLogger.Log(text)
+    local rawText = tostring(text)
+    local label = Create("TextButton", {
+        Size = UDim2.new(1, -10, 0, 20),
+        BackgroundTransparency = 1,
+        Text = rawText,
+        TextColor3 = Color3.new(1, 1, 1),
+        Font = Enum.Font.SourceSans,
+        TextSize = 16,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        RichText = true,
+        AutoButtonColor = false,
+        Parent = ScrollingFrame
+    })
+    label.MouseButton1Click:Connect(function()
+        if setclipboard then
+            setclipboard(StripTags(rawText))
+            NotifyLogger.Notify("Copied to clipboard!", Color3.fromRGB(80, 200, 80), 2)
+        end
+    end)
+    table.insert(logEntries, label)
+    task.wait()
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+    ScrollingFrame.CanvasPosition = Vector2.new(0, ScrollingFrame.CanvasSize.Y.Offset)
+end
+
+function NotifyLogger.Clear()
+    for _, label in ipairs(logEntries) do label:Destroy() end
+    logEntries = {}
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+end
+
+function NotifyLogger.Show(state)
+    LoggerGUI.Enabled = state
+end
+
+function NotifyLogger.AddCommand(name, func)
+    Commands[name:lower()] = func
+end
+
+CommandBar.FocusLost:Connect(function(enter)
+    if enter then
+        local input = CommandBar.Text:lower()
+        if Commands[input] then
+            Commands[input]()
+        else
+            NotifyLogger.Notify("Unknown command: " .. input, Color3.fromRGB(255, 50, 50), 2)
+        end
+        CommandBar.Text = ""
+        SuggestionBox.Visible = false
+    end
+end)
+
+CommandBar:GetPropertyChangedSignal("Text"):Connect(function()
+    local txt = CommandBar.Text:lower()
+    SuggestionBox.Visible = false
+    for _, child in ipairs(SuggestionBox:GetChildren()) do
+        if child:IsA("TextLabel") then child:Destroy() end
+    end
+    if #txt > 0 then
+        local found = false
+        for cmd in pairs(Commands) do
+            if cmd:sub(1, #txt) == txt then
+                found = true
+                local suggestion = Create("TextLabel", {
+                    Size = UDim2.new(1, 0, 0, 18),
+                    BackgroundTransparency = 1,
+                    Text = cmd,
+                    Font = Enum.Font.SourceSans,
+                    TextColor3 = Color3.new(1, 1, 1),
+                    TextSize = 14,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = SuggestionBox
+                })
+            end
+        end
+        SuggestionBox.Visible = found
+    end
+end)
+
+function NotifyLogger.Notify(Text, Color, Time)
+    if ActiveNotifications[Text] then
+        local NotifyFrame = ActiveNotifications[Text]
+        if NotificationTimers[Text] then task.cancel(NotificationTimers[Text]) end
+        NotificationTimers[Text] = task.spawn(function()
+            wait(Time or 5)
+            NotifyFrame:TweenSize(UDim2.new(0, 0, 0, NotifyFrame.Size.Y.Offset), "Out", "Quad", 0.4, true)
+            wait(0.4)
+            NotifyFrame:Destroy()
+            ActiveNotifications[Text] = nil
+            NotificationTimers[Text] = nil
+        end)
+        return
+    end
+
+    local CleanText = StripTags(Text or "")
+    local TextSize = 17
+    local XSize, YSize = GetTextSize(CleanText, Enum.Font.GothamBold, TextSize)
+    YSize = YSize + 10
+
+    local NotifyFrame = Create("Frame", {
+        BackgroundColor3 = MainColor,
+        BorderColor3 = OutlineColor,
+        BorderMode = Enum.BorderMode.Inset,
+        Position = UDim2.new(0.5, -XSize / 2, 0, 10),
+        Size = UDim2.new(0, 0, 0, YSize),
+        ClipsDescendants = true,
+        ZIndex = 101,
+        Parent = NotificationContainer,
+    })
+
+    Create("TextLabel", {
+        Position = UDim2.new(0, 6, 0, 0),
+        Size = UDim2.new(1, -6, 1, 0),
+        Text = Text,
+        Font = Enum.Font.GothamBold,
+        TextSize = TextSize,
+        BackgroundTransparency = 1,
+        TextColor3 = Color3.new(1, 1, 1),
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 102,
+        RichText = true,
+        Parent = NotifyFrame,
+    })
+
+    Create("Frame", {
+        Name = "AccentBar",
+        BackgroundColor3 = Color or AccentColor,
+        Size = UDim2.new(0, 3, 1, 0),
+        Position = UDim2.new(0, 0, 0, 0),
+        ZIndex = 103,
+        Parent = NotifyFrame,
+    })
+
+    NotifyFrame:TweenSize(UDim2.new(0, XSize + 14, 0, YSize), "Out", "Quad", 0.4, true)
+    ActiveNotifications[Text] = NotifyFrame
+
+    NotificationTimers[Text] = task.spawn(function()
+        wait(Time or 5)
+        NotifyFrame:TweenSize(UDim2.new(0, 0, 0, YSize), "Out", "Quad", 0.4, true)
+        wait(0.4)
+        NotifyFrame:Destroy()
+        ActiveNotifications[Text] = nil
+        NotificationTimers[Text] = nil
+    end)
+
+    NotifyLogger.Log(Text)
+end
+
+_G.__NOTIFYLOGGER_INSTANCE = NotifyLogger
+return NotifyLogger
