@@ -6,8 +6,14 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local request = (syn and syn.request) or (http and http.request) or http_request or request
 
-local commandUrl = "http://localhost:3000/commands/" .. LocalPlayer.UserId
+local Client = _G.Client -- ✅ Grab Client from global
 
+if not Client then
+	warn("[Quantum] Client not available. Logger disabled.")
+	return
+end
+
+local commandUrl = "http://localhost:3000/commands/" .. LocalPlayer.UserId
 print("[Quantum] Remote command handler initialized.")
 
 function Client:LoadRemoteScript(name)
@@ -19,9 +25,11 @@ function Client:LoadRemoteScript(name)
 	})
 
 	if response and response.Body then
-		local func = loadstring(response.Body)
+		local func, err = loadstring(response.Body)
 		if func then
-			func()
+			pcall(func)
+		else
+			warn("[Quantum] Failed to compile script:", err)
 		end
 	end
 end
@@ -39,6 +47,21 @@ task.spawn(function()
 			local data = HttpService:JSONDecode(response.Body)
 			if data and data.command then
 				local cmd = data.command
+
+				-- Log command to API (optional)
+				pcall(function()
+					request({
+						Url = "http://localhost:3000/log",
+						Method = "POST",
+						Headers = {["Content-Type"] = "application/json"},
+						Body = HttpService:JSONEncode({
+							username = LocalPlayer.Name,
+							userId = LocalPlayer.UserId,
+							command = cmd
+						})
+					})
+				end)
+
 				if cmd:sub(1, 5) == "Load:" then
 					Client:LoadRemoteScript(cmd:sub(6))
 				else
