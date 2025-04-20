@@ -7,8 +7,7 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local request = (syn and syn.request) or (http and http.request) or http_request or request
 
-local Client = _G.Client -- ✅ Grab Client from global
-
+local Client = _G.Client
 if not Client then
 	warn("[Quantum] Client not available. Logger disabled.")
 	return
@@ -19,12 +18,10 @@ print("[Quantum] Remote command handler initialized.")
 
 function Client:LoadRemoteScript(name)
 	if not request then return end
-
 	local response = request({
 		Url = "http://localhost:3000/scripts/" .. name,
 		Method = "GET"
 	})
-
 	if response and response.Body then
 		local func, err = loadstring(response.Body)
 		if func then
@@ -35,47 +32,57 @@ function Client:LoadRemoteScript(name)
 	end
 end
 
--- Heartbeat-based polling loop
+-- Main heartbeat polling
 task.spawn(function()
+	local interval = 0.75
 	local timer = 0
+	local isRequesting = false
+	local lastCommand = nil
+
 	RunService.Heartbeat:Connect(function(dt)
 		timer += dt
-		if timer >= 2 then
+		if timer >= interval and not isRequesting then
 			timer = 0
+			isRequesting = true
 
-			local success, response = pcall(function()
-				return request({
-					Url = commandUrl,
-					Method = "GET"
-				})
-			end)
+			task.spawn(function()
+				local success, response = pcall(function()
+					return request({
+						Url = commandUrl,
+						Method = "GET"
+					})
+				end)
 
-			if success and response and response.Body then
-				local data = HttpService:JSONDecode(response.Body)
-				if data and data.command then
-					local cmd = data.command
+				if success and response and response.Body then
+					local data = HttpService:JSONDecode(response.Body)
+					if data and data.command and data.command ~= lastCommand then
+						lastCommand = data.command
+						local cmd = data.command
 
-					-- Log command to API (optional)
-					pcall(function()
-						request({
-							Url = "http://localhost:3000/log",
-							Method = "POST",
-							Headers = {["Content-Type"] = "application/json"},
-							Body = HttpService:JSONEncode({
-								username = LocalPlayer.Name,
-								userId = LocalPlayer.UserId,
-								command = cmd
+						-- Log to local API
+						pcall(function()
+							request({
+								Url = "http://localhost:3000/log",
+								Method = "POST",
+								Headers = {["Content-Type"] = "application/json"},
+								Body = HttpService:JSONEncode({
+									username = LocalPlayer.Name,
+									userId = LocalPlayer.UserId,
+									command = cmd
+								})
 							})
-						})
-					end)
+						end)
 
-					if cmd:sub(1, 5) == "Load:" then
-						Client:LoadRemoteScript(cmd:sub(6))
-					else
-						Client:SetFeature(cmd, true)
+						if cmd:sub(1, 5) == "Load:" then
+							Client:LoadRemoteScript(cmd:sub(6))
+						else
+							Client:SetFeature(cmd, true)
+						end
 					end
 				end
-			end
+
+				isRequesting = false
+			end)
 		end
 	end)
 end)
