@@ -4,65 +4,93 @@ _G.QuantumLoggerRunning = true
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local request = (syn and syn.request) or (http and http.request) or http_request or request
+local userId = tostring(LocalPlayer.UserId)
 
-local commandUrl = "http://localhost:3000/commands/" .. LocalPlayer.UserId
-print("[Quantum] Remote command handler initialized.")
-
--- ✅ Declare Client first
 local Client = {}
+local WebSocket
+
+-- 🌐 Load WebSocket connection
+local websocketSupport = WebSocket or syn and syn.websocket or getgenv().WebSocket or WebSocketConnect
+local wsUrl = "ws://localhost:3001"
+
+if not websocketSupport then
+    warn("[Quantum] Your exploit does not support WebSocket.")
+    return
+end
+
+print("[Quantum] Connecting to WebSocket server...")
+
+local ws = websocketSupport.connect(wsUrl)
+
+if not ws then
+    warn("[Quantum] Failed to connect to WebSocket.")
+    return
+end
+
+WebSocket = ws
+
+-- 🎉 Connected
+print("[Quantum] Connected to command server.")
+
+-- 📤 Identify to server
+WebSocket:Send(HttpService:JSONEncode({
+    userId = userId
+}))
+
+-- 📥 Handle incoming commands
+WebSocket.OnMessage:Connect(function(msg)
+    local success, decoded = pcall(function()
+        return HttpService:JSONDecode(msg)
+    end)
+
+    if not success then
+        warn("[Quantum] Failed to parse message:", msg)
+        return
+    end
+
+    local cmd = decoded.command
+    if not cmd then return end
+
+    if cmd:sub(1, 5) == "Load:" then
+        Client:LoadRemoteScript(cmd:sub(6))
+    else
+        Client:SetFeature(cmd, true)
+    end
+end)
 
 function Client:LoadRemoteScript(name)
-	if not request then
-		warn("[Quantum] HTTP request not available.")
-		return
-	end
+    local request = (syn and syn.request) or (http and http.request) or http_request or request
+    if not request then
+        warn("[Quantum] HTTP request not available.")
+        return
+    end
 
-	local response = request({
-		Url = "http://localhost:3000/scripts/" .. name,
-		Method = "GET"
-	})
+    local response = request({
+        Url = "http://localhost:3000/scripts/" .. name,
+        Method = "GET"
+    })
 
-	if response and response.Body then
-		local func, err = loadstring(response.Body)
-		if func then
-			func()
-		else
-			warn("[Quantum] Failed to load remote script:", err)
-		end
-	else
-		warn("[Quantum] Failed to retrieve remote script.")
-	end
+    if response and response.Body then
+        local func, err = loadstring(response.Body)
+        if func then
+            func()
+        else
+            warn("[Quantum] Failed to load script:", err)
+        end
+    else
+        warn("[Quantum] Script request failed.")
+    end
 end
 
 function Client:SetFeature(cmd, state)
-	print("[Quantum] Toggled feature:", cmd, "State:", state)
+    print("[Quantum] Feature triggered:", cmd, "State:", state)
+    -- Insert real toggles here
 end
 
--- 🔁 Command loop
-task.spawn(function()
-	while true do
-		local success, response = pcall(function()
-			return request({
-				Url = commandUrl,
-				Method = "GET"
-			})
-		end)
+WebSocket.OnClose:Connect(function()
+    warn("[Quantum] Disconnected from WebSocket server.")
+end)
 
-		if success and response and response.Body then
-			local data = HttpService:JSONDecode(response.Body)
-			if data and data.command then
-				local cmd = data.command
-				if cmd:sub(1, 5) == "Load:" then
-					Client:LoadRemoteScript(cmd:sub(6))
-				else
-					Client:SetFeature(cmd, true)
-				end
-			end
-		else
-			warn("[Quantum] Failed to get command.")
-		end
-
-		task.wait(5)
-	end
+WebSocket.OnError:Connect(function(err)
+    warn("[Quantum] WebSocket error:", err)
 end)
