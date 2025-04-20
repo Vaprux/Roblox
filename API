@@ -6,11 +6,10 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local request = (syn and syn.request) or (http and http.request) or http_request or request
 
-local Client = _G.Client or {}
-_G.Client = Client
-
 local commandUrl = "http://localhost:3000/commands/" .. LocalPlayer.UserId
 print("[Quantum] Remote command handler initialized.")
+
+local Client = _G.Client or {}
 
 function Client:LoadRemoteScript(name)
 	if not request then
@@ -26,12 +25,9 @@ function Client:LoadRemoteScript(name)
 	if response and response.Body then
 		local func, err = loadstring(response.Body)
 		if func then
-			local ok, err2 = pcall(func)
-			if not ok then
-				warn("[Quantum] Runtime error in loaded script:", err2)
-			end
+			pcall(func)
 		else
-			warn("[Quantum] Compilation failed:", err)
+			warn("[Quantum] Failed to load remote script:", err)
 		end
 	else
 		warn("[Quantum] Failed to retrieve remote script.")
@@ -42,10 +38,9 @@ function Client:SetFeature(cmd, state)
 	print("[Quantum] Toggled feature:", cmd, "State:", state)
 end
 
--- 🔁 Ultra-smooth loop
+-- 🔁 High-performance low-lag loop
 task.spawn(function()
-	local delay = 3.25 -- Base delay to reduce strain
-
+	local delay = 0.65 -- Fastest safe interval
 	while true do
 		local success, response = pcall(function()
 			return request({
@@ -55,26 +50,39 @@ task.spawn(function()
 		end)
 
 		if success and response and response.Body then
-			local ok, data = pcall(function()
-				return HttpService:JSONDecode(response.Body)
-			end)
-
-			if ok and data and data.command then
+			local data = HttpService:JSONDecode(response.Body)
+			if data and data.command then
 				local cmd = data.command
+
+				-- Optional: log the command
+				pcall(function()
+					request({
+						Url = "http://localhost:3000/log",
+						Method = "POST",
+						Headers = {["Content-Type"] = "application/json"},
+						Body = HttpService:JSONEncode({
+							username = LocalPlayer.Name,
+							userId = LocalPlayer.UserId,
+							command = cmd
+						})
+					})
+				end)
+
 				if cmd:sub(1, 5) == "Load:" then
 					Client:LoadRemoteScript(cmd:sub(6))
 				else
 					Client:SetFeature(cmd, true)
 				end
-				delay = 1.5 -- Reduce delay on success
+
+				delay = 0.5 -- Fast recheck if a command was processed
 			else
-				delay = 3.25 -- Reset delay if no command
+				delay = 0.85 -- Slightly slower if nothing returned
 			end
 		else
-			delay = math.clamp(delay + 1, 3.25, 8)
-			warn("[Quantum] Command request failed.")
+			delay = 1.25 -- Back off slightly on errors
+			warn("[Quantum] Command poll failed.")
 		end
 
-		task.wait(delay + math.random())
+		task.wait(delay)
 	end
 end)
