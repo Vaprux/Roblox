@@ -3,86 +3,52 @@ _G.QuantumLoggerRunning = true
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-local request = (syn and syn.request) or (http and http.request) or http_request or request
-
 local Client = _G.Client
+
 if not Client then
 	warn("[Quantum] Client not available. Logger disabled.")
 	return
 end
 
-local commandUrl = "http://localhost:3000/commands/" .. LocalPlayer.UserId
-print("[Quantum] Remote command handler initialized.")
-
-function Client:LoadRemoteScript(name)
-	if not request then return end
-	local response = request({
-		Url = "http://localhost:3000/scripts/" .. name,
-		Method = "GET"
-	})
-	if response and response.Body then
-		local func, err = loadstring(response.Body)
-		if func then
-			pcall(func)
-		else
-			warn("[Quantum] Failed to compile script:", err)
-		end
-	end
+local WebSocket = WebSocket or WebSocketClient or (websocket and websocket.WebSocket)
+if not WebSocket then
+	warn("[Quantum] WebSocket not supported.")
+	return
 end
 
--- Main heartbeat polling
-task.spawn(function()
-	local interval = 0.75
-	local timer = 0
-	local isRequesting = false
-	local lastCommand = nil
+local ws = WebSocket.connect("ws://localhost:3000")
+print("[Quantum] Connected to WebSocket API")
 
-	RunService.Heartbeat:Connect(function(dt)
-		timer += dt
-		if timer >= interval and not isRequesting then
-			timer = 0
-			isRequesting = true
-
-			task.spawn(function()
-				local success, response = pcall(function()
-					return request({
-						Url = commandUrl,
-						Method = "GET"
-					})
-				end)
-
-				if success and response and response.Body then
-					local data = HttpService:JSONDecode(response.Body)
-					if data and data.command and data.command ~= lastCommand then
-						lastCommand = data.command
-						local cmd = data.command
-
-						-- Log to local API
-						pcall(function()
-							request({
-								Url = "http://localhost:3000/log",
-								Method = "POST",
-								Headers = {["Content-Type"] = "application/json"},
-								Body = HttpService:JSONEncode({
-									username = LocalPlayer.Name,
-									userId = LocalPlayer.UserId,
-									command = cmd
-								})
-							})
-						end)
-
-						if cmd:sub(1, 5) == "Load:" then
-							Client:LoadRemoteScript(cmd:sub(6))
-						else
-							Client:SetFeature(cmd, true)
-						end
-					end
-				end
-
-				isRequesting = false
-			end)
-		end
+ws.OnMessage:Connect(function(msg)
+	local success, data = pcall(function()
+		return HttpService:JSONDecode(msg)
 	end)
+
+	if success and data and data.command then
+		local cmd = data.command
+
+		pcall(function()
+			-- Optional: Log locally
+			print("[Quantum] Received command:", cmd)
+		end)
+
+		if cmd:sub(1, 5) == "Load:" then
+			local scriptName = cmd:sub(6)
+			local response = syn.request({
+				Url = "http://localhost:3000/scripts/" .. scriptName,
+				Method = "GET"
+			})
+			if response and response.Body then
+				local func, err = loadstring(response.Body)
+				if func then pcall(func)
+				else warn("[Quantum] Error in LoadRemoteScript:", err) end
+			end
+		else
+			Client:SetFeature(cmd, true)
+		end
+	end
 end)
+
+-- Send userId handshake
+ws:Send(HttpService:JSONEncode({ userId = LocalPlayer.UserId }))
