@@ -1,49 +1,52 @@
-local RunService = game:GetService("RunService")
-local lastPoll = 0
-local pollInterval = 5 -- seconds
+if _G.QuantumLoggerRunning then return end
+_G.QuantumLoggerRunning = true
 
-local connection
-connection = RunService.Heartbeat:Connect(function(dt)
-	lastPoll += dt
-	if lastPoll >= pollInterval then
-		lastPoll = 0
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local request = (syn and syn.request) or (http and http.request) or http_request or request
 
-		task.spawn(function()
-			local success, response = pcall(function()
-				return request({
-					Url = commandUrl,
-					Method = "GET"
-				})
-			end)
+local commandUrl = "http://localhost:3000/commands/" .. LocalPlayer.UserId
 
-			if success and response and response.Body then
-				local data = HttpService:JSONDecode(response.Body)
-				if data and data.command then
-					local cmd = data.command
+print("[Quantum] Remote command handler initialized.")
 
-					-- Log it (non-blocking)
-					task.spawn(function()
-						pcall(function()
-							request({
-								Url = "http://localhost:3000/log",
-								Method = "POST",
-								Headers = {["Content-Type"] = "application/json"},
-								Body = HttpService:JSONEncode({
-									username = LocalPlayer.Name,
-									userId = LocalPlayer.UserId,
-									command = cmd
-								})
-							})
-						end)
-					end)
+function Client:LoadRemoteScript(name)
+	if not request then return end
 
-					if cmd:sub(1, 5) == "Load:" then
-						Client:LoadRemoteScript(cmd:sub(6))
-					else
-						Client:SetFeature(cmd, true)
-					end
+	local response = request({
+		Url = "http://localhost:3000/scripts/" .. name,
+		Method = "GET"
+	})
+
+	if response and response.Body then
+		local func = loadstring(response.Body)
+		if func then
+			func()
+		end
+	end
+end
+
+task.spawn(function()
+	while true do
+		local success, response = pcall(function()
+			return request({
+				Url = commandUrl,
+				Method = "GET"
+			})
+		end)
+
+		if success and response and response.Body then
+			local data = HttpService:JSONDecode(response.Body)
+			if data and data.command then
+				local cmd = data.command
+				if cmd:sub(1, 5) == "Load:" then
+					Client:LoadRemoteScript(cmd:sub(6))
+				else
+					Client:SetFeature(cmd, true)
 				end
 			end
-		end)
+		end
+
+		task.wait(5)
 	end
 end)
