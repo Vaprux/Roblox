@@ -7,11 +7,16 @@ local LocalPlayer = Players.LocalPlayer
 local request = (syn and syn.request) or (http and http.request) or http_request or request
 
 local commandUrl = "http://localhost:3000/commands/" .. LocalPlayer.UserId
-
 print("[Quantum] Remote command handler initialized.")
 
+-- ✅ Declare Client first
+local Client = {}
+
 function Client:LoadRemoteScript(name)
-	if not request then return end
+	if not request then
+		warn("[Quantum] HTTP request not available.")
+		return
+	end
 
 	local response = request({
 		Url = "http://localhost:3000/scripts/" .. name,
@@ -19,13 +24,22 @@ function Client:LoadRemoteScript(name)
 	})
 
 	if response and response.Body then
-		local func = loadstring(response.Body)
+		local func, err = loadstring(response.Body)
 		if func then
 			func()
+		else
+			warn("[Quantum] Failed to load remote script:", err)
 		end
+	else
+		warn("[Quantum] Failed to retrieve remote script.")
 	end
 end
 
+function Client:SetFeature(cmd, state)
+	print("[Quantum] Toggled feature:", cmd, "State:", state)
+end
+
+-- 🔁 Command loop
 task.spawn(function()
 	while true do
 		local success, response = pcall(function()
@@ -45,6 +59,8 @@ task.spawn(function()
 					Client:SetFeature(cmd, true)
 				end
 			end
+		else
+			warn("[Quantum] Failed to get command.")
 		end
 
 		task.wait(5)
