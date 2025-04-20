@@ -7,48 +7,72 @@ local LocalPlayer = Players.LocalPlayer
 local Client = _G.Client
 
 if not Client then
-	warn("[Quantum] Client not available. Logger disabled.")
-	return
+    warn("[Quantum] Client not available. Logger disabled.")
+    return
 end
 
-local WebSocket = WebSocket or WebSocketClient or (websocket and websocket.WebSocket)
+-- WebSocket Support
+local WebSocket = syn and syn.websocket or WebSocket
 if not WebSocket then
-	warn("[Quantum] WebSocket not supported.")
-	return
+    warn("[Quantum] WebSocket not supported.")
+    return
 end
 
-local ws = WebSocket.connect("ws://localhost:3000")
-print("[Quantum] Connected to WebSocket API")
+local socket
+local connected = false
 
-ws.OnMessage:Connect(function(msg)
-	local success, data = pcall(function()
-		return HttpService:JSONDecode(msg)
-	end)
+-- Auto-load scripts from localhost
+function Client:LoadRemoteScript(name)
+    local url = "http://localhost:3000/scripts/" .. name
+    local response = game:HttpGet(url, true)
+    local func, err = loadstring(response)
+    if func then
+        pcall(func)
+        print("[Quantum] Loaded script:", name)
+    else
+        warn("[Quantum] Script error:", err)
+    end
+end
 
-	if success and data and data.command then
-		local cmd = data.command
+-- Connect to WebSocket server
+local function connect()
+    local userId = tostring(LocalPlayer.UserId)
+    socket = WebSocket.connect("ws://localhost:3000/ws")
 
-		pcall(function()
-			-- Optional: Log locally
-			print("[Quantum] Received command:", cmd)
-		end)
+    socket.OnMessage:Connect(function(msg)
+        if msg == "ping" then return end
+        print("[Quantum] WS Command:", msg)
 
-		if cmd:sub(1, 5) == "Load:" then
-			local scriptName = cmd:sub(6)
-			local response = syn.request({
-				Url = "http://localhost:3000/scripts/" .. scriptName,
-				Method = "GET"
-			})
-			if response and response.Body then
-				local func, err = loadstring(response.Body)
-				if func then pcall(func)
-				else warn("[Quantum] Error in LoadRemoteScript:", err) end
-			end
-		else
-			Client:SetFeature(cmd, true)
-		end
-	end
+        if msg:sub(1, 5) == "Load:" then
+            local scriptName = msg:sub(6)
+            Client:LoadRemoteScript(scriptName)
+        else
+            Client:SetFeature(msg, true)
+        end
+    end)
+
+    socket.OnClose:Connect(function()
+        print("[Quantum] WebSocket disconnected.")
+        connected = false
+    end)
+
+    socket.OnError:Connect(function(err)
+        warn("[Quantum] WS Error:", err)
+        connected = false
+    end)
+
+    task.wait(1)
+    socket:Send(userId)
+    connected = true
+    print("[Quantum] WebSocket connected as", userId)
+end
+
+-- Auto-reconnect
+task.spawn(function()
+    while true do
+        if not connected then
+            pcall(connect)
+        end
+        task.wait(30)
+    end
 end)
-
--- Send userId handshake
-ws:Send(HttpService:JSONEncode({ userId = LocalPlayer.UserId }))
