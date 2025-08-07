@@ -1,6 +1,8 @@
+local Players = game:GetService('Players')
+local Player = Players.LocalPlayer
 local HttpService = game:GetService('HttpService')
 
-return function(Player, ClientName, ClientVersion, ClientCode)
+return function(ClientName, ClientVersion, ClientCode)
     local HWID, Executor = nil, nil
     pcall(function() if gethwid then HWID = gethwid() end end)
     pcall(function() if identifyexecutor then Executor = identifyexecutor() end end)
