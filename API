@@ -1,88 +1,30 @@
-if _G.QuantumLoggerRunning then return end
-_G.QuantumLoggerRunning = true
+return function(Player, ClientName, ClientVersion, HttpService, ClientCode)
+	if _G.DiscordLoggerRunning then return end
+	_G.DiscordLoggerRunning = true
 
-local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local request = (syn and syn.request) or (http and http.request) or http_request or request
+	local data = {
+		embeds = {{
+			title = "🛰️ Quantum Client Loaded",
+			color = 0x4B0A78,
+			fields = {
+				{name = "Username", value = Player.Name, inline = true},
+				{name = "User ID", value = tostring(Player.UserId), inline = true},
+				{name = "Display Name", value = Player.DisplayName, inline = true},
+				{name = "Client", value = ClientName, inline = true},
+				{name = "Version", value = ClientVersion, inline = true},
+				{name = "Job ID", value = game.JobId ~= "" and game.JobId or "N/A"}
+			},
+			footer = {text = "Quantum Logger • " .. os.date("%Y-%m-%d %H:%M:%S")}
+		}}
+	}
 
-local commandUrl = "http://localhost:3000/commands/" .. LocalPlayer.UserId
-print("[Quantum] Remote command handler initialized.")
-
-local Client = _G.Client or {}
-
-function Client:LoadRemoteScript(name)
-	if not request then
-		warn("[Quantum] HTTP request not available.")
-		return
-	end
-
-	local response = request({
-		Url = "http://localhost:3000/scripts/" .. name,
-		Method = "GET"
-	})
-
-	if response and response.Body then
-		local func, err = loadstring(response.Body)
-		if func then
-			pcall(func)
-		else
-			warn("[Quantum] Failed to load remote script:", err)
-		end
-	else
-		warn("[Quantum] Failed to retrieve remote script.")
+	local req = syn and syn.request or http and http.request or http_request or request
+	if req then
+		req({
+			Url = ClientCode,
+			Method = "POST",
+			Headers = {["Content-Type"] = "application/json"},
+			Body = HttpService:JSONEncode(data)
+		})
 	end
 end
-
-function Client:SetFeature(cmd, state)
-	print("[Quantum] Toggled feature:", cmd, "State:", state)
-end
-
--- 🔁 High-performance low-lag loop
-task.spawn(function()
-	local delay = 0.65 -- Fastest safe interval
-	while true do
-		local success, response = pcall(function()
-			return request({
-				Url = commandUrl,
-				Method = "GET"
-			})
-		end)
-
-		if success and response and response.Body then
-			local data = HttpService:JSONDecode(response.Body)
-			if data and data.command then
-				local cmd = data.command
-
-				-- Optional: log the command
-				pcall(function()
-					request({
-						Url = "http://localhost:3000/log",
-						Method = "POST",
-						Headers = {["Content-Type"] = "application/json"},
-						Body = HttpService:JSONEncode({
-							username = LocalPlayer.Name,
-							userId = LocalPlayer.UserId,
-							command = cmd
-						})
-					})
-				end)
-
-				if cmd:sub(1, 5) == "Load:" then
-					Client:LoadRemoteScript(cmd:sub(6))
-				else
-					Client:SetFeature(cmd, true)
-				end
-
-				delay = 0.5 -- Fast recheck if a command was processed
-			else
-				delay = 0.85 -- Slightly slower if nothing returned
-			end
-		else
-			delay = 1.25 -- Back off slightly on errors
-			warn("[Quantum] Command poll failed.")
-		end
-
-		task.wait(delay)
-	end
-end)
