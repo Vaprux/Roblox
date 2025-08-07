@@ -1,3 +1,5 @@
+local HttpService = game:GetService('HttpService')
+
 return function(Player, ClientName, ClientVersion, ClientCode)
     local HWID, Executor = nil, nil
     pcall(function() if gethwid then HWID = gethwid() end end)
