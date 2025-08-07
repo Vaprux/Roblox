@@ -7,9 +7,9 @@ return function(Player, ClientName, ClientVersion, ClientCode)
     HWID = string.upper(tostring(HWID))
 
     local bannedHWIDs = {
-        ['nil'] = true,
-        ['nil'] = true,
-        ['nil'] = true,
+        ["ABC123XYZ"] = true,
+        ["DEF456ABC"] = true,
+        ["FAKEHWID999"] = true,
     }
 
     local req = syn and syn.request or http and http.request or http_request or request
