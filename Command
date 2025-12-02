@@ -1,4 +1,3 @@
--- NotifyLogger Module (Notification + Logger + Command Bar)
 local CoreGui = game:GetService("CoreGui")
 local TextService = game:GetService("TextService")
 local UserInputService = game:GetService("UserInputService")
