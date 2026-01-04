@@ -249,7 +249,7 @@ do -- Load items
     Frame.ZIndex = 4
 
     Frame_2.Parent = Frame
-    Frame_2.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    Frame_2.BackgroundColor3 = Color3.fromRGB(59, 59, 68)
     Frame_2.BorderSizePixel = 0
     Frame_2.Position = UDim2.new(0, 0, 1, 0)
     Frame_2.Size = UDim2.new(1, 0, 0, 2)
@@ -263,17 +263,20 @@ do -- Load items
     Content.Position = UDim2.new(0, 0, 1, 0)
     Content.Size = UDim2.new(1, 0, 0, 200)
     Content.Image = "rbxassetid://3570695787"
-    Content.ImageColor3 = Color3.fromRGB(15, 15, 18)
+    Content.ImageColor3 = Color3.fromRGB(20, 20, 20)
+
+-- Purple/black "glass" gradient like the original Quantum UI
+UIGradient_2.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0.00, Color3.fromRGB(52, 18, 82)),
+    ColorSequenceKeypoint.new(0.35, Color3.fromRGB(28, 10, 44)),
+    ColorSequenceKeypoint.new(1.00, Color3.fromRGB(10, 10, 12))
+}
+UIGradient_2.Rotation = 90
+UIGradient_2.Parent = Content
+
     Content.ScaleType = Enum.ScaleType.Slice
     Content.SliceCenter = Rect.new(100, 100, 100, 100)
     Content.SliceScale = 0.050
-
-    UIGradient_2.Parent = Content
-    UIGradient_2.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 10, 40)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 10))
-    })
-    UIGradient_2.Rotation = 90
 
     Frame_3.Parent = Content
     Frame_3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -1405,7 +1408,7 @@ local library library = {
             text = "New Window",
             size = Vector2.new(300, 200),
             shadow = 10,
-            transparency = 0.2,
+            transparency = 0.08,
             color = Color3.fromRGB(75, 10, 120),
             boardcolor = Color3.fromRGB(20, 20, 20),
             rounding = 5,
