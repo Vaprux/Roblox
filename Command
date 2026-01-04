@@ -44,8 +44,9 @@ local NotificationArea = Create("ScreenGui", {
 
 local NotificationContainer = Create("Frame", {
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 0, 0, 370),
-    Size = UDim2.new(1, 0, 1, -40),
+    AnchorPoint = Vector2.new(0, 1),
+    Position = UDim2.new(0, 4, 1, -12),
+    Size = UDim2.new(0, 520, 0, 600),
     ZIndex = 100,
     Parent = NotificationArea
 })
@@ -53,6 +54,7 @@ local NotificationContainer = Create("Frame", {
 Create("UIListLayout", {
     Padding = UDim.new(0, 4),
     FillDirection = Enum.FillDirection.Vertical,
+    VerticalAlignment = Enum.VerticalAlignment.Bottom,
     SortOrder = Enum.SortOrder.LayoutOrder,
     Parent = NotificationContainer,
 })
@@ -255,12 +257,14 @@ function NotifyLogger.Notify(Text, Color, Time)
         BackgroundColor3 = MainColor,
         BorderColor3 = OutlineColor,
         BorderMode = Enum.BorderMode.Inset,
-        Position = UDim2.new(0.5, -XSize / 2, 0, 10),
+        AnchorPoint = Vector2.new(0, 1),
+        Position = UDim2.new(0, 0, 1, 0),
         Size = UDim2.new(0, 0, 0, YSize),
         ClipsDescendants = true,
         ZIndex = 101,
         Parent = NotificationContainer,
     })
+
 
     Create("TextLabel", {
         Position = UDim2.new(0, 6, 0, 0),
