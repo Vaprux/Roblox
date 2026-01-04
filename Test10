@@ -17,6 +17,9 @@ repeat wait() until game:GetService("Players").LocalPlayer
 if game:GetService("CoreGui"):FindFirstChild("imgui2") then
     game:GetService("CoreGui"):FindFirstChild("imgui2"):Destroy()
 end
+if game:GetService("Lighting"):FindFirstChild("ImGuiBlur") then
+    game:GetService("Lighting"):FindFirstChild("ImGuiBlur"):Destroy()
+end
 
 do -- Load items
     local imgui2 = Instance.new("ScreenGui")
@@ -66,7 +69,6 @@ do -- Load items
     local Layer_3 = Instance.new("ImageLabel")
     local Card = Instance.new("ImageLabel")
     local UIGradient = Instance.new("UIGradient")
-    local UIGradient_2 = Instance.new("UIGradient")
     local ImageLabel_3 = Instance.new("ImageLabel")
     local Roundify = Instance.new("ImageLabel")
     local heading = Instance.new("TextLabel")
@@ -123,6 +125,13 @@ do -- Load items
 
     imgui2.Name = "imgui2"
     imgui2.Parent = game:GetService("CoreGui")
+
+    -- Futuristic glass blur
+    local _Lighting = game:GetService("Lighting")
+    local _blur = Instance.new("BlurEffect")
+    _blur.Name = "ImGuiBlur"
+    _blur.Size = 12
+    _blur.Parent = _Lighting
 
     Presets.Name = "Presets"
     Presets.Parent = imgui2
@@ -241,6 +250,24 @@ do -- Load items
     Main.SliceCenter = Rect.new(100, 100, 100, 100)
     Main.SliceScale = 0.050
 
+
+    -- Futuristic titlebar gradient + neon stroke
+    local _MainGrad = Instance.new("UIGradient")
+    _MainGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(160, 80, 255)),
+        ColorSequenceKeypoint.new(0.45, Color3.fromRGB(75, 10, 120)),
+        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(10, 10, 10))
+    }
+    _MainGrad.Rotation = 0
+    _MainGrad.Parent = Main
+
+    local _MainStroke = Instance.new("UIStroke")
+    _MainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    _MainStroke.Thickness = 1
+    _MainStroke.Color = Color3.fromRGB(170, 95, 255)
+    _MainStroke.Transparency = 0.15
+    _MainStroke.Parent = Main
+
     Frame.Parent = Main
     Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
     Frame.BorderSizePixel = 0
@@ -264,19 +291,27 @@ do -- Load items
     Content.Size = UDim2.new(1, 0, 0, 200)
     Content.Image = "rbxassetid://3570695787"
     Content.ImageColor3 = Color3.fromRGB(20, 20, 20)
-
--- Purple/black "glass" gradient like the original Quantum UI
-UIGradient_2.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0.00, Color3.fromRGB(52, 18, 82)),
-    ColorSequenceKeypoint.new(0.35, Color3.fromRGB(28, 10, 44)),
-    ColorSequenceKeypoint.new(1.00, Color3.fromRGB(10, 10, 12))
-}
-UIGradient_2.Rotation = 90
-UIGradient_2.Parent = Content
-
     Content.ScaleType = Enum.ScaleType.Slice
     Content.SliceCenter = Rect.new(100, 100, 100, 100)
     Content.SliceScale = 0.050
+
+
+    -- Futuristic glass panel gradient + subtle noise tint + neon stroke
+    local _ContentGrad = Instance.new("UIGradient")
+    _ContentGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(35, 10, 55)),
+        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(18, 18, 22)),
+        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(8, 8, 10))
+    }
+    _ContentGrad.Rotation = 90
+    _ContentGrad.Parent = Content
+
+    local _ContentStroke = Instance.new("UIStroke")
+    _ContentStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    _ContentStroke.Thickness = 1
+    _ContentStroke.Color = Color3.fromRGB(150, 70, 255)
+    _ContentStroke.Transparency = 0.35
+    _ContentStroke.Parent = Content
 
     Frame_3.Parent = Content
     Frame_3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
@@ -337,7 +372,7 @@ UIGradient_2.Parent = Content
 
     Tabs.Name = "Tabs"
     Tabs.Parent = Main
-    Tabs.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
+    Tabs.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
     Tabs.BorderSizePixel = 0
     Tabs.ClipsDescendants = true
     Tabs.Position = UDim2.new(0, 0, 1, 2)
@@ -356,7 +391,7 @@ UIGradient_2.Parent = Content
     UIListLayout_3.Padding = UDim.new(0, 15)
 
     Frame_4.Parent = Tabs
-    Frame_4.BackgroundColor3 = Color3.fromRGB(59, 59, 68)
+    Frame_4.BackgroundColor3 = Color3.fromRGB(120, 60, 220)
     Frame_4.BorderSizePixel = 0
     Frame_4.Position = UDim2.new(0, 0, 1, -2)
     Frame_4.Size = UDim2.new(1, 0, 0, 2)
@@ -1367,12 +1402,26 @@ local function bleach(c)
 end
 
 local function hoverColor(object)
+    local TweenService = game:GetService("TweenService")
     local originalColor = object.ImageColor3
+    local originalTransparency = object.ImageTransparency
+
     object.MouseEnter:Connect(function()
-        object.ImageColor3 = tint(originalColor)
+        pcall(function()
+            TweenService:Create(object, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                ImageColor3 = bleach(originalColor),
+                ImageTransparency = math.max(0, originalTransparency - 0.05)
+            }):Play()
+        end)
     end)
+
     object.MouseLeave:Connect(function()
-        object.ImageColor3 = originalColor
+        pcall(function()
+            TweenService:Create(object, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                ImageColor3 = originalColor,
+                ImageTransparency = originalTransparency
+            }):Play()
+        end)
     end)
 end
 
@@ -1408,7 +1457,7 @@ local library library = {
             text = "New Window",
             size = Vector2.new(300, 200),
             shadow = 10,
-            transparency = 0.08,
+            transparency = 0.2,
             color = Color3.fromRGB(75, 10, 120),
             boardcolor = Color3.fromRGB(20, 20, 20),
             rounding = 5,
@@ -1446,6 +1495,45 @@ local library library = {
         content.ImageColor3 = options.boardcolor
         content.Size = UDim2.new(1, 0, 0, options.size.Y)
         content.SliceScale = options.rounding / 100
+
+
+        -- Futuristic styling (runtime): gradients + neon strokes
+        local function applyFuturistic(window)
+            local _content = window:FindFirstChild("Content")
+            local _title = window
+            if _content and not _content:FindFirstChild("FuturisticGradient") then
+                local g = Instance.new("UIGradient")
+                g.Name = "FuturisticGradient"
+                g.Color = ColorSequence.new{
+                    ColorSequenceKeypoint.new(0.00, bleach(options.color)),
+                    ColorSequenceKeypoint.new(0.20, options.color),
+                    ColorSequenceKeypoint.new(1.00, options.boardcolor)
+                }
+                g.Rotation = 90
+                g.Parent = _content
+
+                local s = Instance.new("UIStroke")
+                s.Name = "FuturisticStroke"
+                s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                s.Thickness = 1
+                s.Color = bleach(options.color)
+                s.Transparency = 0.35
+                s.Parent = _content
+
+                _content.ImageTransparency = math.clamp(options.transparency + 0.10, 0, 0.7)
+            end
+
+            if _title and not _title:FindFirstChild("FuturisticTitleStroke") then
+                local ts = Instance.new("UIStroke")
+                ts.Name = "FuturisticTitleStroke"
+                ts.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                ts.Thickness = 1
+                ts.Color = bleach(options.color)
+                ts.Transparency = 0.15
+                ts.Parent = _title
+            end
+        end
+        applyFuturistic(main)
 
         function cache.update_layers(y)
             shadow.Position = UDim2.new(0, options.shadow, 0, options.shadow)
