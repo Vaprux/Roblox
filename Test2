@@ -242,37 +242,12 @@ do -- Load items
 
     -- OP "OverPowered" future theme (no blur)
     do
-        -- Neon glow behind the window
-        local Glow = Instance.new("ImageLabel")
-        Glow.Name = "Glow"
-        Glow.Parent = Main
-        Glow.BackgroundTransparency = 1
-        Glow.AnchorPoint = Vector2.new(0.5, 0.5)
-        Glow.Position = UDim2.new(0.5, 0, 0.5, 0)
-        Glow.Size = UDim2.new(1, 34, 1, 34)
-        Glow.ZIndex = 0
-        Glow.Image = Main.Image
-        Glow.ImageColor3 = Color3.fromRGB(120, 60, 255)
-        Glow.ImageTransparency = 0.65
-        Glow.ScaleType = Main.ScaleType
-        Glow.SliceCenter = Main.SliceCenter
-        Glow.SliceScale = 0.080
-
-        local GlowGrad = Instance.new("UIGradient")
-        GlowGrad.Rotation = 25
-        GlowGrad.Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0.00, Color3.fromRGB(120, 60, 255)),
-            ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 220, 255)),
-            ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 60, 200))
-        }
-        GlowGrad.Parent = Glow
-
         -- Clean border + subtle inner line
         local Stroke = Instance.new("UIStroke")
         Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         Stroke.Thickness = 2
         Stroke.Transparency = 0.20
-        Stroke.Color = Color3.fromRGB(120, 60, 255)
+        Stroke.Color = Color3.fromRGB(140, 85, 255)
         Stroke.Parent = Main
 
         local InnerStroke = Instance.new("UIStroke")
@@ -324,7 +299,7 @@ do -- Load items
         ContentStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         ContentStroke.Thickness = 1
         ContentStroke.Transparency = 0.55
-        ContentStroke.Color = Color3.fromRGB(120, 60, 255)
+        ContentStroke.Color = Color3.fromRGB(140, 85, 255)
         ContentStroke.Parent = Content
 
         local ContentGrad = Instance.new("UIGradient")
@@ -414,7 +389,7 @@ do -- Load items
         TabsStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         TabsStroke.Thickness = 1
         TabsStroke.Transparency = 0.60
-        TabsStroke.Color = Color3.fromRGB(0, 220, 255)
+        TabsStroke.Color = Color3.fromRGB(175, 120, 255)
         TabsStroke.Parent = Tabs
     end
 
@@ -496,9 +471,9 @@ do -- Load items
         local ToggleGrad = Instance.new("UIGradient")
         ToggleGrad.Rotation = 25
         ToggleGrad.Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0.00, Color3.fromRGB(120, 60, 255)),
-            ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 220, 255)),
-            ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 60, 200))
+            ColorSequenceKeypoint.new(0.00, Color3.fromRGB(140, 85, 255)),
+            ColorSequenceKeypoint.new(0.50, Color3.fromRGB(175, 120, 255)),
+            ColorSequenceKeypoint.new(1.00, Color3.fromRGB(115, 75, 255))
         }
         ToggleGrad.Parent = ImageLabel
 
@@ -523,7 +498,7 @@ do -- Load items
     Layer_2.Selectable = true
     Layer_2.Size = UDim2.new(1, 0, 1, 0)
     Layer_2.Image = "rbxassetid://3570695787"
-    Layer_2.ImageColor3 = Color3.fromRGB(21, 38, 63)
+    Layer_2.ImageColor3 = Color3.fromRGB(16, 16, 26)
     Layer_2.ScaleType = Enum.ScaleType.Slice
     Layer_2.SliceCenter = Rect.new(100, 100, 100, 100)
     Layer_2.SliceScale = 0.050
@@ -579,9 +554,9 @@ do -- Load items
         local SliderGrad = Instance.new("UIGradient")
         SliderGrad.Rotation = 0
         SliderGrad.Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0.00, Color3.fromRGB(120, 60, 255)),
-            ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 220, 255)),
-            ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 60, 200))
+            ColorSequenceKeypoint.new(0.00, Color3.fromRGB(140, 85, 255)),
+            ColorSequenceKeypoint.new(0.50, Color3.fromRGB(175, 120, 255)),
+            ColorSequenceKeypoint.new(1.00, Color3.fromRGB(115, 75, 255))
         }
         SliderGrad.Parent = Inner
     end
@@ -645,9 +620,9 @@ do -- Load items
         local BtnGrad = Instance.new("UIGradient")
         BtnGrad.Rotation = 25
         BtnGrad.Color = ColorSequence.new{
-            ColorSequenceKeypoint.new(0.00, Color3.fromRGB(120, 60, 255)),
-            ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 220, 255)),
-            ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 60, 200))
+            ColorSequenceKeypoint.new(0.00, Color3.fromRGB(140, 85, 255)),
+            ColorSequenceKeypoint.new(0.50, Color3.fromRGB(175, 120, 255)),
+            ColorSequenceKeypoint.new(1.00, Color3.fromRGB(115, 75, 255))
         }
         BtnGrad.Parent = ImageLabel_2
 
@@ -672,7 +647,7 @@ do -- Load items
     Layer_3.Selectable = true
     Layer_3.Size = UDim2.new(1, 0, 1, 0)
     Layer_3.Image = "rbxassetid://3570695787"
-    Layer_3.ImageColor3 = Color3.fromRGB(21, 38, 63)
+    Layer_3.ImageColor3 = Color3.fromRGB(16, 16, 26)
     Layer_3.ScaleType = Enum.ScaleType.Slice
     Layer_3.SliceCenter = Rect.new(100, 100, 100, 100)
     Layer_3.SliceScale = 0.050
@@ -687,7 +662,7 @@ do -- Load items
     Card.SliceCenter = Rect.new(100, 100, 100, 100)
     Card.SliceScale = 0.120
 
-    UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(0, 129, 167)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(0, 160, 168))}
+    UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(140, 85, 255)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(175, 120, 255))}
     UIGradient.Rotation = 30
     UIGradient.Parent = Card
 
@@ -782,7 +757,7 @@ do -- Load items
     ImageLabel_4.Size = UDim2.new(1, 0, 1, 0)
     ImageLabel_4.ZIndex = 2
     ImageLabel_4.Image = "rbxassetid://3570695787"
-    ImageLabel_4.ImageColor3 = Color3.fromRGB(255, 0, 0)
+    ImageLabel_4.ImageColor3 = Color3.fromRGB(175, 120, 255)
     ImageLabel_4.ScaleType = Enum.ScaleType.Slice
     ImageLabel_4.SliceCenter = Rect.new(100, 100, 100, 100)
     ImageLabel_4.SliceScale = 0.050
@@ -805,7 +780,7 @@ do -- Load items
     Layer_4.Selectable = true
     Layer_4.Size = UDim2.new(1, 0, 1, 0)
     Layer_4.Image = "rbxassetid://3570695787"
-    Layer_4.ImageColor3 = Color3.fromRGB(120, 0, 0)
+    Layer_4.ImageColor3 = Color3.fromRGB(115, 75, 255)
     Layer_4.ScaleType = Enum.ScaleType.Slice
     Layer_4.SliceCenter = Rect.new(100, 100, 100, 100)
     Layer_4.SliceScale = 0.050
