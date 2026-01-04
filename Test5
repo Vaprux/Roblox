@@ -36,7 +36,6 @@ end
 local ActiveNotifications = {}
 local NotificationTimers = {}
 
--- === NOTIFICATION GUI (BOTTOM RIGHT) ===
 local NotificationArea = Create("ScreenGui", {
     Name = "NotificationArea",
     Parent = CoreGui,
@@ -45,9 +44,9 @@ local NotificationArea = Create("ScreenGui", {
 
 local NotificationContainer = Create("Frame", {
     BackgroundTransparency = 1,
-    AnchorPoint = Vector2.new(1, 1),
-    Position = UDim2.new(1, -12, 1, -12), -- bottom-right with padding
-    Size = UDim2.new(0, 520, 1, -24),     -- width for notifications, full height for stacking
+    AnchorPoint = Vector2.new(0, 1),
+    Position = UDim2.new(0, 12, 1, -12),
+    Size = UDim2.new(0, 520, 0, 600),
     ZIndex = 100,
     Parent = NotificationArea
 })
@@ -55,12 +54,11 @@ local NotificationContainer = Create("Frame", {
 Create("UIListLayout", {
     Padding = UDim.new(0, 4),
     FillDirection = Enum.FillDirection.Vertical,
-    VerticalAlignment = Enum.VerticalAlignment.Bottom, -- stack upward
+    VerticalAlignment = Enum.VerticalAlignment.Bottom,
     SortOrder = Enum.SortOrder.LayoutOrder,
     Parent = NotificationContainer,
 })
 
--- === LOGGER GUI ===
 local LoggerGUI = Create("ScreenGui", {
     Name = "LoggerGUI",
     Parent = CoreGui,
@@ -259,13 +257,14 @@ function NotifyLogger.Notify(Text, Color, Time)
         BackgroundColor3 = MainColor,
         BorderColor3 = OutlineColor,
         BorderMode = Enum.BorderMode.Inset,
-        AnchorPoint = Vector2.new(1, 1),
-        Position = UDim2.new(1, 0, 1, 0), -- bottom-right inside container
+        AnchorPoint = Vector2.new(0, 1),
+        Position = UDim2.new(0, 0, 1, 0),
         Size = UDim2.new(0, 0, 0, YSize),
         ClipsDescendants = true,
         ZIndex = 101,
         Parent = NotificationContainer,
     })
+
 
     Create("TextLabel", {
         Position = UDim2.new(0, 6, 0, 0),
