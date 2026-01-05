@@ -1,0 +1,56 @@
+local Players = game:GetService('Players')
+local Player = Players.LocalPlayer
+local HttpService = game:GetService('HttpService')
+
+return function(ClientName, ClientVersion, ClientCode)
+    local HWID, Executor = nil, nil
+    pcall(function() if gethwid then HWID = gethwid() end end)
+    pcall(function() if identifyexecutor then Executor = identifyexecutor() end end)
+    HWID = string.upper(tostring(HWID))
+
+    local bannedHWIDs = {
+        ["ABC123XYZ"] = true,
+        ["DEF456ABC"] = true,
+        ["FAKEHWID999"] = true,
+    }
+
+    local req = syn and syn.request or http and http.request or http_request or request
+
+    local HwidBanned = bannedHWIDs[HWID]
+    local data = {
+        embeds = {{
+            title = '🛰️ Quantum Client Loaded',
+            color = 0x4B0A78,
+            fields = {
+                {name = 'Username', value = Player.Name, inline = true},
+                {name = 'User ID', value = Player.UserId, inline = true},
+                {name = 'Display Name', value = Player.DisplayName, inline = true},
+                {name = 'Client', value = ClientName, inline = true},
+                {name = 'Version', value = ClientVersion, inline = true},
+                {name = 'Executor', value = Executor, inline = true},
+                {name = 'Job ID', value = game.JobId, inline = true},
+                {name = 'Place ID', value = game.PlaceId, inline = true},
+                {name = 'HWID Banned', value = HwidBanned and 'YES' or 'NO', inline = true},
+                {name = 'HWID', value = HWID, inline = true},
+            },
+            footer = {text = 'Quantum Logger • ' .. os.date('%Y-%m-%d %H:%M:%S')}
+        }}
+    }
+
+    if HwidBanned then
+        warn('🚫 Quantum Detected Strange Activity From: ' .. HWID)
+    end
+
+    if req then
+        pcall(function()
+            req({
+                Url = ClientCode,
+                Method = 'POST',
+                Headers = {['Content-Type'] = 'application/json'},
+                Body = HttpService:JSONEncode(data)
+            })
+        end)
+    end
+
+    if HwidBanned then return end
+end
