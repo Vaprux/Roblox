@@ -252,7 +252,7 @@ do -- Load items
     Background.ZIndex = 1
     Background.Image = "rbxassetid://1441374903"
     Background.ScaleType = Enum.ScaleType.Crop
-    Background.ImageTransparency = 0.250
+    Background.ImageTransparency = 1
 
 
     Frame.Parent = Main
