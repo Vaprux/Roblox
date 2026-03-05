@@ -240,21 +240,6 @@ do -- Load items
     Main.SliceCenter = Rect.new(100, 100, 100, 100)
     Main.SliceScale = 0.050
 
-    --//================ Image Background (Vaprux Mod) ===================\\--
-    -- Replace YOUR_IMAGE_ID with your own asset id (example: rbxassetid://1234567890)
-    local Background = Instance.new("ImageLabel")
-    Background.Name = "Background"
-    Background.Parent = Main
-    Background.BackgroundTransparency = 1.000
-    Background.Position = UDim2.new(0, 2, 0, 2)
-    -- Covers header + content + tabs area (adjust if you resize the window)
-    Background.Size = UDim2.new(1, -4, 0, 260)
-    Background.ZIndex = 1
-	Background.Image = "rbxthumb://type=Asset&id=1441374903&w=1920&h=1080"
-    Background.ScaleType = Enum.ScaleType.Crop
-    Background.ImageTransparency = 1
-
-
     Frame.Parent = Main
     Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
     Frame.BorderSizePixel = 0
@@ -278,7 +263,6 @@ do -- Load items
     Content.Size = UDim2.new(1, 0, 0, 200)
     Content.Image = "rbxassetid://3570695787"
     Content.ImageColor3 = Color3.fromRGB(20, 20, 20)
-	Content.ImageTransparency = 0.25
     Content.ScaleType = Enum.ScaleType.Slice
     Content.SliceCenter = Rect.new(100, 100, 100, 100)
     Content.SliceScale = 0.050
@@ -287,7 +271,6 @@ do -- Load items
     Frame_3.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     Frame_3.BorderSizePixel = 0
     Frame_3.Size = UDim2.new(1, 0, 0, 10)
-	Frame_3.BackgroundTransparency = 1
 
     Message.Name = "Message"
     Message.Parent = Content
