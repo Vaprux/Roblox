@@ -250,7 +250,7 @@ do -- Load items
     -- Covers header + content + tabs area (adjust if you resize the window)
     Background.Size = UDim2.new(1, -4, 0, 260)
     Background.ZIndex = 1
-    Background.Image = "rbxassetid://1441374903"
+	Background.Image = "rbxthumb://type=Asset&id=1441374903&w=1920&h=1080"
     Background.ScaleType = Enum.ScaleType.Crop
     Background.ImageTransparency = 1
 
