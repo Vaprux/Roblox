@@ -1120,17 +1120,6 @@ do -- Load items
     Cache_2.Visible = false
 end
 
--- BACKGROUND IMAGE INJECTION
-    local BGImage = Instance.new("ImageLabel")
-    BGImage.Name = "CustomBackground"
-    BGImage.Parent = Main
-    BGImage.Size = UDim2.new(1, 0, 1, 0)
-    BGImage.BackgroundTransparency = 1
-    BGImage.Image = "rbxassetid://10078726581" -- Your cool image ID goes here
-    BGImage.ImageTransparency = 0.85
-    BGImage.ScaleType = Enum.ScaleType.Crop
-    BGImage.ZIndex = 1
-
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
