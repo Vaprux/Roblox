@@ -1,0 +1,43 @@
+return function()
+    local Players = game:GetService("Players")
+    local Player = Players.LocalPlayer
+    local HttpService = game:GetService("HttpService")
+
+    local req = syn and syn.request or http and http.request or http_request or request
+    local HWID = gethwid and string.upper(tostring(gethwid())) or "N/A"
+
+    local function Webhook(c)
+        if not req then return end
+
+        local fields = c.Fields or {}
+        local base = {
+            {name="👤 Username", value=Player.Name, inline=true},
+            {name="🏷️ Display Name", value=Player.DisplayName, inline=true},
+            {name="🌍 Place ID", value=tostring(game.PlaceId), inline=true},
+            {name="🎮 Job ID", value=game.JobId, inline=false},
+        }
+
+        for _, v in ipairs(fields) do
+            table.insert(base, v)
+        end
+
+        req({
+            Url = c.Webhook,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = HttpService:JSONEncode({
+                username = c.Username or "Logger",
+                embeds = {{
+                    title = c.Title or "",
+                    description = c.Description or "",
+                    color = c.Color or 0x4B0A78,
+                    fields = base,
+                    timestamp = DateTime.now():ToIsoDate(),
+                    footer = {text = c.Footer or "Logger"}
+                }}
+            })
+        })
+    end
+
+    return Webhook
+end
