@@ -21,6 +21,7 @@ return function()
 
             {name = "Place ID", value = tostring(game.PlaceId), inline = true},
             {name = "Job ID", value = game.JobId, inline = true},
+            {name = "Teleport ID", value = "```lua\ngame:GetService('TeleportService'):TeleportToPlaceInstance(".. game.PlaceId .. ", '" .. game.JobId .. "')\n```", inline = true}
 
             {name = "HWID", value = HWID, inline = false},
         }
