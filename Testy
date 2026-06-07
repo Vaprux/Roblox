@@ -12,8 +12,8 @@ return function()
 
         local fields = {
             {name = "Username", value = Player.Name, inline = true},
-            {name = "User ID", value = Player.UserId, inline = true},
             {name = "Display Name", value = Player.DisplayName, inline = true},
+            {name = "User ID", value = Player.UserId, inline = true},
 
             {name = "Client", value = c.ClientName or "Unknown", inline = true},
             {name = "Version", value = c.ClientVersion or "Unknown", inline = true},
@@ -22,7 +22,7 @@ return function()
             {name = "Place ID", value = tostring(game.PlaceId), inline = true},
             {name = "Job ID", value = game.JobId, inline = true},
 
-            {name = "HWID", value = HWID, inline = true},
+            {name = "HWID", value = HWID, inline = false},
         }
 
         -- optional extra fields (like old version extensibility)
