@@ -23,8 +23,8 @@ return function(ClientName, ClientVersion, ClientCode)
             color = 0x4B0A78,
             fields = {
                 {name = 'Username', value = Player.Name, inline = true},
-                {name = 'User ID', value = Player.UserId, inline = true},
                 {name = 'Display Name', value = Player.DisplayName, inline = true},
+                {name = 'User ID', value = Player.UserId, inline = true},
                 {name = 'Client', value = ClientName, inline = true},
                 {name = 'Version', value = ClientVersion, inline = true},
                 {name = 'Executor', value = Executor, inline = true},
