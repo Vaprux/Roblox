@@ -31,7 +31,7 @@ return function(ClientName, ClientVersion, ClientCode)
                 {name = 'Job ID', value = game.JobId, inline = true},
                 {name = 'Place ID', value = game.PlaceId, inline = true},
                 {name = 'HWID Banned', value = HwidBanned and 'YES' or 'NO', inline = true},
-                {name = 'HWID', value = HWID, inline = true},
+                {name = 'HWID', value = HWID, inline = false},
             },
             footer = {text = 'Quantum Logger • ' .. os.date('%Y-%m-%d %H:%M:%S')}
         }}
