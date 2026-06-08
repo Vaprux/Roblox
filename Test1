@@ -11,19 +11,19 @@ return function()
         if not req then return end
 
         local fields = {
-            {name = "Username", value = Player.Name, inline = true},
-            {name = "Display Name", value = Player.DisplayName, inline = true},
-            {name = "User ID", value = Player.UserId, inline = true},
-
-            {name = "Client", value = c.ClientName or "Unknown", inline = true},
-            {name = "Version", value = c.ClientVersion or "Unknown", inline = true},
-            {name = "Executor", value = Executor, inline = true},
-
-            {name = "Place ID", value = tostring(game.PlaceId), inline = true},
-            {name = "Job ID", value = game.JobId, inline = true},
-            {name = "Teleport ID", value = "```lua\ngame:GetService('TeleportService'):TeleportToPlaceInstance(".. game.PlaceId .. ", '" .. game.JobId .. "')\n```", inline = false},
-
-            {name = "HWID", value = HWID, inline = false},
+            {name = "👤 Username", value = Player.Name, inline = true},
+            {name = "🏷️ Display Name", value = Player.DisplayName, inline = true},
+            {name = "🆔 User ID", value = tostring(Player.UserId), inline = true},
+            
+            {name = "💻 Client", value = c.ClientName or "Unknown", inline = true},
+            {name = "📦 Version", value = c.ClientVersion or "Unknown", inline = true},
+            {name = "⚡ Executor", value = Executor, inline = true},
+            
+            {name = "🎮 Place ID", value = tostring(game.PlaceId), inline = true},
+            {name = "🌐 Job ID", value = game.JobId, inline = true},
+            {name = "🚪 Teleport ID", value = "```lua\ngame:GetService('TeleportService'):TeleportToPlaceInstance(" .. game.PlaceId .. ", '" .. game.JobId .. "')\n```", inline = false},
+            
+            {name = "🔒 HWID", value = HWID, inline = false},
         }
 
         -- optional extra fields (like old version extensibility)
