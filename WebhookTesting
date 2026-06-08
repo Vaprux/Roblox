@@ -11,10 +11,9 @@ return function()
 
         local fields = c.Fields or {}
         local base = {
-            {name="👤 Username", value=Player.Name, inline=true},
-            {name="🏷️ Display Name", value=Player.DisplayName, inline=true},
-            {name="🌍 Place ID", value=tostring(game.PlaceId), inline=true},
-            {name="🎮 Job ID", value=game.JobId, inline=false},
+            {name = "👤 Username", value = Player.Name, inline = true},
+            {name = "🏷️ Display Name", value = Player.DisplayName, inline = true},
+            {name = "🆔 User ID", value = tostring(Player.UserId), inline = true},
         }
 
         for _, v in ipairs(fields) do
