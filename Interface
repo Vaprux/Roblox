@@ -1274,34 +1274,27 @@ local dragger = {}
 local UserInputService = game:GetService("UserInputService")
 
 do
-    -- Keeps track of windows currently being dragged
     local activeDrags = {}
 
     function dragger.new(frame)
         frame.Active = true
 
-        -- InputBegan fires for both Mouse clicks and Touch taps
         frame.InputBegan:Connect(function(input)
-            -- Verify it's a left click or a finger touch
             local isMouse = input.UserInputType == Enum.UserInputType.MouseButton1
             local isTouch = input.UserInputType == Enum.UserInputType.Touch
             
             if (isMouse or isTouch) then
-                -- Check your safety/state flags
                 if (not colorpicking) and (not sliding) and (findBrowsingTopMost() == frame) then
                     
-                    -- Capture initial offsets
                     local dragStart = input.Position
                     local startPos = frame.Position
                     
-                    -- Create a session table for this unique dragging instance
                     local session = {
                         dragStart = dragStart,
                         startPos = startPos
                     }
                     activeDrags[frame] = session
 
-                    -- Stop dragging when this specific input ends (lifts mouse button or finger)
                     local connection
                     connection = input.Changed:Connect(function()
                         if input.UserInputState == Enum.UserInputState.End then
@@ -1313,7 +1306,6 @@ do
             end
         end)
 
-        -- InputChanged fires whenever the pointer (mouse or finger) moves
         frame.InputChanged:Connect(function(input)
             local isMovement = input.UserInputType == Enum.UserInputType.MouseMovement
             local isTouch = input.UserInputType == Enum.UserInputType.Touch
@@ -1321,20 +1313,16 @@ do
             if (isMovement or isTouch) then
                 local session = activeDrags[frame]
                 if session then
-                    -- Calculate the distance (delta) the pointer has dragged from its origin
                     local delta = input.Position - session.dragStart
                     
-                    pcall(function()
-                        -- Keep your library's default resize/tween behavior intact using delta calculations
-                        resize(frame, { 
-                            Position = UDim2.new(
-                                session.startPos.X.Scale, 
-                                session.startPos.X.Offset + delta.X + (frame.Size.X.Offset * frame.AnchorPoint.X), 
-                                session.startPos.Y.Scale, 
-                                session.startPos.Y.Offset + delta.Y + (frame.Size.Y.Offset * frame.AnchorPoint.Y)
-                            ) 
-                        }, 0.1)
-                    end)
+                    -- BYPASS RESIZE TWEENING FOR PERFECT FLUIDITY:
+                    -- Setting frame.Position directly makes the UI track your mouse perfectly at full frame rate.
+                    frame.Position = UDim2.new(
+                        session.startPos.X.Scale, 
+                        session.startPos.X.Offset + delta.X + (frame.Size.X.Offset * frame.AnchorPoint.X), 
+                        session.startPos.Y.Scale, 
+                        session.startPos.Y.Offset + delta.Y + (frame.Size.Y.Offset * frame.AnchorPoint.Y)
+                    )
                 end
             end
         end)
