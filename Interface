@@ -1270,31 +1270,71 @@ local function findBrowsingTopMost()
     return result
 end
 
-local dragger = {} do
-    local draggerCache = { }
+local dragger = {} 
+local UserInputService = game:GetService("UserInputService")
+
+do
+    -- Keeps track of windows currently being dragged
+    local activeDrags = {}
 
     function dragger.new(frame)
-        local held = false
         frame.Active = true
 
-        frame.MouseLeave:connect(function()
-            draggerCache[frame] = false
+        -- InputBegan fires for both Mouse clicks and Touch taps
+        frame.InputBegan:Connect(function(input)
+            -- Verify it's a left click or a finger touch
+            local isMouse = input.UserInputType == Enum.UserInputType.MouseButton1
+            local isTouch = input.UserInputType == Enum.UserInputType.Touch
+            
+            if (isMouse or isTouch) then
+                -- Check your safety/state flags
+                if (not colorpicking) and (not sliding) and (findBrowsingTopMost() == frame) then
+                    
+                    -- Capture initial offsets
+                    local dragStart = input.Position
+                    local startPos = frame.Position
+                    
+                    -- Create a session table for this unique dragging instance
+                    local session = {
+                        dragStart = dragStart,
+                        startPos = startPos
+                    }
+                    activeDrags[frame] = session
+
+                    -- Stop dragging when this specific input ends (lifts mouse button or finger)
+                    local connection
+                    connection = input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            activeDrags[frame] = nil
+                            connection:Disconnect()
+                        end
+                    end)
+                end
+            end
         end)
 
-        frame.MouseEnter:connect(function()
-            draggerCache[frame] = true
-        end)
-
-        mouse.InputBegan:Connect(function()
-            if findBrowsingTopMost() == frame then
-                if (not colorpicking) and (not sliding) and rawget(draggerCache, frame) then
-                    local objectPosition = Vector2.new(getMouse().X - frame.AbsolutePosition.X, getMouse().Y - frame.AbsolutePosition.Y)
-                    while mouse.held do
-                        pcall(function()
-                            resize(frame, { Position = UDim2.new(0, getMouse().X - objectPosition.X + (frame.Size.X.Offset * frame.AnchorPoint.X), 0, getMouse().Y - objectPosition.Y + (frame.Size.Y.Offset * frame.AnchorPoint.Y)) }, 0.1)
-                        end)
-                        RunService.Heartbeat:Wait()
-                    end
+        -- InputChanged fires whenever the pointer (mouse or finger) moves
+        frame.InputChanged:Connect(function(input)
+            local isMovement = input.UserInputType == Enum.UserInputType.MouseMovement
+            local isTouch = input.UserInputType == Enum.UserInputType.Touch
+            
+            if (isMovement or isTouch) then
+                local session = activeDrags[frame]
+                if session then
+                    -- Calculate the distance (delta) the pointer has dragged from its origin
+                    local delta = input.Position - session.dragStart
+                    
+                    pcall(function()
+                        -- Keep your library's default resize/tween behavior intact using delta calculations
+                        resize(frame, { 
+                            Position = UDim2.new(
+                                session.startPos.X.Scale, 
+                                session.startPos.X.Offset + delta.X + (frame.Size.X.Offset * frame.AnchorPoint.X), 
+                                session.startPos.Y.Scale, 
+                                session.startPos.Y.Offset + delta.Y + (frame.Size.Y.Offset * frame.AnchorPoint.Y)
+                            ) 
+                        }, 0.1)
+                    end)
                 end
             end
         end)
