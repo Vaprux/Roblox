@@ -1270,60 +1270,61 @@ local function findBrowsingTopMost()
     return result
 end
 
-local dragger = {} 
-local UserInputService = game:GetService("UserInputService")
-
-do
-    local activeDrags = {}
+local dragger = {} do
+    local draggerCache = {}
 
     function dragger.new(frame)
+        local held = false
+        local dragInput
+
         frame.Active = true
 
-        frame.InputBegan:Connect(function(input)
-            local isMouse = input.UserInputType == Enum.UserInputType.MouseButton1
-            local isTouch = input.UserInputType == Enum.UserInputType.Touch
-            
-            if (isMouse or isTouch) then
-                if (not colorpicking) and (not sliding) and (findBrowsingTopMost() == frame) then
-                    
-                    local dragStart = input.Position
-                    local startPos = frame.Position
-                    
-                    local session = {
-                        dragStart = dragStart,
-                        startPos = startPos
-                    }
-                    activeDrags[frame] = session
+        frame.MouseLeave:Connect(function()
+            draggerCache[frame] = false
+        end)
 
-                    local connection
-                    connection = input.Changed:Connect(function()
-                        if input.UserInputState == Enum.UserInputState.End then
-                            activeDrags[frame] = nil
-                            connection:Disconnect()
+        frame.MouseEnter:Connect(function()
+            draggerCache[frame] = true
+        end)
+
+        frame.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+
+                if findBrowsingTopMost() == frame then
+                    if (not colorpicking) and (not sliding) and rawget(draggerCache, frame) then
+                        
+                        held = true
+                        dragInput = input
+
+                        local objectPosition = Vector2.new(
+                            getMouse().X - frame.AbsolutePosition.X,
+                            getMouse().Y - frame.AbsolutePosition.Y
+                        )
+
+                        while held do
+                            pcall(function()
+                                resize(frame, {
+                                    Position = UDim2.new(
+                                        0,
+                                        getMouse().X - objectPosition.X + (frame.Size.X.Offset * frame.AnchorPoint.X),
+                                        0,
+                                        getMouse().Y - objectPosition.Y + (frame.Size.Y.Offset * frame.AnchorPoint.Y)
+                                    )
+                                }, 0.1)
+                            end)
+
+                            RunService.Heartbeat:Wait()
                         end
-                    end)
+                    end
                 end
             end
         end)
 
-        frame.InputChanged:Connect(function(input)
-            local isMovement = input.UserInputType == Enum.UserInputType.MouseMovement
-            local isTouch = input.UserInputType == Enum.UserInputType.Touch
-            
-            if (isMovement or isTouch) then
-                local session = activeDrags[frame]
-                if session then
-                    local delta = input.Position - session.dragStart
-                    
-                    -- BYPASS RESIZE TWEENING FOR PERFECT FLUIDITY:
-                    -- Setting frame.Position directly makes the UI track your mouse perfectly at full frame rate.
-                    frame.Position = UDim2.new(
-                        session.startPos.X.Scale, 
-                        session.startPos.X.Offset + delta.X + (frame.Size.X.Offset * frame.AnchorPoint.X), 
-                        session.startPos.Y.Scale, 
-                        session.startPos.Y.Offset + delta.Y + (frame.Size.Y.Offset * frame.AnchorPoint.Y)
-                    )
-                end
+        frame.InputEnded:Connect(function(input)
+            if input == dragInput then
+                held = false
+                dragInput = nil
             end
         end)
     end
