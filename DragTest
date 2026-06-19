@@ -1272,6 +1272,8 @@ end
 
 local dragger = {} do
     local draggerCache = {}
+    local UserInputService = game:GetService("UserInputService")
+    local RunService = game:GetService("RunService")
 
     function dragger.new(frame)
         local held = false
@@ -1281,46 +1283,54 @@ local dragger = {} do
 
         frame.Active = true
 
+        frame.MouseLeave:Connect(function()
+            draggerCache[frame] = false
+        end)
+
+        frame.MouseEnter:Connect(function()
+            draggerCache[frame] = true
+        end)
+
         frame.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1
             or input.UserInputType == Enum.UserInputType.Touch then
 
                 if findBrowsingTopMost() == frame then
-                    if (not colorpicking) and (not sliding) then
+                    if (not colorpicking) and (not sliding) and rawget(draggerCache, frame) then
 
                         held = true
                         dragInput = input
 
                         dragStart = input.Position
                         startPos = frame.Position
-
-                        input.Changed:Connect(function()
-                            if input.UserInputState == Enum.UserInputState.End then
-                                held = false
-                                dragInput = nil
-                            end
-                        end)
                     end
                 end
             end
         end)
 
-        game:GetService("UserInputService").InputChanged:Connect(function(input)
-            if not held then return end
-            if input ~= dragInput then return end
-            if input.UserInputType ~= Enum.UserInputType.MouseMovement
-            and input.UserInputType ~= Enum.UserInputType.Touch then return end
+        frame.InputEnded:Connect(function(input)
+            if input == dragInput then
+                held = false
+                dragInput = nil
+            end
+        end)
 
-            local delta = input.Position - dragStart
+        RunService.RenderStepped:Connect(function()
+            if not held or not dragInput then return end
 
-            resize(frame, {
-                Position = UDim2.new(
-                    startPos.X.Scale,
-                    startPos.X.Offset + delta.X,
-                    startPos.Y.Scale,
-                    startPos.Y.Offset + delta.Y
-                )
-            }, 0)
+            local currentPos = UserInputService:GetMouseLocation()
+            local delta = currentPos - dragStart
+
+            pcall(function()
+                resize(frame, {
+                    Position = UDim2.new(
+                        startPos.X.Scale,
+                        startPos.X.Offset + delta.X + (frame.Size.X.Offset * frame.AnchorPoint.X),
+                        startPos.Y.Scale,
+                        startPos.Y.Offset + delta.Y + (frame.Size.Y.Offset * frame.AnchorPoint.Y)
+                    )
+                }, 0.05)
+            end)
         end)
     end
 end
