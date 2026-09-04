@@ -11,6 +11,7 @@
 	v2: Updated font to Arial using Enum.Font.Code.
 
 	v3: Fixed color functions—now all elements will correctly use your library's designated color.
+	v4: Added Mobile Drag
 --]]
 
 repeat wait() until game:GetService("Players").LocalPlayer
