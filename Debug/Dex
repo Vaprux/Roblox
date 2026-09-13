@@ -8,6 +8,7 @@
 
 	Modified By Vaprux
 	Added: FireServer!
+	Fixed: Teleport To!
 ]]
 
 local selection
@@ -2024,46 +2025,46 @@ local function main()
 			end
 		end})
 
-		context:Register("TELEPORT_TO",{Name = "Teleport To", IconMap = Explorer.MiscIcons, Icon = "TeleportTo", OnClick = function()
-			local sList = selection.List
-			local plrRP = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+		context:Register('TELEPORT_TO', {
+			Name = 'Teleport To',
+			IconMap = Explorer.MiscIcons,
+			Icon = 'TeleportTo',
+			OnClick = function()
+				local Character = plr.Character
+				local Root = Character and Character:FindFirstChild('HumanoidRootPart')
+				if not Root then return end
 
-			if not plrRP then return end
+				local Offset = Settings.Explorer.TeleportToOffset or Vector3.new(0, 3, 0)
 
-			for _,node in next, sList do
-				local Obj = node.Obj
+				for _, node in next, selection.List do
+					local Obj = node.Obj
+					if not Obj then continue end
 
-				if Obj:IsA("BasePart") then
-					if Obj.CanCollide then
-						plr.Character:MoveTo(Obj.Position)
+					local CFrame
+
+					if Obj:IsA('BasePart') then
+						CFrame = Obj.CFrame
+					elseif Obj:IsA('Model') then
+						CFrame = Obj:GetPivot()
+					elseif Obj:IsA('Attachment') then
+						CFrame = Obj.WorldCFrame
 					else
-						plrRP.CFrame = CFrame.new(Obj.Position + Settings.Explorer.TeleportToOffset)
+						local Part = Obj:FindFirstChildWhichIsA('BasePart', true)
+
+						if Part then
+							CFrame = Part.CFrame
+						elseif Obj.Parent and Obj.Parent:IsA('BasePart') then
+							CFrame = Obj.Parent.CFrame
+						end
 					end
-					break
-				elseif Obj:IsA("Model") then
-					if Obj.PrimaryPart then
-						if Obj.PrimaryPart.CanCollide then
-							plr.Character:MoveTo(Obj.PrimaryPart.Position)
-						else
-							plrRP.CFrame = CFrame.new(Obj.PrimaryPart.Position + Settings.Explorer.TeleportToOffset)
-						end
+
+					if CFrame then
+						Character:PivotTo(CFrame + Offset)
 						break
-					else
-						local part = Obj:FindFirstChildWhichIsA("BasePart", true)
-						if part and nodes[part] then
-							if part.CanCollide then
-								plr.Character:MoveTo(part.Position)
-							else
-								plrRP.CFrame = CFrame.new(part.Position + Settings.Explorer.TeleportToOffset)
-							end
-							break
-						elseif Obj.WorldPivot then
-							plrRP.CFrame = Obj.WorldPivot
-						end
 					end
 				end
 			end
-		end})
+		})
 
 		local OldAnimation
 		context:Register("PLAY_TWEEN",{Name = "Play Tween", IconMap = Explorer.MiscIcons, Icon = "Play", OnClick = function()
