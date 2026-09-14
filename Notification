@@ -4,25 +4,44 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
 --// Multi-load cleanup
-if type(_G.__NOTIFYLOGGER_CLEANUP) == "function" then
-    pcall(_G.__NOTIFYLOGGER_CLEANUP)
+if type(_G.__QUANTUM_NOTIFY_CLEANUP) == "function" then
+    pcall(_G.__QUANTUM_NOTIFY_CLEANUP)
 end
 
-_G.__NOTIFYLOGGER_LOADED = nil
-_G.__NOTIFYLOGGER_INSTANCE = nil
-_G.__NOTIFYLOGGER_CLEANUP = nil
-
-if CoreGui:FindFirstChild("NotificationArea") then
-    CoreGui.NotificationArea:Destroy()
-end
-
-if CoreGui:FindFirstChild("LoggerGUI") then
-    CoreGui.LoggerGUI:Destroy()
-end
-
-local NotifyLogger = {}
+local Notification = {}
 local Connections = {}
-local CleanupTasks = {}
+local ActiveNotifications = {}
+local NotificationTimers = {}
+local LogEntries = {}
+local RegisteredCommands = {}
+
+local AccentColor = Color3.fromRGB(126, 72, 255)
+local BackgroundColor = Color3.fromRGB(13, 13, 16)
+local SurfaceColor = Color3.fromRGB(20, 20, 24)
+local Surface2Color = Color3.fromRGB(28, 28, 33)
+local TextColor = Color3.fromRGB(238, 238, 242)
+local MutedColor = Color3.fromRGB(150, 150, 160)
+
+local Colors = {
+    Red = "#FF6262",
+    Green = "#63E6A7",
+    Blue = "#6BA7FF",
+    White = "#FFFFFF",
+    Yellow = "#FFD966",
+    Cyan = "#63E6E2",
+    Magenta = "#F074FF",
+    Gray = "#A8A8B3",
+    Orange = "#FFAA5C",
+    Purple = "#9E78FF"
+}
+
+local function Create(Class, Properties)
+    local Object = Instance.new(Class)
+    for Property, Value in pairs(Properties) do
+        Object[Property] = Value
+    end
+    return Object
+end
 
 local function Connect(Signal, Callback)
     local Connection = Signal:Connect(Callback)
@@ -30,52 +49,23 @@ local function Connect(Signal, Callback)
     return Connection
 end
 
-local AccentColor = Color3.fromRGB(135, 55, 255)
-local MainColor = Color3.fromRGB(18, 18, 20)
-local HeaderColor = Color3.fromRGB(24, 24, 27)
-local OutlineColor = Color3.fromRGB(52, 52, 58)
-
-local Colors = {
-    Red = "#FF5555",
-    Green = "#55FF55",
-    Blue = "#5599FF",
-    White = "#FFFFFF",
-    Yellow = "#FFFF55",
-    Cyan = "#55FFFF",
-    Magenta = "#FF55FF",
-    Gray = "#AAAAAA",
-    Orange = "#FFA500",
-    Purple = "#AA55FF"
-}
-
-local function Create(Class, Properties)
-    local Object = Instance.new(Class)
-
-    for Property, Value in pairs(Properties) do
-        Object[Property] = Value
-    end
-
-    return Object
-end
-
 local function StripTags(Text)
     return tostring(Text or ""):gsub("<[^>]->", "")
 end
 
-local function GetTextSize(Text, Font, Size)
+local function Measure(Text, Font, Size)
     local Bounds = TextService:GetTextSize(
         StripTags(Text),
         Size,
         Font,
         Vector2.new(1000, 1000)
     )
-
     return Bounds.X, Bounds.Y
 end
 
---// Notifications
+--// Root
 local NotificationArea = Create("ScreenGui", {
-    Name = "NotificationArea",
+    Name = "QuantumNotificationArea",
     Parent = CoreGui,
     IgnoreGuiInset = true,
     ResetOnSpawn = false,
@@ -87,8 +77,8 @@ local NotificationContainer = Create("Frame", {
     Parent = NotificationArea,
     BackgroundTransparency = 1,
     AnchorPoint = Vector2.new(1, 0),
-    Position = UDim2.new(1, -18, 0, 52),
-    Size = UDim2.new(0, 390, 1, -70)
+    Position = UDim2.new(1, -20, 0, 54),
+    Size = UDim2.new(0, 420, 1, -74)
 })
 
 Create("UIListLayout", {
@@ -97,13 +87,10 @@ Create("UIListLayout", {
     HorizontalAlignment = Enum.HorizontalAlignment.Right,
     VerticalAlignment = Enum.VerticalAlignment.Top,
     SortOrder = Enum.SortOrder.LayoutOrder,
-    Padding = UDim.new(0, 6)
+    Padding = UDim.new(0, 7)
 })
 
-local ActiveNotifications = {}
-local NotificationTimers = {}
-
-function NotifyLogger.ColorText(ColorName, Text)
+function Notification.ColorText(ColorName, Text)
     return string.format(
         "<font color='%s'>%s</font>",
         Colors[ColorName] or Colors.White,
@@ -119,12 +106,17 @@ local function RemoveNotification(Key, Frame)
     end
 
     local Scale = Frame:FindFirstChildOfClass("UIScale")
+    local Stroke = Frame:FindFirstChildOfClass("UIStroke")
+
+    if Stroke then
+        TweenService:Create(Stroke, TweenInfo.new(.16), {Transparency = 1}):Play()
+    end
 
     TweenService:Create(
         Frame,
-        TweenInfo.new(.18, Enum.EasingStyle.Quart, Enum.EasingDirection.In),
+        TweenInfo.new(.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
         {
-            Position = UDim2.new(0, 35, 0, 0),
+            Position = UDim2.new(0, 55, 0, 0),
             BackgroundTransparency = 1
         }
     ):Play()
@@ -132,12 +124,12 @@ local function RemoveNotification(Key, Frame)
     if Scale then
         TweenService:Create(
             Scale,
-            TweenInfo.new(.18, Enum.EasingStyle.Quart, Enum.EasingDirection.In),
-            {Scale = .97}
+            TweenInfo.new(.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
+            {Scale = .965}
         ):Play()
     end
 
-    task.wait(.2)
+    task.wait(.21)
 
     if Frame.Parent then
         Frame:Destroy()
@@ -147,7 +139,7 @@ local function RemoveNotification(Key, Frame)
     NotificationTimers[Key] = nil
 end
 
-function NotifyLogger.Notify(Message, Color, Timer)
+function Notification.Notify(Message, Color, Timer)
     Message = tostring(Message or "")
     Color = Color or AccentColor
     Timer = tonumber(Timer) or 5
@@ -157,33 +149,43 @@ function NotifyLogger.Notify(Message, Color, Timer)
 
     if Existing and Existing.Parent then
         if NotificationTimers[Key] then
-            task.cancel(NotificationTimers[Key])
+            pcall(task.cancel, NotificationTimers[Key])
         end
 
         local Accent = Existing:FindFirstChild("Accent")
+        local Title = Existing:FindFirstChild("Title")
         local Scale = Existing:FindFirstChildOfClass("UIScale")
 
-        if Accent then
-            Accent.BackgroundColor3 = Color
-        end
+        if Accent then Accent.BackgroundColor3 = Color end
+        if Title then Title.TextColor3 = Color end
 
         if Scale then
-            Scale.Scale = 1
             TweenService:Create(
                 Scale,
-                TweenInfo.new(.11, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+                TweenInfo.new(.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
                 {Scale = 1.025}
             ):Play()
 
-            task.delay(.11, function()
+            task.delay(.1, function()
                 if Scale.Parent then
                     TweenService:Create(
                         Scale,
-                        TweenInfo.new(.12, Enum.EasingStyle.Quart, Enum.EasingDirection.In),
+                        TweenInfo.new(.13, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
                         {Scale = 1}
                     ):Play()
                 end
             end)
+        end
+
+        local Progress = Existing:FindFirstChild("Progress")
+        if Progress then
+            Progress.Size = UDim2.new(1, 0, 0, 2)
+            Progress.BackgroundColor3 = Color
+            TweenService:Create(
+                Progress,
+                TweenInfo.new(Timer, Enum.EasingStyle.Linear),
+                {Size = UDim2.new(0, 0, 0, 2)}
+            ):Play()
         end
 
         NotificationTimers[Key] = task.delay(Timer, function()
@@ -193,131 +195,191 @@ function NotifyLogger.Notify(Message, Color, Timer)
         return Existing
     end
 
-    local TextWidth = GetTextSize(Message, Enum.Font.GothamMedium, 14)
-    local Width = math.clamp(TextWidth + 40, 220, 380)
-    local Height = 49
+    local TextWidth = Measure(Message, Enum.Font.GothamMedium, 13)
+    local Width = math.clamp(TextWidth + 62, 245, 410)
+    local Height = 54
 
     local Frame = Create("Frame", {
         Name = "Notification",
         Parent = NotificationContainer,
-        BackgroundColor3 = MainColor,
-        BackgroundTransparency = .08,
+        BackgroundColor3 = BackgroundColor,
+        BackgroundTransparency = .05,
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 32, 0, 0),
+        Position = UDim2.new(0, 58, 0, 0),
         Size = UDim2.new(0, Width, 0, Height),
         ClipsDescendants = true,
-        ZIndex = 10
+        ZIndex = 20
     })
 
     Create("UICorner", {
         Parent = Frame,
-        CornerRadius = UDim.new(0, 3)
+        CornerRadius = UDim.new(0, 2)
     })
 
-    Create("UIStroke", {
+    local Stroke = Create("UIStroke", {
         Parent = Frame,
-        Color = OutlineColor,
-        Transparency = .2,
+        Color = Color3.fromRGB(58, 58, 66),
+        Transparency = .12,
         Thickness = 1
     })
 
     local Scale = Create("UIScale", {
         Parent = Frame,
-        Scale = .98
+        Scale = .97
+    })
+
+    local Gradient = Create("UIGradient", {
+        Parent = Frame,
+        Rotation = 0,
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, BackgroundColor),
+            ColorSequenceKeypoint.new(1, SurfaceColor)
+        })
     })
 
     Create("Frame", {
+        Name = "TopLine",
+        Parent = Frame,
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = .93,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 1),
+        ZIndex = 22
+    })
+
+    local Accent = Create("Frame", {
         Name = "Accent",
         Parent = Frame,
         BackgroundColor3 = Color,
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 0, 0, 0),
         Size = UDim2.new(0, 3, 1, 0),
-        ZIndex = 12
+        ZIndex = 23
     })
 
-    Create("Frame", {
+    local BrandBox = Create("Frame", {
         Parent = Frame,
-        BackgroundColor3 = HeaderColor,
-        BackgroundTransparency = .12,
+        BackgroundColor3 = Surface2Color,
+        BackgroundTransparency = .05,
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 3, 0, 0),
-        Size = UDim2.new(1, -3, 0, 18),
-        ZIndex = 11
+        Position = UDim2.new(0, 11, 0, 9),
+        Size = UDim2.new(0, 30, 0, 30),
+        ZIndex = 22
+    })
+
+    Create("UICorner", {
+        Parent = BrandBox,
+        CornerRadius = UDim.new(0, 2)
+    })
+
+    Create("UIStroke", {
+        Parent = BrandBox,
+        Color = Color,
+        Transparency = .3,
+        Thickness = 1
     })
 
     Create("TextLabel", {
-        Parent = Frame,
+        Parent = BrandBox,
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 12, 0, 1),
-        Size = UDim2.new(1, -20, 0, 16),
-        Font = Enum.Font.GothamBold,
-        Text = "QUANTUM",
+        Size = UDim2.new(1, 0, 1, 0),
+        Font = Enum.Font.GothamBlack,
+        Text = "Q",
         TextColor3 = Color,
-        TextSize = 11,
+        TextSize = 16,
+        ZIndex = 24
+    })
+
+    local Title = Create("TextLabel", {
+        Name = "Title",
+        Parent = Frame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 51, 0, 7),
+        Size = UDim2.new(1, -60, 0, 14),
+        Font = Enum.Font.GothamBold,
+        Text = "Q U A N T U M",
+        TextColor3 = Color,
+        TextSize = 10,
         TextXAlignment = Enum.TextXAlignment.Left,
-        ZIndex = 13
+        ZIndex = 24
     })
 
     Create("TextLabel", {
         Parent = Frame,
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 12, 0, 20),
-        Size = UDim2.new(1, -20, 0, 24),
+        Position = UDim2.new(0, 51, 0, 21),
+        Size = UDim2.new(1, -60, 0, 24),
         Font = Enum.Font.GothamMedium,
         Text = Message,
-        TextColor3 = Color3.fromRGB(235, 235, 238),
-        TextSize = 14,
+        TextColor3 = TextColor,
+        TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
         RichText = true,
         TextTruncate = Enum.TextTruncate.AtEnd,
-        ZIndex = 13
+        ZIndex = 24
+    })
+
+    Create("Frame", {
+        Parent = Frame,
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = .94,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 50, 0, 20),
+        Size = UDim2.new(1, -60, 0, 1),
+        ZIndex = 23
+    })
+
+    local ProgressBack = Create("Frame", {
+        Parent = Frame,
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = .92,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 3, 1, -2),
+        Size = UDim2.new(1, -3, 0, 2),
+        ZIndex = 22
     })
 
     local Progress = Create("Frame", {
         Name = "Progress",
-        Parent = Frame,
+        Parent = ProgressBack,
         BackgroundColor3 = Color,
-        BackgroundTransparency = .2,
+        BackgroundTransparency = 0,
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 3, 1, -2),
-        Size = UDim2.new(1, -3, 0, 2),
-        ZIndex = 13
+        Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = 23
     })
 
     ActiveNotifications[Key] = Frame
 
     TweenService:Create(
         Frame,
-        TweenInfo.new(.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+        TweenInfo.new(.26, Enum.EasingStyle.Quint, Enum.EasingDirection.Out),
         {Position = UDim2.new(0, 0, 0, 0)}
     ):Play()
 
     TweenService:Create(
         Scale,
-        TweenInfo.new(.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+        TweenInfo.new(.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
         {Scale = 1}
     ):Play()
 
     TweenService:Create(
         Progress,
         TweenInfo.new(Timer, Enum.EasingStyle.Linear),
-        {Size = UDim2.new(0, 0, 0, 2)}
+        {Size = UDim2.new(0, 0, 1, 0)}
     ):Play()
 
     NotificationTimers[Key] = task.delay(Timer, function()
         RemoveNotification(Key, Frame)
     end)
 
-    NotifyLogger.Log(Message)
-
+    Notification.Log(Message)
     return Frame
 end
 
 --// Logger
 local LoggerGUI = Create("ScreenGui", {
-    Name = "LoggerGUI",
+    Name = "QuantumLoggerGUI",
     Parent = CoreGui,
     ResetOnSpawn = false,
     Enabled = false,
@@ -327,45 +389,72 @@ local LoggerGUI = Create("ScreenGui", {
 local LoggerFrame = Create("Frame", {
     Parent = LoggerGUI,
     Name = "LoggerFrame",
-    Size = UDim2.new(0, 330, 0, 220),
-    Position = UDim2.new(1, -350, 1, -240),
-    BackgroundColor3 = MainColor,
-    BackgroundTransparency = .05,
+    Size = UDim2.new(0, 360, 0, 235),
+    Position = UDim2.new(1, -382, 1, -260),
+    BackgroundColor3 = BackgroundColor,
+    BackgroundTransparency = .03,
     BorderSizePixel = 0
 })
 
 Create("UICorner", {
     Parent = LoggerFrame,
-    CornerRadius = UDim.new(0, 3)
+    CornerRadius = UDim.new(0, 2)
 })
 
 Create("UIStroke", {
     Parent = LoggerFrame,
-    Color = OutlineColor,
+    Color = Color3.fromRGB(58, 58, 66),
+    Transparency = .1,
     Thickness = 1
+})
+
+Create("UIGradient", {
+    Parent = LoggerFrame,
+    Rotation = 90,
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, SurfaceColor),
+        ColorSequenceKeypoint.new(1, BackgroundColor)
+    })
+})
+
+Create("Frame", {
+    Parent = LoggerFrame,
+    BackgroundColor3 = AccentColor,
+    BorderSizePixel = 0,
+    Size = UDim2.new(1, 0, 0, 2)
 })
 
 local Header = Create("TextButton", {
     Parent = LoggerFrame,
-    Size = UDim2.new(1, 0, 0, 25),
-    BackgroundColor3 = HeaderColor,
+    Size = UDim2.new(1, 0, 0, 31),
+    Position = UDim2.new(0, 0, 0, 2),
+    BackgroundColor3 = Surface2Color,
+    BackgroundTransparency = .1,
     BorderSizePixel = 0,
-    Text = "  QUANTUM LOGGER",
-    Font = Enum.Font.GothamBold,
-    TextSize = 12,
-    TextColor3 = Color3.fromRGB(235, 235, 238),
-    TextXAlignment = Enum.TextXAlignment.Left,
+    Text = "",
     AutoButtonColor = false
+})
+
+Create("TextLabel", {
+    Parent = Header,
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 12, 0, 0),
+    Size = UDim2.new(1, -24, 1, 0),
+    Font = Enum.Font.GothamBold,
+    Text = "Q U A N T U M   //   C O N S O L E",
+    TextColor3 = TextColor,
+    TextSize = 11,
+    TextXAlignment = Enum.TextXAlignment.Left
 })
 
 local ScrollingFrame = Create("ScrollingFrame", {
     Parent = LoggerFrame,
     Name = "LogScroll",
-    Size = UDim2.new(1, -8, 1, -61),
-    Position = UDim2.new(0, 4, 0, 29),
+    Size = UDim2.new(1, -14, 1, -76),
+    Position = UDim2.new(0, 7, 0, 39),
     BackgroundTransparency = 1,
     BorderSizePixel = 0,
-    ScrollBarThickness = 3,
+    ScrollBarThickness = 2,
     ScrollBarImageColor3 = AccentColor,
     CanvasSize = UDim2.new()
 })
@@ -373,65 +462,89 @@ local ScrollingFrame = Create("ScrollingFrame", {
 local Layout = Create("UIListLayout", {
     Parent = ScrollingFrame,
     SortOrder = Enum.SortOrder.LayoutOrder,
-    Padding = UDim.new(0, 2)
+    Padding = UDim.new(0, 3)
+})
+
+local CommandBarHolder = Create("Frame", {
+    Parent = LoggerFrame,
+    BackgroundColor3 = Surface2Color,
+    BackgroundTransparency = .05,
+    BorderSizePixel = 0,
+    Position = UDim2.new(0, 7, 1, -31),
+    Size = UDim2.new(1, -14, 0, 24)
+})
+
+Create("UICorner", {
+    Parent = CommandBarHolder,
+    CornerRadius = UDim.new(0, 2)
+})
+
+Create("UIStroke", {
+    Parent = CommandBarHolder,
+    Color = Color3.fromRGB(58, 58, 66),
+    Transparency = .25,
+    Thickness = 1
+})
+
+Create("TextLabel", {
+    Parent = CommandBarHolder,
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 8, 0, 0),
+    Size = UDim2.new(0, 12, 1, 0),
+    Font = Enum.Font.GothamBold,
+    Text = ">",
+    TextColor3 = AccentColor,
+    TextSize = 12
 })
 
 local CommandBar = Create("TextBox", {
-    Parent = LoggerFrame,
-    Size = UDim2.new(1, -8, 0, 24),
-    Position = UDim2.new(0, 4, 1, -28),
-    BackgroundColor3 = HeaderColor,
-    BorderSizePixel = 0,
+    Parent = CommandBarHolder,
+    Size = UDim2.new(1, -27, 1, 0),
+    Position = UDim2.new(0, 24, 0, 0),
+    BackgroundTransparency = 1,
     ClearTextOnFocus = false,
     Text = "",
-    PlaceholderText = "Enter command...",
-    PlaceholderColor3 = Color3.fromRGB(120, 120, 125),
-    TextColor3 = Color3.fromRGB(235, 235, 238),
+    PlaceholderText = "type a command...",
+    PlaceholderColor3 = MutedColor,
+    TextColor3 = TextColor,
     Font = Enum.Font.Gotham,
     TextSize = 12,
     TextXAlignment = Enum.TextXAlignment.Left
 })
 
-Create("UICorner", {
-    Parent = CommandBar,
-    CornerRadius = UDim.new(0, 2)
-})
-
-local LogEntries = {}
-local RegisteredCommands = {}
-
-function NotifyLogger.Log(Text)
+function Notification.Log(Text)
     local RawText = tostring(Text)
 
-    local Label = Create("TextButton", {
+    local Entry = Create("TextButton", {
         Parent = ScrollingFrame,
-        Size = UDim2.new(1, -4, 0, 18),
+        Size = UDim2.new(1, -4, 0, 19),
         BackgroundTransparency = 1,
-        Text = RawText,
-        TextColor3 = Color3.fromRGB(220, 220, 224),
+        Text = "›  " .. RawText,
+        TextColor3 = Color3.fromRGB(214, 214, 220),
         Font = Enum.Font.Gotham,
-        TextSize = 12,
+        TextSize = 11,
         TextXAlignment = Enum.TextXAlignment.Left,
         RichText = true,
         AutoButtonColor = false
     })
 
-    Connect(Label.MouseButton1Click, function()
+    Connect(Entry.MouseButton1Click, function()
         if setclipboard then
             setclipboard(StripTags(RawText))
-            NotifyLogger("Copied to clipboard", Color3.fromRGB(80, 200, 120), 2)
+            Notification("Copied to clipboard", Color3.fromRGB(99, 230, 167), 2)
         end
     end)
 
-    table.insert(LogEntries, Label)
+    table.insert(LogEntries, Entry)
 
     task.defer(function()
+        if not ScrollingFrame.Parent then return end
         ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 5)
         ScrollingFrame.CanvasPosition = Vector2.new(0, math.max(0, Layout.AbsoluteContentSize.Y))
     end)
 end
 
-function NotifyLogger.Clear()
+function Notification.Clear()
     for _, Entry in ipairs(LogEntries) do
         if Entry.Parent then
             Entry:Destroy()
@@ -442,45 +555,41 @@ function NotifyLogger.Clear()
     ScrollingFrame.CanvasSize = UDim2.new()
 end
 
-function NotifyLogger.Show(State)
+function Notification.Show(State)
     LoggerGUI.Enabled = State == true
 end
 
-function NotifyLogger.AddCommand(Name, Callback)
+function Notification.AddCommand(Name, Callback)
     RegisteredCommands[tostring(Name):lower()] = Callback
 end
 
 Connect(CommandBar.FocusLost, function(EnterPressed)
-    if not EnterPressed then
-        return
-    end
+    if not EnterPressed then return end
 
     local Input = CommandBar.Text
     CommandBar.Text = ""
 
-    if Input == "" then
-        return
-    end
+    if Input == "" then return end
 
-    NotifyLogger.Log("> " .. Input)
+    Notification.Log("> " .. Input)
 
     local Arguments = Input:split(" ")
     local CommandName = (table.remove(Arguments, 1) or ""):lower()
     local Command = RegisteredCommands[CommandName]
 
     if not Command then
-        NotifyLogger("Unknown command: " .. CommandName, Color3.fromRGB(255, 90, 90), 3)
+        Notification("Unknown command: " .. CommandName, Color3.fromRGB(255, 98, 98), 3)
         return
     end
 
     local Success, Error = pcall(Command, Arguments)
 
     if not Success then
-        NotifyLogger("Command error: " .. tostring(Error), Color3.fromRGB(255, 90, 90), 4)
+        Notification("Command error: " .. tostring(Error), Color3.fromRGB(255, 98, 98), 4)
     end
 end)
 
--- Drag logger
+--// Drag logger
 local Dragging = false
 local DragOffset
 
@@ -509,9 +618,9 @@ Connect(UserInputService.InputChanged, function(Input)
     end
 end)
 
-function NotifyLogger.Destroy()
-    for _, TimerThread in pairs(NotificationTimers) do
-        pcall(task.cancel, TimerThread)
+function Notification.Destroy()
+    for _, Thread in pairs(NotificationTimers) do
+        pcall(task.cancel, Thread)
     end
 
     table.clear(NotificationTimers)
@@ -519,24 +628,12 @@ function NotifyLogger.Destroy()
 
     for i = #Connections, 1, -1 do
         local Connection = Connections[i]
-
         if Connection then
             pcall(function()
                 Connection:Disconnect()
             end)
         end
-
         Connections[i] = nil
-    end
-
-    for i = #CleanupTasks, 1, -1 do
-        local Thread = CleanupTasks[i]
-
-        if Thread then
-            pcall(task.cancel, Thread)
-        end
-
-        CleanupTasks[i] = nil
     end
 
     if NotificationArea and NotificationArea.Parent then
@@ -547,23 +644,21 @@ function NotifyLogger.Destroy()
         LoggerGUI:Destroy()
     end
 
-    if _G.__NOTIFYLOGGER_INSTANCE == NotifyLogger then
-        _G.__NOTIFYLOGGER_INSTANCE = nil
-        _G.__NOTIFYLOGGER_LOADED = nil
-        _G.__NOTIFYLOGGER_CLEANUP = nil
+    if _G.__QUANTUM_NOTIFY_INSTANCE == Notification then
+        _G.__QUANTUM_NOTIFY_INSTANCE = nil
+        _G.__QUANTUM_NOTIFY_CLEANUP = nil
     end
 end
 
-setmetatable(NotifyLogger, {
+setmetatable(Notification, {
     __call = function(_, Message, Color, Timer)
-        return NotifyLogger.Notify(Message, Color, Timer)
+        return Notification.Notify(Message, Color, Timer)
     end
 })
 
-_G.__NOTIFYLOGGER_LOADED = true
-_G.__NOTIFYLOGGER_INSTANCE = NotifyLogger
-_G.__NOTIFYLOGGER_CLEANUP = function()
-    NotifyLogger.Destroy()
+_G.__QUANTUM_NOTIFY_INSTANCE = Notification
+_G.__QUANTUM_NOTIFY_CLEANUP = function()
+    Notification.Destroy()
 end
 
-return NotifyLogger
+return Notification
