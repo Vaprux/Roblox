@@ -53,12 +53,12 @@ local function StripTags(Text)
     return tostring(Text or ""):gsub("<[^>]->", "")
 end
 
-local function Measure(Text, Font, Size)
+local function Measure(Text, Font, Size, MaxWidth)
     local Bounds = TextService:GetTextSize(
         StripTags(Text),
         Size,
         Font,
-        Vector2.new(1000, 1000)
+        Vector2.new(MaxWidth or 1000, 1000)
     )
     return Bounds.X, Bounds.Y
 end
@@ -106,19 +106,34 @@ local function RemoveNotification(Key, Frame)
     end
 
     local Scale = Frame:FindFirstChildOfClass("UIScale")
-    local Stroke = Frame:FindFirstChildOfClass("UIStroke")
+    local Card = Frame:FindFirstChild("Card")
+    local Aura = Frame:FindFirstChild("Aura")
+    local Stroke = Card and Card:FindFirstChildOfClass("UIStroke")
 
     if Stroke then
         TweenService:Create(Stroke, TweenInfo.new(.16), {Transparency = 1}):Play()
     end
 
+    if Card then
+        TweenService:Create(
+            Card,
+            TweenInfo.new(.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
+            {BackgroundTransparency = 1}
+        ):Play()
+    end
+
+    if Aura then
+        TweenService:Create(
+            Aura,
+            TweenInfo.new(.18, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
+            {ImageTransparency = 1}
+        ):Play()
+    end
+
     TweenService:Create(
         Frame,
         TweenInfo.new(.2, Enum.EasingStyle.Quint, Enum.EasingDirection.In),
-        {
-            Position = UDim2.new(0, 55, 0, 0),
-            BackgroundTransparency = 1
-        }
+        {Position = UDim2.new(0, 55, 0, 0)}
     ):Play()
 
     if Scale then
@@ -152,9 +167,12 @@ function Notification.Notify(Message, Color, Timer)
             pcall(task.cancel, NotificationTimers[Key])
         end
 
-        local Accent = Existing:FindFirstChild("Accent")
-        local Title = Existing:FindFirstChild("Title")
+        local Card = Existing:FindFirstChild("Card")
+        local Accent = Card and Card:FindFirstChild("Accent")
+        local Title = Card and Card:FindFirstChild("Title")
         local Scale = Existing:FindFirstChildOfClass("UIScale")
+        local ProgressBack = Card and Card:FindFirstChild("ProgressBack")
+        local Progress = ProgressBack and ProgressBack:FindFirstChild("Progress")
 
         if Accent then Accent.BackgroundColor3 = Color end
         if Title then Title.TextColor3 = Color end
@@ -177,14 +195,13 @@ function Notification.Notify(Message, Color, Timer)
             end)
         end
 
-        local Progress = Existing:FindFirstChild("Progress")
         if Progress then
-            Progress.Size = UDim2.new(1, 0, 0, 2)
+            Progress.Size = UDim2.new(1, 0, 1, 0)
             Progress.BackgroundColor3 = Color
             TweenService:Create(
                 Progress,
                 TweenInfo.new(Timer, Enum.EasingStyle.Linear),
-                {Size = UDim2.new(0, 0, 0, 2)}
+                {Size = UDim2.new(0, 0, 1, 0)}
             ):Play()
         end
 
@@ -195,32 +212,21 @@ function Notification.Notify(Message, Color, Timer)
         return Existing
     end
 
-    local TextWidth = Measure(Message, Enum.Font.GothamMedium, 13)
-    local Width = math.clamp(TextWidth + 62, 245, 410)
-    local Height = 54
+    local Width = 390
+    local TextAreaWidth = Width - 68
+    local _, TextHeight = Measure(Message, Enum.Font.GothamMedium, 13, TextAreaWidth)
+    local BodyHeight = math.max(24, TextHeight + 8)
+    local Height = math.max(58, 31 + BodyHeight)
 
     local Frame = Create("Frame", {
         Name = "Notification",
         Parent = NotificationContainer,
-        BackgroundColor3 = BackgroundColor,
-        BackgroundTransparency = .05,
+        BackgroundTransparency = 1,
         BorderSizePixel = 0,
         Position = UDim2.new(0, 58, 0, 0),
         Size = UDim2.new(0, Width, 0, Height),
-        ClipsDescendants = true,
+        ClipsDescendants = false,
         ZIndex = 20
-    })
-
-    Create("UICorner", {
-        Parent = Frame,
-        CornerRadius = UDim.new(0, 2)
-    })
-
-    local Stroke = Create("UIStroke", {
-        Parent = Frame,
-        Color = Color3.fromRGB(58, 58, 66),
-        Transparency = .12,
-        Thickness = 1
     })
 
     local Scale = Create("UIScale", {
@@ -228,8 +234,47 @@ function Notification.Notify(Message, Color, Timer)
         Scale = .97
     })
 
-    local Gradient = Create("UIGradient", {
+    -- Matches the offset shadow/aura style used by the main Quantum library.
+    local Aura = Create("ImageLabel", {
+        Name = "Aura",
         Parent = Frame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 9, 0, 9),
+        Size = UDim2.new(1, 0, 1, 0),
+        Image = "rbxassetid://3570695787",
+        ImageColor3 = Color3.fromRGB(0, 0, 0),
+        ImageTransparency = .5,
+        ScaleType = Enum.ScaleType.Slice,
+        SliceCenter = Rect.new(100, 100, 100, 100),
+        SliceScale = .05,
+        ZIndex = 19
+    })
+
+    local Card = Create("Frame", {
+        Name = "Card",
+        Parent = Frame,
+        BackgroundColor3 = BackgroundColor,
+        BackgroundTransparency = .05,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 1, 0),
+        ClipsDescendants = true,
+        ZIndex = 20
+    })
+
+    Create("UICorner", {
+        Parent = Card,
+        CornerRadius = UDim.new(0, 2)
+    })
+
+    local Stroke = Create("UIStroke", {
+        Parent = Card,
+        Color = Color3.fromRGB(58, 58, 66),
+        Transparency = .12,
+        Thickness = 1
+    })
+
+    Create("UIGradient", {
+        Parent = Card,
         Rotation = 0,
         Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, BackgroundColor),
@@ -239,7 +284,7 @@ function Notification.Notify(Message, Color, Timer)
 
     Create("Frame", {
         Name = "TopLine",
-        Parent = Frame,
+        Parent = Card,
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
         BackgroundTransparency = .93,
         BorderSizePixel = 0,
@@ -249,7 +294,7 @@ function Notification.Notify(Message, Color, Timer)
 
     local Accent = Create("Frame", {
         Name = "Accent",
-        Parent = Frame,
+        Parent = Card,
         BackgroundColor3 = Color,
         BorderSizePixel = 0,
         Size = UDim2.new(0, 3, 1, 0),
@@ -257,11 +302,11 @@ function Notification.Notify(Message, Color, Timer)
     })
 
     local BrandBox = Create("Frame", {
-        Parent = Frame,
+        Parent = Card,
         BackgroundColor3 = Surface2Color,
         BackgroundTransparency = .05,
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 11, 0, 9),
+        Position = UDim2.new(0, 11, 0, 11),
         Size = UDim2.new(0, 30, 0, 30),
         ZIndex = 22
     })
@@ -291,9 +336,9 @@ function Notification.Notify(Message, Color, Timer)
 
     local Title = Create("TextLabel", {
         Name = "Title",
-        Parent = Frame,
+        Parent = Card,
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 51, 0, 7),
+        Position = UDim2.new(0, 51, 0, 8),
         Size = UDim2.new(1, -60, 0, 14),
         Font = Enum.Font.GothamBold,
         Text = "Q U A N T U M",
@@ -303,34 +348,36 @@ function Notification.Notify(Message, Color, Timer)
         ZIndex = 24
     })
 
+    Create("Frame", {
+        Parent = Card,
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = .94,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 50, 0, 24),
+        Size = UDim2.new(1, -60, 0, 1),
+        ZIndex = 23
+    })
+
     Create("TextLabel", {
-        Parent = Frame,
+        Name = "Message",
+        Parent = Card,
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 51, 0, 21),
-        Size = UDim2.new(1, -60, 0, 24),
+        Position = UDim2.new(0, 51, 0, 27),
+        Size = UDim2.new(1, -60, 0, BodyHeight),
         Font = Enum.Font.GothamMedium,
         Text = Message,
         TextColor3 = TextColor,
         TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
-        TextYAlignment = Enum.TextYAlignment.Center,
+        TextYAlignment = Enum.TextYAlignment.Top,
         RichText = true,
-        TextTruncate = Enum.TextTruncate.AtEnd,
+        TextWrapped = true,
         ZIndex = 24
     })
 
-    Create("Frame", {
-        Parent = Frame,
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        BackgroundTransparency = .94,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 50, 0, 20),
-        Size = UDim2.new(1, -60, 0, 1),
-        ZIndex = 23
-    })
-
     local ProgressBack = Create("Frame", {
-        Parent = Frame,
+        Name = "ProgressBack",
+        Parent = Card,
         BackgroundColor3 = Color3.fromRGB(255, 255, 255),
         BackgroundTransparency = .92,
         BorderSizePixel = 0,
