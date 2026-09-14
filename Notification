@@ -304,6 +304,22 @@ function NotifyLogger.Notify(Text, Color, Time)
     NotifyLogger.Log(Text)
 end
 
+
+-- === Notification Helpers ===
+function NotifyLogger.ColorText(colorName, text)
+    local colors = {
+        Red = '#FF5555', Green = '#55FF55', Blue = '#5555FF', White = '#FFFFFF',
+        Yellow = '#FFFF55', Cyan = '#55FFFF', Magenta = '#FF55FF', Gray = '#AAAAAA',
+        Orange = '#FFA500', Purple = '#AA00FF'
+    }
+
+    return string.format("<font color='%s'>%s</font>", colors[colorName] or '#FFFFFF', tostring(text))
+end
+
+function NotifyLogger.QuickNotify(text, color, time)
+    NotifyLogger.Notify(text, color or AccentColor, time or 10)
+end
+
 -- === Command System ===
 local CommandBar = Create("TextBox", {
     Size = UDim2.new(1, -6, 0, 24),
